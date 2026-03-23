@@ -1,0 +1,6 @@
+[build]
+builder = "nixpacks"
+buildCommand = "echo 'Please deploy each service separately'"
+
+[deploy]
+startCommand = "echo 'This is a monorepo. Deploy backend, cms, and frontend as separate services.'"
