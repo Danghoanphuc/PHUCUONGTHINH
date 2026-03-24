@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Download } from "lucide-react";
+import { useAuth } from "@repo/shared-utils";
 
 type ProductType = "gach" | "tbvs" | "bep" | "phu-tro";
 
@@ -148,6 +149,7 @@ function Group({
 
 // ── Gạch specs ────────────────────────────────────────────────────────────────
 function GachSpecs({ specs }: { specs: Record<string, any> }) {
+  const { isAuthenticated } = useAuth();
   const size = val(specs, "size", "kich_thuoc");
   const thickness = val(specs, "thickness_mm", "do_day");
   const piecesPerBox = Number(
@@ -225,7 +227,7 @@ function GachSpecs({ specs }: { specs: Record<string, any> }) {
         </Group>
       )}
 
-      {priceM2 > 0 && (
+      {priceM2 > 0 && isAuthenticated && (
         <div>
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
             Giá thành
@@ -264,6 +266,7 @@ function GachSpecs({ specs }: { specs: Record<string, any> }) {
 
 // ── TBVS specs ────────────────────────────────────────────────────────────────
 function TBVSSpecs({ specs }: { specs: Record<string, any> }) {
+  const { isAuthenticated } = useAuth();
   const drainCenter = val(specs, "drain_center");
   const waterPressure = val(specs, "water_pressure_min");
   const pipeInlet = val(specs, "pipe_inlet_diameter");
@@ -354,7 +357,7 @@ function TBVSSpecs({ specs }: { specs: Record<string, any> }) {
         </Group>
       )}
 
-      {priceRetail > 0 && (
+      {priceRetail > 0 && isAuthenticated && (
         <div>
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
             Giá thành
@@ -375,6 +378,7 @@ function TBVSSpecs({ specs }: { specs: Record<string, any> }) {
 
 // ── Bếp specs ─────────────────────────────────────────────────────────────────
 function BepSpecs({ specs }: { specs: Record<string, any> }) {
+  const { isAuthenticated } = useAuth();
   const sizeOverall = val(specs, "size_overall", "size");
   const sizeCutout = val(specs, "size_cutout");
   const sizePanel = val(specs, "size_panel");
@@ -528,7 +532,7 @@ function BepSpecs({ specs }: { specs: Record<string, any> }) {
         </Group>
       )}
 
-      {priceRetail > 0 && (
+      {priceRetail > 0 && isAuthenticated && (
         <div>
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
             Giá thành
