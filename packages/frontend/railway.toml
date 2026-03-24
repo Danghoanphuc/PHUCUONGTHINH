@@ -1,5 +1,6 @@
 [build]
 builder = "nixpacks"
+buildCommand = "pnpm install --frozen-lockfile && pnpm --filter digital-showroom build"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "pnpm --filter digital-showroom start"

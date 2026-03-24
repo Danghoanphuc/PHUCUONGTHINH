@@ -1,5 +1,6 @@
 [build]
 builder = "nixpacks"
+buildCommand = "pnpm install --frozen-lockfile && pnpm --filter backend build"
 
 [deploy]
-startCommand = "npm run start:prod"
+startCommand = "node packages/backend/dist/main"
