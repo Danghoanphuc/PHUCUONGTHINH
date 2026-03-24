@@ -57,7 +57,9 @@ export function Header() {
             <div className="flex items-center gap-3">
               <span className="text-gray-400">Chế độ Admin</span>
               <span className="text-gray-500">·</span>
-              <span className="text-emerald-400 font-medium">{user?.email}</span>
+              <span className="text-emerald-400 font-medium">
+                {user?.email}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Link
@@ -84,69 +86,71 @@ export function Header() {
             </div>
           </div>
         )}
-        <div className={`fixed right-4 z-50 ${isAuthenticated ? "top-12" : "top-4"}`}
-        <div className="bg-brand-secondary rounded-xl shadow-lg border border-brand-paper p-4 flex items-center gap-3">
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 shrink-0 hover:opacity-80 transition-opacity"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 22 22"
-              fill="none"
-              aria-hidden="true"
+        <div
+          className={`fixed right-4 z-50 ${isAuthenticated ? "top-12" : "top-4"}`}
+        >
+          <div className="bg-brand-secondary rounded-xl shadow-lg border border-brand-paper p-4 flex items-center gap-3">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 shrink-0 hover:opacity-80 transition-opacity"
             >
-              <rect width="22" height="22" fill="#8B2E16" />
-              <path d="M4 4h6v3H7v2h3v3H7v6H4V4z" fill="#F5F0E8" />
-              <path d="M12 4h6v14h-3v-5.5h-3V9.5h3V7h-3V4z" fill="#F5F0E8" />
-            </svg>
-            <span className="font-black text-[12px] tracking-tight text-brand-primary uppercase leading-none">
-              Phú Cường Thịnh
-            </span>
-          </Link>
-          <span className="w-px h-5 bg-brand-paper" />
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 22 22"
+                fill="none"
+                aria-hidden="true"
+              >
+                <rect width="22" height="22" fill="#8B2E16" />
+                <path d="M4 4h6v3H7v2h3v3H7v6H4V4z" fill="#F5F0E8" />
+                <path d="M12 4h6v14h-3v-5.5h-3V9.5h3V7h-3V4z" fill="#F5F0E8" />
+              </svg>
+              <span className="font-black text-[12px] tracking-tight text-brand-primary uppercase leading-none">
+                Phú Cường Thịnh
+              </span>
+            </Link>
+            <span className="w-px h-5 bg-brand-paper" />
 
-          <div className="relative">
-            <button
-              onClick={() => setCompactMenuOpen(!compactMenuOpen)}
-              className="flex items-center gap-1 text-brand-primary/70 hover:text-brand-primary text-[12px] font-medium transition-colors"
+            <div className="relative">
+              <button
+                onClick={() => setCompactMenuOpen(!compactMenuOpen)}
+                className="flex items-center gap-1 text-brand-primary/70 hover:text-brand-primary text-[12px] font-medium transition-colors"
+              >
+                Menu
+                <ChevronDown
+                  size={13}
+                  className={`transition-transform ${compactMenuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {compactMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 bg-brand-secondary border border-brand-paper rounded-lg shadow-lg py-2 min-w-[140px]">
+                  {compactNavLinks.map(({ href, label }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setCompactMenuOpen(false)}
+                      className="block px-4 py-2 text-[12px] text-brand-primary/70 hover:text-brand-primary hover:bg-brand-paper/50 transition-colors"
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <span className="w-px h-5 bg-brand-paper" />
+            <a
+              href="https://zalo.me"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 bg-brand-primary text-brand-secondary text-[12px] font-bold px-3 py-1.5 rounded-lg hover:bg-[#6e2411] transition-colors whitespace-nowrap"
             >
-              Menu
-              <ChevronDown
-                size={13}
-                className={`transition-transform ${compactMenuOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            {compactMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 bg-brand-secondary border border-brand-paper rounded-lg shadow-lg py-2 min-w-[140px]">
-                {compactNavLinks.map(({ href, label }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={() => setCompactMenuOpen(false)}
-                    className="block px-4 py-2 text-[12px] text-brand-primary/70 hover:text-brand-primary hover:bg-brand-paper/50 transition-colors"
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            )}
+              <CalendarCheck size={13} />
+              Đặt lịch
+            </a>
           </div>
-
-          <span className="w-px h-5 bg-brand-paper" />
-          <a
-            href="https://zalo.me"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 bg-brand-primary text-brand-secondary text-[12px] font-bold px-3 py-1.5 rounded-lg hover:bg-[#6e2411] transition-colors whitespace-nowrap"
-          >
-            <CalendarCheck size={13} />
-            Đặt lịch
-          </a>
         </div>
-      </div>
       </>
     );
   }
