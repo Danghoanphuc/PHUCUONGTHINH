@@ -340,7 +340,7 @@ export default function ProductDetailPage({
 
       <main className="min-h-screen bg-[#F8F9FA] py-8 px-4 pt-8 pb-24 lg:pb-12">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 bg-white p-5 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 lg:gap-14 bg-white p-4 md:p-8 rounded-2xl md:rounded-3xl shadow-sm border border-gray-100">
             {/* Breadcrumb - Di chuyển vào trong khối trắng */}
             <nav className="lg:col-span-12 flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest">
               <Link href="/" className="hover:text-[#0a192f] transition-colors">

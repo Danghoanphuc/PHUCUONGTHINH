@@ -172,7 +172,7 @@ export default function ProductsPage() {
             <span className="text-emerald-600">Sản Phẩm</span>
           </nav>
           <div>
-            <h1 className="text-3xl md:text-5xl font-black text-[#0a192f] tracking-tight mb-3">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#0a192f] tracking-tight mb-2 md:mb-3">
               Vật Liệu Khơi Nguồn Sáng Tạo
             </h1>
             <p className="text-gray-500 text-base flex items-center gap-2">
@@ -251,7 +251,7 @@ export default function ProductsPage() {
           <aside
             className={`lg:col-span-1 ${showMobileFilters ? "block" : "hidden lg:block"}`}
           >
-            <div className="sticky top-[200px] lg:top-32 space-y-6">
+            <div className="sticky top-20 space-y-4 md:space-y-6">
               {/* Search Bar */}
               <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
                 <div className="relative">
@@ -281,7 +281,7 @@ export default function ProductsPage() {
               </div>
 
               {/* Filters */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
                 <FilterTabs activeTab={activeTab} onTabChange={setActiveTab} />
                 <div className="mt-8">
                   {activeTab === "inspiration" ? (
@@ -317,8 +317,8 @@ export default function ProductsPage() {
 
           {/* Products Grid */}
           <div className="lg:col-span-3">
-            <div className="mb-6 flex justify-between items-center bg-white px-5 py-4 rounded-2xl shadow-sm border border-gray-100">
-              <p className="text-sm font-medium text-gray-600">
+            <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-white px-4 py-3 md:px-5 md:py-4 rounded-2xl shadow-sm border border-gray-100">
+              <p className="text-xs md:text-sm font-medium text-gray-600">
                 Hiển thị{" "}
                 <span className="font-bold text-gray-900">
                   {products.length > 0 ? (filters.page! - 1) * 20 + 1 : 0}

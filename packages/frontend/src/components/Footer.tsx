@@ -15,14 +15,14 @@ const ZALO_URL = "https://zalo.me/0901234567";
 
 export function Footer() {
   return (
-    <footer className="bg-[#0a192f] text-gray-400 pt-24 pb-8 border-t border-white/10 relative overflow-hidden font-sans mt-auto">
+    <footer className="bg-[#0a192f] text-gray-400 pt-12 md:pt-24 pb-8 border-t border-white/10 relative overflow-hidden font-sans mt-auto">
       {/* ─── Background Elements (DNA Match) ─── */}
       <div className="absolute top-0 left-0 -translate-y-1/2 -translate-x-1/3 w-[500px] h-[500px] bg-emerald-600/10 rounded-full blur-[80px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 translate-y-1/2 translate-x-1/3 w-[300px] h-[300px] bg-teal-500/10 rounded-full blur-[60px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         {/* ─── Main Footer Content ─── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-8 mb-10 md:mb-16">
           {/* CỘT 1: Thương Hiệu & Triết Lý (4 columns) */}
           <div className="lg:col-span-4 pr-0 lg:pr-8">
             <Link href="/" className="inline-block mb-6 group">
@@ -90,9 +90,9 @@ export function Footer() {
               Liên Hệ
             </h3>
             <ul className="space-y-6 text-sm">
-              <li className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
-                  <Building2 size={18} className="text-emerald-400" />
+              <li className="flex items-start gap-3">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
+                  <Building2 size={16} className="text-emerald-400" />
                 </div>
                 <div>
                   <span className="block text-white font-bold mb-1">
@@ -103,9 +103,9 @@ export function Footer() {
                   </span>
                 </div>
               </li>
-              <li className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
-                  <MapPin size={18} className="text-emerald-400" />
+              <li className="flex items-start gap-3">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
+                  <MapPin size={16} className="text-emerald-400" />
                 </div>
                 <div>
                   <span className="block text-white font-bold mb-1">
@@ -116,9 +116,9 @@ export function Footer() {
                   </span>
                 </div>
               </li>
-              <li className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
-                  <Phone size={18} className="text-emerald-400" />
+              <li className="flex items-center gap-3">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
+                  <Phone size={16} className="text-emerald-400" />
                 </div>
                 <div>
                   <a
@@ -177,7 +177,7 @@ export function Footer() {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 bg-white/5 hover:bg-[#1877F2] rounded-xl flex items-center justify-center transition-all border border-white/10 hover:-translate-y-1 hover:border-transparent"
+                className="w-10 h-10 md:w-12 md:h-12 bg-white/5 hover:bg-[#1877F2] rounded-xl flex items-center justify-center transition-all border border-white/10 hover:-translate-y-1 hover:border-transparent"
               >
                 <Facebook size={18} className="text-white" />
               </a>
@@ -185,7 +185,7 @@ export function Footer() {
                 href="https://youtube.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 bg-white/5 hover:bg-[#FF0000] rounded-xl flex items-center justify-center transition-all border border-white/10 hover:-translate-y-1 hover:border-transparent"
+                className="w-10 h-10 md:w-12 md:h-12 bg-white/5 hover:bg-[#FF0000] rounded-xl flex items-center justify-center transition-all border border-white/10 hover:-translate-y-1 hover:border-transparent"
               >
                 <Youtube size={18} className="text-white" />
               </a>

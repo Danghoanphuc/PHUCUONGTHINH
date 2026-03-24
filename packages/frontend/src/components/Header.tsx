@@ -53,41 +53,43 @@ export function Header() {
       <>
         {/* Admin toolbar cho trang products */}
         {isAuthenticated && (
-          <div className="fixed top-0 left-0 right-0 z-[60] bg-[#0a192f] text-white text-xs flex items-center justify-between px-4 h-8">
-            <div className="flex items-center gap-3">
-              <span className="text-gray-400">Chế độ Admin</span>
-              <span className="text-gray-500">·</span>
-              <span className="text-emerald-400 font-medium">
+          <div className="fixed top-0 left-0 right-0 z-[60] bg-[#0a192f] text-white text-xs flex items-center justify-between px-3 md:px-4 h-8">
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline text-gray-400">
+                Chế độ Admin
+              </span>
+              <span className="hidden sm:inline text-gray-500">·</span>
+              <span className="text-emerald-400 font-medium truncate max-w-[120px] sm:max-w-none">
                 {user?.email}
               </span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <Link
                 href="/admin/dashboard"
-                className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
+                className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
               >
                 <LayoutDashboard size={12} />
-                Dashboard
+                <span className="hidden sm:inline">Dashboard</span>
               </Link>
               <Link
                 href="/admin/products"
-                className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
+                className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
               >
                 <Settings size={12} />
-                Quản lý SP
+                <span className="hidden sm:inline">Quản lý SP</span>
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-red-500/20 transition-colors text-gray-400 hover:text-red-400"
+                className="flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/20 transition-colors text-gray-400 hover:text-red-400"
               >
                 <LogOut size={12} />
-                Đăng xuất
+                <span className="hidden sm:inline">Đăng xuất</span>
               </button>
             </div>
           </div>
         )}
         <div
-          className={`fixed right-4 z-50 ${isAuthenticated ? "top-12" : "top-4"}`}
+          className={`fixed right-3 md:right-4 z-50 ${isAuthenticated ? "top-12" : "top-4"}`}
         >
           <div className="bg-brand-secondary rounded-xl shadow-lg border border-brand-paper p-4 flex items-center gap-3">
             <Link
@@ -159,33 +161,35 @@ export function Header() {
     <>
       {/* Admin toolbar — chỉ hiện khi đã đăng nhập */}
       {isAuthenticated && (
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-[#0a192f] text-white text-xs flex items-center justify-between px-4 h-8">
-          <div className="flex items-center gap-3">
-            <span className="text-gray-400">Chế độ Admin</span>
-            <span className="text-gray-500">·</span>
-            <span className="text-emerald-400 font-medium">{user?.email}</span>
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-[#0a192f] text-white text-xs flex items-center justify-between px-3 md:px-4 h-8">
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline text-gray-400">Chế độ Admin</span>
+            <span className="hidden sm:inline text-gray-500">·</span>
+            <span className="text-emerald-400 font-medium truncate max-w-[120px] sm:max-w-none">
+              {user?.email}
+            </span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Link
               href="/admin/dashboard"
-              className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
+              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
             >
               <LayoutDashboard size={12} />
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
             </Link>
             <Link
               href={`/admin/products`}
-              className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
+              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
             >
               <Settings size={12} />
-              Quản lý SP
+              <span className="hidden sm:inline">Quản lý SP</span>
             </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-red-500/20 transition-colors text-gray-400 hover:text-red-400"
+              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/20 transition-colors text-gray-400 hover:text-red-400"
             >
               <LogOut size={12} />
-              Đăng xuất
+              <span className="hidden sm:inline">Đăng xuất</span>
             </button>
           </div>
         </div>

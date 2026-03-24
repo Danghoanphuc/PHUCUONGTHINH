@@ -51,39 +51,39 @@ function HeroSection() {
             </span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-black leading-tight mb-6 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-black leading-tight mb-4 md:mb-6 tracking-tight">
             Tiên Phong Giải Pháp <br className="hidden md:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-200">
               Gạch Khổ Lớn & Kiến Trúc xanh
             </span>
           </h1>
 
-          <p className="text-gray-300 text-base md:text-lg mb-8 max-w-xl leading-relaxed">
+          <p className="text-gray-300 text-sm md:text-lg mb-6 md:mb-8 max-w-xl leading-relaxed">
             Đơn vị dẫn đầu chuỗi cung ứng vật liệu xây dựng cho các đại dự án.
             Mang công nghệ gạch kháng khuẩn và gạch ốp lát khổ lớn vào mọi công
             trình đẳng cấp.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 md:mb-8">
             <a
               href="https://zalo.me"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-[#0068FF] hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 hover:-translate-y-1"
+              className="inline-flex items-center justify-center gap-2 bg-[#0068FF] hover:bg-blue-700 text-white font-bold px-6 py-3.5 md:px-8 md:py-4 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30"
             >
-              <PhoneCall size={20} />
+              <PhoneCall size={18} />
               Tư Vấn Miễn Phí
             </a>
             <Link
               href="/ve-chung-toi"
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md text-white font-semibold px-8 py-4 rounded-xl transition-all hover:-translate-y-1"
+              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md text-white font-semibold px-6 py-3.5 md:px-8 md:py-4 rounded-xl transition-all"
             >
-              <FileText size={20} />
+              <FileText size={18} />
               Hồ Sơ Năng Lực
             </Link>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300 font-medium">
+          <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-gray-300 font-medium">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 size={16} className="text-green-400" /> 10.000m² Kho
               Bãi
@@ -115,15 +115,15 @@ function TrustBrandsSection() {
   ];
   return (
     <div className="bg-white border-b border-gray-100 py-6">
-      <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest shrink-0">
-          ĐỐI TÁC PHÂN PHỐI CHÍNH THỨC:
+      <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest shrink-0 text-center md:text-left">
+          ĐỐI TÁC PHÂN PHỐI:
         </p>
-        <div className="flex gap-8 overflow-x-auto w-full no-scrollbar justify-between opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+        <div className="flex gap-4 md:gap-8 overflow-x-auto w-full no-scrollbar justify-start md:justify-between opacity-60 grayscale hover:grayscale-0 transition-all duration-500 pb-1">
           {brands.map((brand) => (
             <span
               key={brand}
-              className="text-xl font-black text-gray-800 tracking-tighter shrink-0"
+              className="text-base md:text-xl font-black text-gray-800 tracking-tighter shrink-0"
             >
               {brand}
             </span>
@@ -188,7 +188,7 @@ function CategoryFunnel() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {categories.map((cat, idx) => (
             <Link
               key={idx}
@@ -236,10 +236,10 @@ function BOQLeadMagnet() {
           <Star size={16} className="fill-emerald-400" />
           Hỗ trợ bóc tách khối lượng (BOQ) miễn phí
         </div>
-        <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
           Bạn Đã Có Bản Vẽ Thiết Kế?
         </h2>
-        <p className="text-gray-400 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-gray-400 text-base md:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
           Đừng mất thời gian tự nhẩm tính. Gửi bản vẽ cho Phú Cường Thịnh, đội
           ngũ kỹ thuật sẽ gửi lại{" "}
           <strong className="text-white">Bảng báo giá dự án chi tiết</strong>{" "}
@@ -252,10 +252,10 @@ function BOQLeadMagnet() {
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="Nhập Số điện thoại / Zalo của bạn..."
-            className="flex-1 px-6 py-4 rounded-xl text-gray-900 text-lg outline-none border-2 border-transparent focus:border-emerald-400 transition-colors"
+            placeholder="Số điện thoại / Zalo..."
+            className="flex-1 px-4 py-3.5 md:px-6 md:py-4 rounded-xl text-gray-900 text-base outline-none border-2 border-transparent focus:border-emerald-400 transition-colors"
           />
-          <button className="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-gray-900 font-bold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-emerald-500/40 text-lg whitespace-nowrap">
+          <button className="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-gray-900 font-bold px-6 py-3.5 md:px-8 md:py-4 rounded-xl transition-all shadow-lg text-base whitespace-nowrap">
             Nhận báo giá ngay
           </button>
         </div>
@@ -301,7 +301,7 @@ function USPSection() {
             công trình của bạn.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
           {usps.map((usp, idx) => {
             const Icon = usp.icon;
             return (
