@@ -505,70 +505,90 @@ export default function ProductDetailPage({
                       ✏️ Chỉnh sửa
                     </a>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {specs["gia_ban_le"] && (
-                      <div className="bg-white rounded-lg p-2.5 border border-amber-100">
-                        <p className="text-xs text-gray-500 mb-0.5">
-                          Giá bán lẻ
-                        </p>
-                        <p className="font-bold text-gray-900">
-                          {Number(specs["gia_ban_le"]).toLocaleString("vi-VN")}đ
-                        </p>
+                  <div className="space-y-2">
+                    {/* Giá cả */}
+                    <div className="bg-white rounded-lg p-2.5 border border-amber-100">
+                      <p className="text-xs font-semibold text-amber-700 mb-1.5">
+                        💰 Giá cả
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {specs["price_retail"] ||
+                        specs["price_m2"] ||
+                        specs["gia_ban_le"] ? (
+                          <div>
+                            <p className="text-[10px] text-gray-400">
+                              Giá bán lẻ
+                            </p>
+                            <p className="font-bold text-gray-900 text-sm">
+                              {Number(
+                                specs["price_retail"] ||
+                                  specs["price_m2"] ||
+                                  specs["gia_ban_le"],
+                              ).toLocaleString("vi-VN")}
+                              đ
+                            </p>
+                          </div>
+                        ) : null}
+                        {specs["gia_dai_ly"] ? (
+                          <div>
+                            <p className="text-[10px] text-gray-400">
+                              Giá đại lý
+                            </p>
+                            <p className="font-bold text-emerald-700 text-sm">
+                              {Number(specs["gia_dai_ly"]).toLocaleString(
+                                "vi-VN",
+                              )}
+                              đ
+                            </p>
+                          </div>
+                        ) : null}
+                        {!specs["price_retail"] &&
+                          !specs["price_m2"] &&
+                          !specs["gia_ban_le"] &&
+                          !specs["gia_dai_ly"] && (
+                            <p className="text-xs text-gray-400 italic col-span-2">
+                              Chưa có thông tin giá
+                            </p>
+                          )}
                       </div>
-                    )}
-                    {specs["gia_dai_ly"] && (
-                      <div className="bg-white rounded-lg p-2.5 border border-amber-100">
-                        <p className="text-xs text-gray-500 mb-0.5">
-                          Giá đại lý
-                        </p>
-                        <p className="font-bold text-emerald-700">
-                          {Number(specs["gia_dai_ly"]).toLocaleString("vi-VN")}đ
-                        </p>
+                    </div>
+                    {/* Nhà cung cấp */}
+                    <div className="bg-white rounded-lg p-2.5 border border-amber-100">
+                      <p className="text-xs font-semibold text-amber-700 mb-1.5">
+                        🏭 Nhà cung cấp
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-[10px] text-gray-400">Tên NCC</p>
+                          <p className="font-semibold text-gray-800 text-sm">
+                            {specs["supplier_name"] ||
+                              specs["nha_cung_cap"] ||
+                              specs["thuong_hieu"] ||
+                              "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-400">
+                            Số điện thoại
+                          </p>
+                          <p className="font-semibold text-gray-800 text-sm">
+                            {specs["supplier_phone"] || specs["sdt_ncc"] || "—"}
+                          </p>
+                        </div>
                       </div>
-                    )}
-                    {specs["nha_cung_cap"] && (
-                      <div className="bg-white rounded-lg p-2.5 border border-amber-100">
-                        <p className="text-xs text-gray-500 mb-0.5">
-                          Nhà cung cấp
-                        </p>
-                        <p className="font-semibold text-gray-800">
-                          {specs["nha_cung_cap"]}
-                        </p>
-                      </div>
-                    )}
-                    {specs["xuat_xu"] && (
-                      <div className="bg-white rounded-lg p-2.5 border border-amber-100">
-                        <p className="text-xs text-gray-500 mb-0.5">Xuất xứ</p>
-                        <p className="font-semibold text-gray-800">
-                          {specs["xuat_xu"]}
-                        </p>
-                      </div>
-                    )}
-                    {specs["thuong_hieu"] && (
-                      <div className="bg-white rounded-lg p-2.5 border border-amber-100">
-                        <p className="text-xs text-gray-500 mb-0.5">
-                          Thương hiệu
-                        </p>
-                        <p className="font-semibold text-gray-800">
-                          {specs["thuong_hieu"]}
-                        </p>
-                      </div>
-                    )}
-                    {specs["bao_hanh"] && (
-                      <div className="bg-white rounded-lg p-2.5 border border-amber-100">
-                        <p className="text-xs text-gray-500 mb-0.5">Bảo hành</p>
-                        <p className="font-semibold text-gray-800">
-                          {specs["bao_hanh"]}
-                        </p>
-                      </div>
-                    )}
+                    </div>
+                    {/* Vị trí kho */}
+                    <div className="bg-white rounded-lg p-2.5 border border-amber-100">
+                      <p className="text-xs font-semibold text-amber-700 mb-1.5">
+                        📦 Vị trí kho
+                      </p>
+                      <p className="font-semibold text-gray-800 text-sm">
+                        {specs["warehouse_location"] ||
+                          specs["vi_tri_kho"] ||
+                          "—"}
+                      </p>
+                    </div>
                   </div>
-                  {!specs["gia_ban_le"] && !specs["gia_dai_ly"] && (
-                    <p className="text-xs text-amber-600 italic">
-                      Chưa có thông tin giá. Cập nhật trong phần chỉnh sửa sản
-                      phẩm.
-                    </p>
-                  )}
                 </div>
               )}
 
