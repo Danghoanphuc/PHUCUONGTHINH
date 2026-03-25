@@ -22,13 +22,13 @@ export class EnvironmentVariables {
   @Transform(({ value }) => parseInt(value, 10))
   PORT: number = 3001;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  DATABASE_URL: string;
+  DATABASE_URL?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  JWT_SECRET: string;
+  JWT_SECRET?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -82,10 +82,10 @@ export default registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '3001', 10),
   database: {
-    url: process.env.DATABASE_URL || '',
+    url: process.env.DATABASE_URL || 'file:./dev.db',
   },
   jwt: {
-    secret: process.env.JWT_SECRET || '',
+    secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
     expiresIn: process.env.JWT_EXPIRES_IN || '24h',
   },
   aws: {
