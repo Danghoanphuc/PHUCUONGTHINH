@@ -147,23 +147,23 @@ model Product {
   @@index([name]) // For text search
   
   // JSONB GIN Indexes for Performance Optimization
-  @@index([technical_data], type: Gin)
-  @@index([marketing_content], type: Gin)
-  @@index([digital_assets], type: Gin)
-  @@index([relational_data], type: Gin)
-  @@index([ai_semantic_layer], type: Gin)
+  @@index([technical_data], type: Gin, map: "products_technical_data_gin_idx")
+  @@index([marketing_content], type: Gin, map: "products_marketing_content_gin_idx")
+  @@index([digital_assets], type: Gin, map: "products_digital_assets_gin_idx")
+  @@index([relational_data], type: Gin, map: "products_relational_data_gin_idx")
+  @@index([ai_semantic_layer], type: Gin, map: "products_ai_semantic_layer_gin_idx")
   
   // Specific JSONB path indexes for frequently queried fields
-  @@index([technical_data(path: "$.material")], type: Gin)
-  @@index([technical_data(path: "$.dimensions")], type: Gin)
-  @@index([technical_data(path: "$.performance_specs")], type: Gin)
-  @@index([marketing_content(path: "$.target_spaces")], type: Gin)
-  @@index([marketing_content(path: "$.design_styles")], type: Gin)
-  @@index([marketing_content(path: "$.short_description")], type: Gin)
-  @@index([relational_data(path: "$.color_variants")], type: Gin)
-  @@index([relational_data(path: "$.size_variants")], type: Gin)
-  @@index([ai_semantic_layer(path: "$.auto_generated_tags")], type: Gin)
-  @@index([ai_semantic_layer(path: "$.similarity_score")], type: Gin)
+  @@index([technical_data(path: "$.material")], type: Gin, map: "products_technical_data_material_idx")
+  @@index([technical_data(path: "$.dimensions")], type: Gin, map: "products_technical_data_dimensions_idx")
+  @@index([technical_data(path: "$.performance_specs")], type: Gin, map: "products_technical_data_performance_idx")
+  @@index([marketing_content(path: "$.target_spaces")], type: Gin, map: "products_marketing_content_spaces_idx")
+  @@index([marketing_content(path: "$.design_styles")], type: Gin, map: "products_marketing_content_styles_idx")
+  @@index([marketing_content(path: "$.short_description")], type: Gin, map: "products_marketing_content_desc_idx")
+  @@index([relational_data(path: "$.color_variants")], type: Gin, map: "products_relational_data_color_idx")
+  @@index([relational_data(path: "$.size_variants")], type: Gin, map: "products_relational_data_size_idx")
+  @@index([ai_semantic_layer(path: "$.auto_generated_tags")], type: Gin, map: "products_ai_semantic_layer_tags_idx")
+  @@index([ai_semantic_layer(path: "$.similarity_score")], type: Gin, map: "products_ai_semantic_layer_score_idx")
   
   @@map("products")
 }
