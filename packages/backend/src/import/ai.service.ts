@@ -16,7 +16,7 @@ export interface ExtractedProduct {
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private readonly openai: OpenAI;
+  private readonly openai: OpenAI | null;
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAYS = [1000, 2000, 4000]; // 1s, 2s, 4s
 
@@ -26,8 +26,10 @@ export class AiService {
       this.logger.warn(
         'OPENAI_API_KEY not configured. AI extraction will not work.',
       );
+      this.openai = null;
+    } else {
+      this.openai = new OpenAI({ apiKey });
     }
-    this.openai = new OpenAI({ apiKey });
   }
 
   /**
@@ -101,6 +103,10 @@ export class AiService {
     imageBuffer: Buffer,
     pageNumber: number,
   ): Promise<ExtractedProduct[]> {
+    if (!this.openai) {
+      throw new Error('OpenAI API key not configured');
+    }
+
     this.logger.log(`Extracting products from page ${pageNumber}`);
 
     return this.callWithRetry(async () => {
@@ -202,6 +208,10 @@ Trả về JSON theo format:
    * Check if OpenAI API is configured and working
    */
   async healthCheck(): Promise<boolean> {
+    if (!this.openai) {
+      return false;
+    }
+
     try {
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4o',
