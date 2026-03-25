@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     librsvg2-dev \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app/packages/backend
+WORKDIR /app
 
 COPY packages/backend/package*.json packages/backend/.npmrc ./
 COPY packages/backend/prisma ./prisma/
@@ -25,4 +25,4 @@ RUN npm run build
 
 EXPOSE 3001
 
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main"]
