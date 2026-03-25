@@ -17,7 +17,7 @@ WORKDIR /app/packages/backend
 COPY packages/backend/package*.json packages/backend/.npmrc ./
 COPY packages/backend/prisma ./prisma/
 
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps && npx prisma generate
 
 COPY packages/backend/ .
 
