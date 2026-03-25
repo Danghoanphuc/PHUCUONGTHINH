@@ -1,5 +1,5 @@
 [build]
-builder = "nixpacks"
+builder = "dockerfile"
 
 [deploy]
-startCommand = "cd packages/backend && npm run start:prod"
+startCommand = "npm run start:prod"
