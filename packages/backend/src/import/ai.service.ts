@@ -160,7 +160,7 @@ Trả về JSON theo format:
 }
 `;
 
-      const response = await this.openai.chat.completions.create({
+      const response = await this.openai!.chat.completions.create({
         model: 'gpt-4o', // Updated to latest model with vision support
         messages: [
           {
@@ -213,7 +213,7 @@ Trả về JSON theo format:
     }
 
     try {
-      const response = await this.openai.chat.completions.create({
+      const response = await this.openai!.chat.completions.create({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 5,
