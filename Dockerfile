@@ -20,9 +20,7 @@ COPY packages/backend/.npmrc ./
 COPY packages/backend/prisma ./prisma/
 
 RUN npm install --legacy-peer-deps
-RUN cp prisma/schema.postgresql.prisma prisma/schema.prisma && \
-    DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
-    npx prisma generate
+RUN npx prisma generate
 
 # Copy source code
 COPY packages/backend/src ./src/
@@ -55,9 +53,7 @@ RUN npm install --legacy-peer-deps --omit=dev
 
 # Copy prisma schema and generate client
 COPY packages/backend/prisma ./prisma/
-RUN cp prisma/schema.postgresql.prisma prisma/schema.prisma && \
-    DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
-    npx prisma generate
+RUN npx prisma generate
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
