@@ -58,9 +58,10 @@ RUN npx prisma generate
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
+COPY packages/backend/scripts ./scripts
 
 RUN echo "Production stage, checking files:" && ls -la && ls -la dist/
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "npx prisma db push && node dist/src/main"]
+CMD ["sh", "-c", "npx prisma db push && node scripts/seed-admin.js && node dist/src/main"]
