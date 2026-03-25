@@ -41,6 +41,32 @@ export interface ProductFiltersResponse {
     total: number;
     total_pages: number;
   };
+  available_filters?: {
+    inspiration?: {
+      styles?: Style[];
+      spaces?: Space[];
+    };
+  };
+}
+
+export interface Style {
+  id: string;
+  name: string;
+}
+export interface Space {
+  id: string;
+  name: string;
+}
+
+export interface ProductFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  styles?: string[];
+  spaces?: string[];
+  published?: boolean | "all";
+  technical_specs?: Record<string, any>;
 }
 
 interface BackendProductsResponse {
@@ -56,17 +82,38 @@ interface BackendProductsResponse {
 
 class ProductService {
   async getProducts(
-    page: number = 1,
+    pageOrFilters: number | ProductFilters = 1,
     limit: number = 10,
     search?: string,
   ): Promise<ProductFiltersResponse> {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      published: "all",
-    });
+    let params: URLSearchParams;
 
-    if (search) params.append("search", search);
+    if (typeof pageOrFilters === "object") {
+      // Called with filters object (public pages)
+      const f = pageOrFilters;
+      params = new URLSearchParams();
+      if (f.page) params.set("page", f.page.toString());
+      if (f.limit) params.set("limit", f.limit.toString());
+      if (f.search) params.set("search", f.search);
+      if (f.category) params.set("category", f.category);
+      if (f.published !== undefined)
+        params.set(
+          "published",
+          f.published === "all" ? "all" : f.published ? "true" : "false",
+        );
+      if (f.styles?.length) f.styles.forEach((s) => params.append("styles", s));
+      if (f.spaces?.length) f.spaces.forEach((s) => params.append("spaces", s));
+      if (f.technical_specs)
+        params.set("technical_specs", JSON.stringify(f.technical_specs));
+    } else {
+      // Called with (page, limit, search) — admin pages
+      params = new URLSearchParams({
+        page: pageOrFilters.toString(),
+        limit: limit.toString(),
+        published: "all",
+      });
+      if (search) params.append("search", search);
+    }
 
     const raw = await rawApiClient.getRaw<BackendProductsResponse>(
       `/products?${params.toString()}`,
@@ -75,6 +122,7 @@ class ProductService {
     return {
       products: raw.data ?? [],
       pagination: raw.pagination,
+      available_filters: (raw as any).available_filters,
     };
   }
 

@@ -34,6 +34,8 @@ import {
 import { MediaShowcase } from "@/components/MediaShowcase";
 import { Product } from "@/types";
 import { useAuth } from "@repo/shared-utils";
+import InternalProductInfo from "@/components/internal/InternalProductInfo";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const ZALO_URL = "https://zalo.me/0901234567";
 const TRUST_BADGES = [
@@ -225,6 +227,8 @@ export default function ProductDetailPage({
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
+  const [activeTab, setActiveTab] = useState<"specs" | "internal">("specs");
+  const [internalQueryClient] = useState(() => new QueryClient());
   const ctaRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
 
@@ -491,116 +495,59 @@ export default function ProductDetailPage({
                 </p>
               )}
 
-              {/* Panel nội bộ — chỉ hiện khi đã đăng nhập */}
-              {isAuthenticated && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
-                      🔒 Thông tin nội bộ
-                    </span>
-                    <a
-                      href={`/admin/products/${product.id}`}
-                      className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors"
+              {/* Block 2: Tab bar + nội dung tab */}
+              <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                {/* Tab bar — luôn hiện "Thông số", chỉ hiện "Nội bộ" khi authenticated */}
+                <div className="flex border-b border-gray-100">
+                  <button
+                    onClick={() => setActiveTab("specs")}
+                    className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+                      activeTab === "specs"
+                        ? "text-emerald-600 border-b-2 border-emerald-500 bg-emerald-50/40"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    Thông số
+                  </button>
+                  {isAuthenticated && (
+                    <button
+                      onClick={() => setActiveTab("internal")}
+                      className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+                        activeTab === "internal"
+                          ? "text-amber-600 border-b-2 border-amber-500 bg-amber-50/40"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
                     >
-                      ✏️ Chỉnh sửa
-                    </a>
-                  </div>
-                  <div className="space-y-2">
-                    {/* Giá cả */}
-                    <div className="bg-white rounded-lg p-2.5 border border-amber-100">
-                      <p className="text-xs font-semibold text-amber-700 mb-1.5">
-                        💰 Giá cả
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {specs["price_retail"] ||
-                        specs["price_m2"] ||
-                        specs["gia_ban_le"] ? (
-                          <div>
-                            <p className="text-[10px] text-gray-400">
-                              Giá bán lẻ
-                            </p>
-                            <p className="font-bold text-gray-900 text-sm">
-                              {Number(
-                                specs["price_retail"] ||
-                                  specs["price_m2"] ||
-                                  specs["gia_ban_le"],
-                              ).toLocaleString("vi-VN")}
-                              đ
-                            </p>
-                          </div>
-                        ) : null}
-                        {specs["gia_dai_ly"] ? (
-                          <div>
-                            <p className="text-[10px] text-gray-400">
-                              Giá đại lý
-                            </p>
-                            <p className="font-bold text-emerald-700 text-sm">
-                              {Number(specs["gia_dai_ly"]).toLocaleString(
-                                "vi-VN",
-                              )}
-                              đ
-                            </p>
-                          </div>
-                        ) : null}
-                        {!specs["price_retail"] &&
-                          !specs["price_m2"] &&
-                          !specs["gia_ban_le"] &&
-                          !specs["gia_dai_ly"] && (
-                            <p className="text-xs text-gray-400 italic col-span-2">
-                              Chưa có thông tin giá
-                            </p>
-                          )}
-                      </div>
-                    </div>
-                    {/* Nhà cung cấp */}
-                    <div className="bg-white rounded-lg p-2.5 border border-amber-100">
-                      <p className="text-xs font-semibold text-amber-700 mb-1.5">
-                        🏭 Nhà cung cấp
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <p className="text-[10px] text-gray-400">Tên NCC</p>
-                          <p className="font-semibold text-gray-800 text-sm">
-                            {specs["supplier_name"] ||
-                              specs["nha_cung_cap"] ||
-                              specs["thuong_hieu"] ||
-                              "—"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-gray-400">
-                            Số điện thoại
-                          </p>
-                          <p className="font-semibold text-gray-800 text-sm">
-                            {specs["supplier_phone"] || specs["sdt_ncc"] || "—"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Vị trí kho */}
-                    <div className="bg-white rounded-lg p-2.5 border border-amber-100">
-                      <p className="text-xs font-semibold text-amber-700 mb-1.5">
-                        📦 Vị trí kho
-                      </p>
-                      <p className="font-semibold text-gray-800 text-sm">
-                        {specs["warehouse_location"] ||
-                          specs["vi_tri_kho"] ||
-                          "—"}
-                      </p>
-                    </div>
-                  </div>
+                      🔒 Nội bộ
+                    </button>
+                  )}
                 </div>
-              )}
 
-              {/* Block 2: Box Thông số kỹ thuật (Đưa lên trước) */}
-              {Object.keys(specs).length > 0 && (
-                <div className="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm">
-                  <h3 className="text-base font-bold text-[#0a192f] mb-2.5">
-                    Thông số kỹ thuật
-                  </h3>
-                  <ProductSpecs specs={specs} />
+                {/* Tab content */}
+                <div className="p-3.5">
+                  {activeTab === "specs" && (
+                    <>
+                      {Object.keys(specs).length > 0 ? (
+                        <>
+                          <h3 className="text-base font-bold text-[#0a192f] mb-2.5">
+                            Thông số kỹ thuật
+                          </h3>
+                          <ProductSpecs specs={specs} />
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">
+                          Chưa có thông số kỹ thuật
+                        </p>
+                      )}
+                    </>
+                  )}
+                  {activeTab === "internal" && isAuthenticated && (
+                    <QueryClientProvider client={internalQueryClient}>
+                      <InternalProductInfo productId={product.id} />
+                    </QueryClientProvider>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Block 3: Khu vực CTA (Đưa xuống sau) */}
               <div

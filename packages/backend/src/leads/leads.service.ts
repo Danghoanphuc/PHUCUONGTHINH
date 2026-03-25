@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from './notification.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadFiltersDto } from './dto/lead-filters.dto';
@@ -11,7 +12,10 @@ import { Lead } from '@prisma/client';
 
 @Injectable()
 export class LeadsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   async create(createLeadDto: CreateLeadDto): Promise<Lead> {
     const { product_ids, preferred_date, ...leadData } = createLeadDto;
@@ -65,9 +69,14 @@ export class LeadsService {
       });
 
       // Fetch the lead again with products
-      return this.findOne(lead.id);
+      const finalLead = await this.findOne(lead.id);
+      // Fire-and-forget notification
+      void this.notificationService.sendLeadNotification(finalLead);
+      return finalLead;
     }
 
+    // Fire-and-forget notification
+    void this.notificationService.sendLeadNotification(lead);
     return lead;
   }
 

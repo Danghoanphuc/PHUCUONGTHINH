@@ -3,7 +3,101 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { productService, Product } from "@/lib/product-service";
+import { Eye, EyeOff, Plus, Search, Copy, Trash2, Pencil } from "lucide-react";
 
+// ── Chế độ admin: table ───────────────────────────────────────────────────────
+function AdminTable({
+  products,
+  onPublish,
+  onClone,
+  onDelete,
+}: {
+  products: Product[];
+  onPublish: (id: string, current: boolean) => void;
+  onClone: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-100 bg-gray-50/60">
+            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Tên
+            </th>
+            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              SKU
+            </th>
+            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Trạng thái
+            </th>
+            <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Thao tác
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {products.map((product) => (
+            <tr
+              key={product.id}
+              className="hover:bg-gray-50/50 transition-colors"
+            >
+              <td className="px-5 py-3.5 text-sm font-medium text-gray-900 max-w-[260px] truncate">
+                {product.name}
+              </td>
+              <td className="px-5 py-3.5 text-sm text-gray-500 font-mono">
+                {product.sku}
+              </td>
+              <td className="px-5 py-3.5">
+                <button
+                  onClick={() => onPublish(product.id, product.is_published)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${product.is_published ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                >
+                  {product.is_published ? (
+                    <>
+                      <Eye size={11} /> Đã đăng
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff size={11} /> Nháp
+                    </>
+                  )}
+                </button>
+              </td>
+              <td className="px-5 py-3.5">
+                <div className="flex items-center justify-end gap-1">
+                  <Link
+                    href={`/admin/products/${product.id}`}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    title="Sửa"
+                  >
+                    <Pencil size={14} />
+                  </Link>
+                  <button
+                    onClick={() => onClone(product.id)}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                    title="Nhân bản"
+                  >
+                    <Copy size={14} />
+                  </button>
+                  <button
+                    onClick={() => onDelete(product.id)}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    title="Xóa"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -11,7 +105,7 @@ export default function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [total, setTotal] = useState(0);
-  const limit = 10;
+  const limit = 20;
 
   const loadProducts = useCallback(async () => {
     setIsLoading(true);
@@ -21,12 +115,11 @@ export default function AdminProductsPage() {
       setProducts(response.products);
       setTotal(response.pagination.total);
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.error?.message ||
+      setError(
         err?.response?.data?.message ||
-        err?.message ||
-        "Không thể tải danh sách sản phẩm";
-      setError(msg);
+          err?.message ||
+          "Không thể tải danh sách sản phẩm",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -40,20 +133,18 @@ export default function AdminProductsPage() {
     if (!confirm("Bạn có chắc muốn xóa sản phẩm này?")) return;
     try {
       await productService.deleteProduct(id);
-      setProducts(products.filter((p) => p.id !== id));
+      setProducts((p) => p.filter((x) => x.id !== id));
     } catch (err: any) {
-      setError(err.response?.data?.error?.message || "Không thể xóa sản phẩm");
+      setError(err.response?.data?.message || "Không thể xóa sản phẩm");
     }
   };
 
   const handleClone = async (id: string) => {
     try {
       const cloned = await productService.cloneProduct(id);
-      setProducts((prev) => [cloned, ...prev]);
+      setProducts((p) => [cloned, ...p]);
     } catch (err: any) {
-      setError(
-        err.response?.data?.error?.message || "Không thể nhân bản sản phẩm",
-      );
+      setError(err.response?.data?.message || "Không thể nhân bản sản phẩm");
     }
   };
 
@@ -62,11 +153,9 @@ export default function AdminProductsPage() {
       const updated = isPublished
         ? await productService.unpublishProduct(id)
         : await productService.publishProduct(id);
-      setProducts(products.map((p) => (p.id === id ? updated : p)));
+      setProducts((p) => p.map((x) => (x.id === id ? updated : x)));
     } catch (err: any) {
-      setError(
-        err.response?.data?.error?.message || "Không thể cập nhật sản phẩm",
-      );
+      setError(err.response?.data?.message || "Không thể cập nhật sản phẩm");
     }
   };
 
@@ -74,136 +163,91 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Sản phẩm</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900">Sản phẩm</h1>
+          <p className="text-sm text-gray-400 mt-0.5">{total} sản phẩm</p>
+        </div>
         <Link
           href="/admin/products/new"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#0a192f] text-white rounded-xl text-sm font-semibold hover:bg-[#0d2137] transition-colors shadow-sm"
         >
+          <Plus size={16} />
           Thêm sản phẩm
         </Link>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-800">
+        <div className="mb-4 p-3.5 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm">
           {error}
         </div>
       )}
 
-      <div className="mb-6">
-        <input
-          type="text"
-          placeholder="Tìm kiếm sản phẩm..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="relative flex-1">
+          <Search
+            size={15}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            placeholder="Tìm theo tên, SKU..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-white"
+          />
+        </div>
       </div>
 
+      {/* Content */}
       {isLoading ? (
-        <div className="text-center py-8">Đang tải...</div>
-      ) : !products || products.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="flex justify-center py-16">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : !products.length ? (
+        <div className="text-center py-16 text-gray-400 text-sm">
           Không tìm thấy sản phẩm
         </div>
       ) : (
-        <>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                    Tên
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                    SKU
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                    Trạng thái
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {product.name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {product.sku}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <button
-                        onClick={() =>
-                          handlePublish(product.id, product.is_published)
-                        }
-                        className={`px-3 py-1 rounded text-white text-xs font-medium ${
-                          product.is_published
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-gray-400 hover:bg-gray-500"
-                        }`}
-                      >
-                        {product.is_published ? "Đã đăng" : "Nháp"}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-sm space-x-2">
-                      <Link
-                        href={`/admin/products/${product.id}`}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        Sửa
-                      </Link>
-                      <button
-                        onClick={() => handleClone(product.id)}
-                        className="text-gray-500 hover:text-gray-700 ml-2"
-                      >
-                        Nhân bản
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-red-600 hover:text-red-800 ml-2"
-                      >
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <AdminTable
+          products={products}
+          onPublish={handlePublish}
+          onClone={handleClone}
+          onDelete={handleDelete}
+        />
+      )}
 
-          <div className="mt-6 flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              Hiển thị {(page - 1) * limit + 1} đến{" "}
-              {Math.min(page * limit, total)} trong {total} sản phẩm
-            </div>
-            <div className="space-x-2">
-              <button
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
-              >
-                Trước
-              </button>
-              <span className="px-4 py-2">
-                Trang {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
-                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
-              >
-                Sau
-              </button>
-            </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between text-sm text-gray-500">
+          <span>
+            {(page - 1) * limit + 1}–{Math.min(page * limit, total)} / {total}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+            >
+              Trước
+            </button>
+            <span className="px-2 font-medium text-gray-700">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+            >
+              Sau
+            </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

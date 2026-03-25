@@ -33,7 +33,7 @@ export default function AdminEditProductPage() {
     Promise.all([
       productService.getProductById(productId),
       apiClient
-        .get<MediaRecord[]>(`/media/products/${productId}`)
+        .get<MediaRecord[]>(`/media/product/${productId}`)
         .catch(() => []),
       categoryService.getCategories(),
       tagService.getStyles(),
@@ -55,7 +55,7 @@ export default function AdminEditProductPage() {
     setIsLoading(true);
     try {
       await productService.updateProduct(productId, data);
-      router.push("/admin/products");
+      router.push("/products");
     } catch (err: any) {
       throw err;
     } finally {
@@ -74,10 +74,7 @@ export default function AdminEditProductPage() {
   return (
     <div>
       <div className="mb-8">
-        <Link
-          href="/admin/products"
-          className="text-blue-600 hover:text-blue-800"
-        >
+        <Link href="/products" className="text-blue-600 hover:text-blue-800">
           ← Quay lại Sản phẩm
         </Link>
         <h1 className="text-3xl font-bold text-gray-900 mt-4">

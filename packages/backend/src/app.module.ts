@@ -13,6 +13,9 @@ import { LeadsModule } from './leads/leads.module';
 import { ImportModule } from './import/import.module';
 import { CommonModule } from './common/common.module';
 import { HealthModule } from './health/health.module';
+import { InternalProductsModule } from './internal-products/internal-products.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { ContentModule } from './content/content.module';
 import configuration, { validate } from './config/configuration';
 
 @Module({
@@ -37,6 +40,9 @@ import configuration, { validate } from './config/configuration';
     LeadsModule,
     ImportModule,
     HealthModule,
+    InternalProductsModule,
+    InventoryModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

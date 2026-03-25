@@ -30,12 +30,6 @@ class AuthService {
       "/auth/login",
       credentials,
     );
-    if (response.accessToken) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(TOKEN_KEY, response.accessToken);
-        localStorage.setItem("auth_user", JSON.stringify(response.user));
-      }
-    }
     return response;
   }
 

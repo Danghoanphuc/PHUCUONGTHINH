@@ -51,7 +51,7 @@ export default function AdminNewProductPage() {
       const created = await productService.createProduct(
         data as CreateProductRequest,
       );
-      router.push("/admin/products");
+      router.push("/products");
       return created;
     } catch (err: any) {
       throw err;
@@ -67,10 +67,7 @@ export default function AdminNewProductPage() {
   return (
     <div>
       <div className="mb-8">
-        <Link
-          href="/admin/products"
-          className="text-blue-600 hover:text-blue-800"
-        >
+        <Link href="/products" className="text-blue-600 hover:text-blue-800">
           ← Quay lại Sản phẩm
         </Link>
         <h1 className="text-3xl font-bold text-gray-900 mt-4">

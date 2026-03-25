@@ -27,7 +27,18 @@ code {
     source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-/* Scrollbar styling */
+/* Safe area for iPhone notch / home indicator */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Prevent content from being hidden behind bottom nav on mobile */
+@media (max-width: 1023px) {
+  .admin-content {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -74,3 +85,5 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Scrollbar styling */

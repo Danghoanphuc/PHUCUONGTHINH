@@ -34,7 +34,7 @@ export default function AdminMediaPage() {
   useEffect(() => {
     if (!selectedProduct) return;
     apiClient
-      .get<MediaRecord[]>(`/media/products/${selectedProduct}`)
+      .get<MediaRecord[]>(`/media/product/${selectedProduct}`)
       .then((data) =>
         setMedia((data || []).sort((a, b) => a.sort_order - b.sort_order)),
       )

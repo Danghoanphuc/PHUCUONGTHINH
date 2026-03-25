@@ -44,11 +44,12 @@ model Product {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  category      Category            @relation(fields: [category_id], references: [id])
-  media         Media[]
-  style_tags    ProductStyleTag[]
-  space_tags    ProductSpaceTag[]
-  lead_products LeadProduct[]
+  category         Category            @relation(fields: [category_id], references: [id])
+  media            Media[]
+  style_tags       ProductStyleTag[]
+  space_tags       ProductSpaceTag[]
+  lead_products    LeadProduct[]
+  productInternal  ProductInternal?
 
   @@index([category_id])
   @@index([is_published])
@@ -202,4 +203,83 @@ model ExtractedProduct {
   @@index([import_job_id])
   @@index([validation_status])
   @@map("extracted_products")
+}
+
+model ProductInternal {
+  id               String   @id @default(cuid())
+  product_id       String   @unique
+  cost_price       Float?
+  supplier_name    String?
+  supplier_contact String?
+  internal_notes   String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  product      Product      @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  stock_levels StockLevel[]
+
+  @@map("product_internals")
+}
+
+model Warehouse {
+  id         String   @id @default(cuid())
+  name       String
+  location   String?
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  stock_levels      StockLevel[]
+  inventory_records InventoryRecord[]
+
+  @@map("warehouses")
+}
+
+model StockLevel {
+  id           String   @id @default(cuid())
+  product_id   String
+  warehouse_id String
+  quantity     Int      @default(0)
+  updated_at   DateTime @updatedAt
+
+  product_internal ProductInternal @relation(fields: [product_id], references: [product_id])
+  warehouse        Warehouse       @relation(fields: [warehouse_id], references: [id])
+
+  @@unique([product_id, warehouse_id])
+  @@index([product_id])
+  @@index([warehouse_id])
+  @@map("stock_levels")
+}
+
+model InventoryRecord {
+  id           String   @id @default(cuid())
+  product_id   String
+  warehouse_id String
+  type         String   // "in" | "out" | "adjustment"
+  quantity     Int
+  note         String?
+  created_by   String
+  created_at   DateTime @default(now())
+
+  warehouse Warehouse @relation(fields: [warehouse_id], references: [id])
+
+  @@index([product_id])
+  @@index([warehouse_id])
+  @@index([created_at])
+  @@map("inventory_records")
+}
+
+model ContentItem {
+  id           String   @id @default(cuid())
+  title        String
+  type         String   // "design" | "project" | "construction"
+  description  String?
+  is_published Boolean  @default(false)
+  images       String   @default("[]") // JSON array of media URLs
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@index([type])
+  @@index([is_published])
+  @@map("content_items")
 }
