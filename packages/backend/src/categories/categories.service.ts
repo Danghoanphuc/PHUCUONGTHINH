@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -23,7 +27,10 @@ export class CategoriesService {
   /**
    * Ensure slug is unique by appending number if needed
    */
-  private async ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
+  private async ensureUniqueSlug(
+    baseSlug: string,
+    excludeId?: string,
+  ): Promise<string> {
     let slug = baseSlug;
     let counter = 1;
 
@@ -45,10 +52,10 @@ export class CategoriesService {
   }
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
-    const { name, parent_id } = createCategoryDto;
+    const { name, slug: providedSlug, parent_id } = createCategoryDto;
 
-    // Validate parent exists if provided
-    if (parent_id) {
+    // Validate parent exists if provided and not empty
+    if (parent_id && parent_id.trim() !== '') {
       const parent = await this.prisma.category.findUnique({
         where: { id: parent_id },
       });
@@ -58,14 +65,14 @@ export class CategoriesService {
     }
 
     // Generate unique slug
-    const baseSlug = this.generateSlug(name);
+    const baseSlug = providedSlug || this.generateSlug(name);
     const slug = await this.ensureUniqueSlug(baseSlug);
 
     return this.prisma.category.create({
       data: {
         name,
         slug,
-        parent_id,
+        parent_id: parent_id && parent_id.trim() !== '' ? parent_id : null,
       },
       include: {
         parent: true,
@@ -136,22 +143,27 @@ export class CategoriesService {
   async findHierarchy(id: string): Promise<Category[]> {
     const category = await this.findOne(id);
     const allCategories = await this.findAll();
-    
+
     const getDescendants = (categoryId: string): Category[] => {
-      const children = allCategories.filter(cat => cat.parent_id === categoryId);
+      const children = allCategories.filter(
+        (cat) => cat.parent_id === categoryId,
+      );
       const descendants = [...children];
-      
+
       for (const child of children) {
         descendants.push(...getDescendants(child.id));
       }
-      
+
       return descendants;
     };
 
     return [category, ...getDescendants(id)];
   }
 
-  async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+  async update(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<Category> {
     const existingCategory = await this.findOne(id);
     const { name, parent_id } = updateCategoryDto;
 
@@ -170,9 +182,11 @@ export class CategoriesService {
 
       // Check for circular reference
       const hierarchy = await this.findHierarchy(id);
-      const descendantIds = hierarchy.map(cat => cat.id);
+      const descendantIds = hierarchy.map((cat) => cat.id);
       if (descendantIds.includes(parent_id)) {
-        throw new BadRequestException('Cannot create circular reference in category hierarchy');
+        throw new BadRequestException(
+          'Cannot create circular reference in category hierarchy',
+        );
       }
     }
 
@@ -207,7 +221,7 @@ export class CategoriesService {
 
     if (productCount > 0) {
       throw new BadRequestException(
-        `Cannot delete category with ${productCount} assigned products. Please reassign products first.`
+        `Cannot delete category with ${productCount} assigned products. Please reassign products first.`,
       );
     }
 
@@ -218,7 +232,7 @@ export class CategoriesService {
 
     if (childrenCount > 0) {
       throw new BadRequestException(
-        'Cannot delete category with subcategories. Please delete or reassign subcategories first.'
+        'Cannot delete category with subcategories. Please delete or reassign subcategories first.',
       );
     }
 
