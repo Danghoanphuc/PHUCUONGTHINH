@@ -719,8 +719,8 @@ export default function CataloguePage() {
     queryKey: ["catalogue-products", debouncedSearch],
     queryFn: async () => {
       const url = debouncedSearch
-        ? `/products?search=${encodeURIComponent(debouncedSearch)}&limit=20`
-        : "/products?limit=20";
+        ? `/products?search=${encodeURIComponent(debouncedSearch)}&limit=20&published=all`
+        : "/products?limit=20&published=all";
       const res = await apiClient.get<any>(url);
       // Handle both array and paginated response shapes
       if (Array.isArray(res)) return res;
