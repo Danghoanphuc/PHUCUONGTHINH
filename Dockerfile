@@ -63,4 +63,4 @@ RUN echo "Production stage, checking files:" && ls -la && ls -la dist/
 
 EXPOSE 3001
 
-CMD ["node", "dist/src/main"]
+CMD ["sh", "-c", "npx prisma db push && node dist/src/main"]
