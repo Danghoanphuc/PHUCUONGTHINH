@@ -50,5 +50,4 @@ USER nextjs
 
 EXPOSE 3000
 
-# Debug: list files to find server.js location
-CMD ["sh", "-c", "find /app -name 'server.js' 2>/dev/null && ls -la /app"]
+CMD ["node", "server.js"]
