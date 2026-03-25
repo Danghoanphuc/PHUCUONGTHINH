@@ -18,6 +18,7 @@ WORKDIR /app
 COPY packages/backend/package*.json ./
 COPY packages/backend/.npmrc ./
 COPY packages/backend/prisma ./prisma/
+COPY packages/backend/prisma.config.ts ./
 
 RUN npm install --legacy-peer-deps
 RUN cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate
@@ -53,6 +54,7 @@ RUN npm install --legacy-peer-deps --omit=dev
 
 # Copy prisma schema and generate client
 COPY packages/backend/prisma ./prisma/
+COPY packages/backend/prisma.config.ts ./
 RUN cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate
 
 # Copy built application from builder
