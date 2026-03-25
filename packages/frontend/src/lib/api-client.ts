@@ -1,6 +1,6 @@
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
-// Build time: 2026-03-25
+// v2 - force rebuild with env var
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
