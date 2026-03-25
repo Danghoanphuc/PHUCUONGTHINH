@@ -62,4 +62,4 @@ RUN echo "Production stage, checking files:" && ls -la && ls -la dist/
 
 EXPOSE 3001
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
