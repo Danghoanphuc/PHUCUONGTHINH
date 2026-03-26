@@ -25,6 +25,7 @@ import {
   updateSortOrder,
   MediaRecord,
 } from "@/lib/media-service";
+import { apiClient } from "@/lib/api-client";
 
 export interface ProductFormProps {
   product?: Product & { media?: MediaRecord[] };
@@ -427,7 +428,6 @@ export function ProductForm({
 
         if (hasInternalInfo) {
           try {
-            const { apiClient } = await import("@/lib/api-client");
             await apiClient.patch(`/products/${productId}/internal`, {
               internal_notes: internalInfo.warehouse_location,
               supplier_name: internalInfo.supplier_name,
