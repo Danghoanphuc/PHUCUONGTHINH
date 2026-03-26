@@ -5,6 +5,7 @@ import { ResponseInterceptor } from './interceptors/response.interceptor';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
 import { LoggerService } from './services/logger.service';
 import { CacheService } from './services/cache.service';
+import { RedisCacheService } from './services/redis-cache.service';
 import { DatabaseOptimizationService } from './services/database-optimization.service';
 import { CdnCachingService } from './services/cdn-caching.service';
 import { RateLimiterService } from './services/rate-limiter.service';
@@ -28,6 +29,7 @@ import { PrismaModule } from '../prisma/prisma.module';
   providers: [
     LoggerService,
     CacheService,
+    RedisCacheService,
     DatabaseOptimizationService,
     CdnCachingService,
     RateLimiterService,
@@ -49,6 +51,7 @@ import { PrismaModule } from '../prisma/prisma.module';
   exports: [
     LoggerService,
     CacheService,
+    RedisCacheService,
     DatabaseOptimizationService,
     CdnCachingService,
     RateLimiterService,
