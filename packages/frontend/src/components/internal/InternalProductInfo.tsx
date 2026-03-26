@@ -39,10 +39,17 @@ export default function InternalProductInfo({
   const { data, isLoading, isError, refetch } =
     useQuery<InternalProductData | null>({
       queryKey: ["internal-product", productId],
-      queryFn: () =>
-        apiClient.get<InternalProductData | null>(
-          `/products/${productId}/internal`,
-        ),
+      queryFn: async () => {
+        try {
+          const result = await apiClient.get<InternalProductData | null>(
+            `/products/${productId}/internal`,
+          );
+          return result;
+        } catch (err: any) {
+          console.error("[InternalProductInfo] API Error:", err.message);
+          throw err;
+        }
+      },
     });
 
   if (isLoading) {
