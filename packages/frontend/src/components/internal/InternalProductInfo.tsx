@@ -36,14 +36,30 @@ interface InternalProductInfoProps {
 export default function InternalProductInfo({
   productId,
 }: InternalProductInfoProps) {
-  const { data, isLoading, isError, refetch } =
+  const { data, isLoading, isError, error, refetch } =
     useQuery<InternalProductData | null>({
       queryKey: ["internal-product", productId],
-      queryFn: () =>
-        apiClient.get<InternalProductData | null>(
-          `/products/${productId}/internal`,
-        ),
+      queryFn: async () => {
+        console.log("[InternalProductInfo] Fetching data for:", productId);
+        try {
+          const result = await apiClient.get<InternalProductData | null>(
+            `/products/${productId}/internal`,
+          );
+          console.log("[InternalProductInfo] Data received:", result);
+          return result;
+        } catch (err) {
+          console.error("[InternalProductInfo] Fetch error:", err);
+          throw err;
+        }
+      },
     });
+
+  console.log("[InternalProductInfo] Query state:", {
+    isLoading,
+    isError,
+    error,
+    hasData: !!data,
+  });
 
   if (isLoading) {
     return (

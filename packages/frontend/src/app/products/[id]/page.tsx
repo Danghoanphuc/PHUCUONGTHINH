@@ -230,7 +230,12 @@ export default function ProductDetailPage({
   const [activeTab, setActiveTab] = useState<"specs" | "internal">("specs");
   const [internalQueryClient] = useState(() => new QueryClient());
   const ctaRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+
+  // Debug: Log authentication status
+  useEffect(() => {
+    console.log("[ProductDetail] Auth status:", { isAuthenticated, user });
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     if (!params.id) return;
