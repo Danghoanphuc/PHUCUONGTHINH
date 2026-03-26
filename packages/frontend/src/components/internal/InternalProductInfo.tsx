@@ -50,43 +50,25 @@ export default function InternalProductInfo({
   const { data, isLoading, isError, error, refetch } =
     useQuery<InternalProductData | null>({
       queryKey: ["internal-product", productId],
-      queryFn: async () => {
-        console.log("[InternalProductInfo] Fetching data for:", productId);
-        try {
-          const result = await apiClient.get<InternalProductData | null>(
-            `/products/${productId}/internal`,
-          );
-          console.log("[InternalProductInfo] Data received:", result);
-          return result;
-        } catch (err) {
-          console.error("[InternalProductInfo] Fetch error:", err);
-          throw err;
-        }
-      },
+      queryFn: () =>
+        apiClient.get<InternalProductData | null>(
+          `/products/${productId}/internal`,
+        ),
     });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: {
+    mutationFn: (data: {
       cost_price?: number;
       supplier_name?: string;
       supplier_contact?: string;
       internal_notes?: string;
-    }) => {
-      return apiClient.patch(`/products/${productId}/internal`, data);
-    },
+    }) => apiClient.patch(`/products/${productId}/internal`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["internal-product", productId],
       });
       setIsEditing(false);
     },
-  });
-
-  console.log("[InternalProductInfo] Query state:", {
-    isLoading,
-    isError,
-    error,
-    hasData: !!data,
   });
 
   const handleEdit = () => {

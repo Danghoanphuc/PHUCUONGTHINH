@@ -232,11 +232,6 @@ export default function ProductDetailPage({
   const ctaRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, user } = useAuth();
 
-  // Debug: Log authentication status
-  useEffect(() => {
-    console.log("[ProductDetail] Auth status:", { isAuthenticated, user });
-  }, [isAuthenticated, user]);
-
   useEffect(() => {
     if (!params.id) return;
     setIsLoading(true);
