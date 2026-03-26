@@ -163,7 +163,7 @@ export class CombinedFilterService {
     const cached = await this.cacheService.get(cacheKey);
     if (cached) {
       console.log('✅ CACHE HIT!');
-      return cached;
+      return cached as FilterResponse;
     }
     console.log('❌ CACHE MISS - fetching from database');
 
