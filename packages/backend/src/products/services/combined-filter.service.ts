@@ -63,6 +63,11 @@ export class CombinedFilterService {
   ) {}
 
   async filterProducts(filters: CombinedFilters): Promise<FilterResponse> {
+    console.log(
+      '🔍 CombinedFilterService.filterProducts called with:',
+      JSON.stringify(filters),
+    );
+
     const {
       categories,
       search,
@@ -151,32 +156,74 @@ export class CombinedFilterService {
           : { AND: whereConditions }
         : {};
 
-    // Execute queries
+    // Try cache first
+    const cacheKey = `products:${JSON.stringify(finalWhere)}:${page}:${limit}`;
+    console.log(`📦 Checking cache for key: ${cacheKey}`);
+
+    const cached = await this.cacheService.get(cacheKey);
+    if (cached) {
+      console.log('✅ CACHE HIT!');
+      return cached;
+    }
+    console.log('❌ CACHE MISS - fetching from database');
+
+    // Execute queries with optimized select
     const [products, total, availableFilters] = await Promise.all([
       this.prisma.product.findMany({
         where: finalWhere,
-        include: {
-          category: true,
+        select: {
+          id: true,
+          name: true,
+          sku: true,
+          description: true,
+          category_id: true,
+          technical_specs: true,
+          is_published: true,
+          created_at: true,
+          updated_at: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
           style_tags: {
-            include: {
-              style: true,
+            select: {
+              style: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
           },
           space_tags: {
-            include: {
-              space: true,
+            select: {
+              space: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
           },
           media: {
+            select: {
+              id: true,
+              file_url: true,
+              file_type: true,
+              media_type: true,
+              sort_order: true,
+              is_cover: true,
+              alt_text: true,
+            },
             orderBy: {
               sort_order: 'asc',
             },
           },
         },
-        orderBy: [
-          { is_published: 'desc' }, // Published products first
-          { created_at: 'desc' },
-        ],
+        orderBy: [{ is_published: 'desc' }, { created_at: 'desc' }],
         skip,
         take: limit,
       }),
@@ -190,7 +237,7 @@ export class CombinedFilterService {
       technical_specs: this.parseJsonSafely(product.technical_specs),
     }));
 
-    return {
+    const result = {
       products: productsWithParsedSpecs,
       pagination: {
         page,
@@ -200,6 +247,12 @@ export class CombinedFilterService {
       },
       available_filters: availableFilters,
     };
+
+    // Cache for 5 minutes
+    console.log(`💾 Caching result for key: ${cacheKey}`);
+    await this.cacheService.set(cacheKey, result, { ttl: 300 });
+
+    return result;
   }
 
   private async getAvailableFilters(baseWhere: any = {}) {

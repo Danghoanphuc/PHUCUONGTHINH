@@ -55,9 +55,8 @@ model Product {
   @@index([category_id])
   @@index([is_published])
   @@index([created_at])
-  @@index([name]) // Add index for search
-  @@index([sku]) // Add index for search
-  @@index([description]) // Add index for search
+  @@index([is_published, category_id])
+  @@index([is_published, created_at])
   @@map("products")
 }
 
@@ -91,6 +90,8 @@ model ProductStyleTag {
   style   Style   @relation(fields: [style_id], references: [id], onDelete: Cascade)
 
   @@id([product_id, style_id])
+  @@index([product_id])
+  @@index([style_id])
   @@map("product_style_tags")
 }
 
@@ -102,6 +103,8 @@ model ProductSpaceTag {
   space   Space   @relation(fields: [space_id], references: [id], onDelete: Cascade)
 
   @@id([product_id, space_id])
+  @@index([product_id])
+  @@index([space_id])
   @@map("product_space_tags")
 }
 
@@ -123,6 +126,8 @@ model Media {
   @@index([product_id])
   @@index([media_type])
   @@index([sort_order])
+  @@index([is_cover])
+  @@index([product_id, is_cover])
   @@map("media")
 }
 

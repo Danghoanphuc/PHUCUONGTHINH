@@ -34,13 +34,15 @@ export class PerformanceTestController {
 
     // Test 4: Count all tables
     const start4 = Date.now();
-    const [products, categories, media] = await Promise.all([
+    const [products, categories, media, styles, spaces] = await Promise.all([
       this.prisma.product.count(),
       this.prisma.category.count(),
       this.prisma.media.count(),
+      this.prisma.style.count(),
+      this.prisma.space.count(),
     ]);
     results.parallelQueries = `${Date.now() - start4}ms`;
-    results.counts = { products, categories, media };
+    results.counts = { products, categories, media, styles, spaces };
 
     return {
       message: 'Performance test results',
