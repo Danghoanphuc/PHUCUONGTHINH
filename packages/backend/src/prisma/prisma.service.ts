@@ -23,8 +23,22 @@ export class PrismaService
             : ['query', 'info', 'warn', 'error'],
       });
     } else {
-      // Use SQLite with adapter
+      // Use SQLite with adapter and performance optimizations
       const adapter = new PrismaBetterSQLite3({ url: dbUrl });
+
+      // Apply EXTREME performance pragmas to the underlying database
+      const db = (adapter as any).db;
+      if (db) {
+        db.pragma('journal_mode = WAL');
+        db.pragma('synchronous = NORMAL');
+        db.pragma('cache_size = -64000');
+        db.pragma('temp_store = MEMORY');
+        db.pragma('mmap_size = 268435456');
+        db.pragma('page_size = 8192');
+        db.pragma('busy_timeout = 5000');
+        db.pragma('wal_autocheckpoint = 1000');
+      }
+
       super({
         adapter,
         log:
@@ -37,6 +51,7 @@ export class PrismaService
 
   async onModuleInit() {
     await this.$connect();
+    console.log('🚀 Database connected with EXTREME performance mode');
   }
 
   async onModuleDestroy() {

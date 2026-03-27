@@ -16,17 +16,19 @@ export function TechnicalFilters({ onFilterChange }: TechnicalFiltersProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <label className="block text-lg font-semibold mb-3">Định dạng</label>
+        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+          Định dạng
+        </label>
         <select
           value={specs.format || ""}
           onChange={(e) =>
             handleSpecChange("format", e.target.value || undefined)
           }
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-accent"
+          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-gray-50"
         >
-          <option value="">Tất cả định dạng</option>
+          <option value="">Tất cả</option>
           <option value="Slab">Slab</option>
           <option value="Mosaic">Mosaic</option>
           <option value="Hexagon">Hexagon</option>
@@ -34,15 +36,17 @@ export function TechnicalFilters({ onFilterChange }: TechnicalFiltersProps) {
       </div>
 
       <div>
-        <label className="block text-lg font-semibold mb-3">Chất liệu</label>
+        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+          Chất liệu
+        </label>
         <select
           value={specs.material || ""}
           onChange={(e) =>
             handleSpecChange("material", e.target.value || undefined)
           }
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-accent"
+          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-gray-50"
         >
-          <option value="">Tất cả chất liệu</option>
+          <option value="">Tất cả</option>
           <option value="Porcelain">Sứ</option>
           <option value="Ceramic">Gốm</option>
           <option value="Natural Stone">Đá tự nhiên</option>
@@ -50,15 +54,17 @@ export function TechnicalFilters({ onFilterChange }: TechnicalFiltersProps) {
       </div>
 
       <div>
-        <label className="block text-lg font-semibold mb-3">Bề mặt</label>
+        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+          Bề mặt
+        </label>
         <select
           value={specs.finish || ""}
           onChange={(e) =>
             handleSpecChange("finish", e.target.value || undefined)
           }
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-accent"
+          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-gray-50"
         >
-          <option value="">Tất cả bề mặt</option>
+          <option value="">Tất cả</option>
           <option value="Matte">Mờ</option>
           <option value="Glossy">Bóng</option>
           <option value="Textured">Nhám</option>
@@ -66,15 +72,17 @@ export function TechnicalFilters({ onFilterChange }: TechnicalFiltersProps) {
       </div>
 
       <div>
-        <label className="block text-lg font-semibold mb-3">Chống trơn</label>
+        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+          Chống trơn
+        </label>
         <select
           value={specs.slip_resistance || ""}
           onChange={(e) =>
             handleSpecChange("slip_resistance", e.target.value || undefined)
           }
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-accent"
+          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-gray-50"
         >
-          <option value="">Tất cả mức độ</option>
+          <option value="">Tất cả</option>
           <option value="R9">R9</option>
           <option value="R10">R10</option>
           <option value="R11">R11</option>

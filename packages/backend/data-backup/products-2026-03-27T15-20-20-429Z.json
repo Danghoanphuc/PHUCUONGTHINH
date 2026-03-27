@@ -1,0 +1,203 @@
+[
+  {
+    "id": "cmn8t37eh0007my0d38mnt8iq",
+    "name": "d (Bản sao)",
+    "sku": "d-COPY-MN8T35WZ",
+    "description": null,
+    "category_id": "cmn6c7o3y0001ox1p202r7dkb",
+    "technical_specs": {
+      "size": "20x120",
+      "size_custom": "d",
+      "material": "Porcelain (Đá đồng chất)",
+      "surface_finish": "Mờ (Matte)",
+      "pieces_per_box": 2,
+      "m2_per_box": 2,
+      "kg_per_box": 2,
+      "stock_status": "pre_order",
+      "price_retail": "1111232",
+      "price_dealer": "11111",
+      "unit": "M2",
+      "price_note": "ok",
+      "price_promo": "111",
+      "promo_start": "2026-04-03",
+      "promo_end": "2026-04-03",
+      "slug": "d",
+      "meta_title": "d",
+      "badges": [
+        "Best Seller",
+        "Hàng hiếm",
+        "Độc quyền"
+      ]
+    },
+    "is_published": true,
+    "created_at": "2026-03-27T11:16:31.673Z",
+    "updated_at": "2026-03-27T11:16:41.264Z",
+    "category": {
+      "id": "cmn6c7o3y0001ox1p202r7dkb",
+      "name": "s",
+      "slug": "s"
+    },
+    "style_tags": [],
+    "space_tags": [],
+    "media": []
+  },
+  {
+    "id": "cmn6cti2f0001ow1pugs4teas",
+    "name": "dsd",
+    "sku": "ddđ",
+    "description": "d",
+    "category_id": "cmn6c7o3y0001ox1p202r7dkb",
+    "technical_specs": {
+      "size": "20x120",
+      "material": "Porcelain (Đá đồng chất)",
+      "surface_finish": "Lappato (Bán bóng)",
+      "pieces_per_box": 2,
+      "m2_per_box": 2,
+      "kg_per_box": 2,
+      "stock_status": "out_of_stock",
+      "slug": "dsd",
+      "meta_title": "dsd d",
+      "meta_description": "d",
+      "price_retail": "132213",
+      "price_dealer": "11",
+      "unit": "M2dff"
+    },
+    "is_published": true,
+    "created_at": "2026-03-25T18:05:32.727Z",
+    "updated_at": "2026-03-27T10:31:41.961Z",
+    "category": {
+      "id": "cmn6c7o3y0001ox1p202r7dkb",
+      "name": "s",
+      "slug": "s"
+    },
+    "style_tags": [],
+    "space_tags": [],
+    "media": []
+  },
+  {
+    "id": "cmn6ccd310003ox1pwcj82sw6",
+    "name": "d",
+    "sku": "d",
+    "description": null,
+    "category_id": "cmn6c7o3y0001ox1p202r7dkb",
+    "technical_specs": {
+      "size": "20x120",
+      "size_custom": "d",
+      "material": "Porcelain (Đá đồng chất)",
+      "surface_finish": "Mờ (Matte)",
+      "pieces_per_box": 2,
+      "m2_per_box": 2,
+      "kg_per_box": 2,
+      "stock_status": "pre_order",
+      "price_retail": "1111232",
+      "price_dealer": "11111",
+      "unit": "M2",
+      "price_note": "ok",
+      "price_promo": "111",
+      "promo_start": "2026-04-03",
+      "promo_end": "2026-04-03",
+      "slug": "d",
+      "meta_title": "d",
+      "badges": [
+        "Best Seller",
+        "Hàng hiếm",
+        "Độc quyền"
+      ]
+    },
+    "is_published": true,
+    "created_at": "2026-03-25T17:52:13.117Z",
+    "updated_at": "2026-03-26T07:12:55.783Z",
+    "category": {
+      "id": "cmn6c7o3y0001ox1p202r7dkb",
+      "name": "s",
+      "slug": "s"
+    },
+    "style_tags": [],
+    "space_tags": [],
+    "media": []
+  },
+  {
+    "id": "cmn8t2zjt0005my0dcvt15o0w",
+    "name": "d (Bản sao)",
+    "sku": "d-COPY-MN8T2Y2M",
+    "description": null,
+    "category_id": "cmn6c7o3y0001ox1p202r7dkb",
+    "technical_specs": {
+      "size": "20x120",
+      "size_custom": "d",
+      "material": "Porcelain (Đá đồng chất)",
+      "surface_finish": "Mờ (Matte)",
+      "pieces_per_box": 2,
+      "m2_per_box": 2,
+      "kg_per_box": 2,
+      "stock_status": "pre_order",
+      "price_retail": "1111232",
+      "price_dealer": "11111",
+      "unit": "M2",
+      "price_note": "ok",
+      "price_promo": "111",
+      "promo_start": "2026-04-03",
+      "promo_end": "2026-04-03",
+      "slug": "d",
+      "meta_title": "d",
+      "badges": [
+        "Best Seller",
+        "Hàng hiếm",
+        "Độc quyền"
+      ]
+    },
+    "is_published": false,
+    "created_at": "2026-03-27T11:16:21.497Z",
+    "updated_at": "2026-03-27T11:16:21.497Z",
+    "category": {
+      "id": "cmn6c7o3y0001ox1p202r7dkb",
+      "name": "s",
+      "slug": "s"
+    },
+    "style_tags": [],
+    "space_tags": [],
+    "media": []
+  },
+  {
+    "id": "cmn8t2wmx0003my0dv9wnz61v",
+    "name": "d (Bản sao)",
+    "sku": "d-COPY-MN8T2V4L",
+    "description": null,
+    "category_id": "cmn6c7o3y0001ox1p202r7dkb",
+    "technical_specs": {
+      "size": "20x120",
+      "size_custom": "d",
+      "material": "Porcelain (Đá đồng chất)",
+      "surface_finish": "Mờ (Matte)",
+      "pieces_per_box": 2,
+      "m2_per_box": 2,
+      "kg_per_box": 2,
+      "stock_status": "pre_order",
+      "price_retail": "1111232",
+      "price_dealer": "11111",
+      "unit": "M2",
+      "price_note": "ok",
+      "price_promo": "111",
+      "promo_start": "2026-04-03",
+      "promo_end": "2026-04-03",
+      "slug": "d",
+      "meta_title": "d",
+      "badges": [
+        "Best Seller",
+        "Hàng hiếm",
+        "Độc quyền"
+      ]
+    },
+    "is_published": false,
+    "created_at": "2026-03-27T11:16:17.720Z",
+    "updated_at": "2026-03-27T11:16:17.720Z",
+    "category": {
+      "id": "cmn6c7o3y0001ox1p202r7dkb",
+      "name": "s",
+      "slug": "s"
+    },
+    "style_tags": [],
+    "space_tags": [],
+    "media": []
+  }
+]

@@ -744,12 +744,18 @@ export default function CataloguePage() {
   }
 
   return (
-    <div className="px-4 pt-6 pb-24">
+    <div className="min-h-screen px-4 pt-4 pb-28 lg:px-6 lg:pt-6 lg:pb-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Catalogue</h1>
-          <p className="text-sm text-gray-500">Quản lý danh mục sản phẩm</p>
+      <div className="mb-4">
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
+              Catalogue
+            </h1>
+            <p className="text-xs lg:text-sm text-gray-500">
+              Quản lý danh mục sản phẩm
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <button
@@ -757,16 +763,16 @@ export default function CataloguePage() {
               setShowImport((v) => !v);
               setShowAddForm(false);
             }}
-            className="px-3 py-2 bg-amber-100 text-amber-700 text-sm font-medium rounded-lg border border-amber-200"
+            className="flex-1 lg:flex-none px-3 py-2.5 bg-amber-100 text-amber-700 text-xs lg:text-sm font-medium rounded-lg border border-amber-200 active:scale-95 transition-transform"
           >
-            Import PDF
+            📄 Import
           </button>
           <button
             onClick={() => {
               setShowAddForm((v) => !v);
               setShowImport(false);
             }}
-            className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg"
+            className="flex-1 lg:flex-none px-3 py-2.5 bg-blue-600 text-white text-xs lg:text-sm font-medium rounded-lg active:scale-95 transition-transform"
           >
             + Thêm
           </button>
@@ -788,8 +794,8 @@ export default function CataloguePage() {
       <div className="mb-4">
         <input
           type="search"
-          className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          placeholder="Tìm theo tên hoặc SKU..."
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
+          placeholder="🔍 Tìm theo tên hoặc SKU..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -817,49 +823,54 @@ export default function CataloguePage() {
       )}
 
       {/* Product list */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {(products ?? []).map((product) => {
           const isEditing = editingId === product.id;
           return (
             <div
               key={product.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden active:shadow-md transition-shadow"
             >
               {/* Row */}
               <button
-                className="w-full text-left px-4 py-3 flex items-center gap-3"
+                className="w-full text-left px-4 py-4 flex items-start gap-3 active:bg-gray-50 transition-colors"
                 onClick={() => toggleEdit(product.id)}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">
+                  <p className="font-bold text-gray-900 text-sm lg:text-base mb-1 line-clamp-2">
                     {product.name}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    SKU: {product.sku}
-                    {product.category_id && categoryMap[product.category_id]
-                      ? ` · ${categoryMap[product.category_id]}`
-                      : ""}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                    <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">
+                      {product.sku}
+                    </span>
+                    {product.category_id &&
+                      categoryMap[product.category_id] && (
+                        <span className="text-gray-400">
+                          · {categoryMap[product.category_id]}
+                        </span>
+                      )}
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
+                <div className="flex flex-col items-end gap-2 shrink-0">
                   <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    className={`text-[10px] lg:text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${
                       product.is_published
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-100 text-gray-500"
                     }`}
                   >
-                    {product.is_published ? "Đã đăng" : "Nháp"}
+                    {product.is_published ? "✓ Đăng" : "Nháp"}
+                  </span>
+                  <span className="text-gray-400 text-lg">
+                    {isEditing ? "▲" : "▼"}
                   </span>
                 </div>
-                <span className="text-gray-400 ml-1 text-sm">
-                  {isEditing ? "▲" : "▼"}
-                </span>
               </button>
 
               {/* Edit form inline */}
               {isEditing && (
-                <div className="border-t border-gray-100 px-4 pb-4">
+                <div className="border-t border-gray-100 px-4 pb-4 bg-gray-50">
                   <EditProductForm
                     product={product}
                     categories={categories ?? []}

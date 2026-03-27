@@ -22,28 +22,27 @@ export function InspirationFilters({
   onSpaceChange,
 }: InspirationFiltersProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {/* Phong cách */}
       <div>
-        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">
+        <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2.5">
           Phong cách
         </h3>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-1.5">
           {styles.map((style) => {
             const isSelected = selectedStyles.includes(style.id);
             return (
               <motion.button
                 key={style.id}
                 onClick={() => onStyleChange(style.id)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   isSelected
-                    ? "bg-[#0a192f] text-white shadow-md border border-[#0a192f]"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                    ? "bg-[#0a192f] text-white shadow-sm"
+                    : "bg-gray-50 text-gray-600 border border-gray-200 hover:border-gray-300"
                 }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {isSelected && <Check size={14} className="text-emerald-400" />}
+                {isSelected && <Check size={12} className="text-emerald-400" />}
                 {style.name}
               </motion.button>
             );
@@ -53,25 +52,24 @@ export function InspirationFilters({
 
       {/* Không gian */}
       <div>
-        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">
+        <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2.5">
           Không gian
         </h3>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-1.5">
           {spaces.map((space) => {
             const isSelected = selectedSpaces.includes(space.id);
             return (
               <motion.button
                 key={space.id}
                 onClick={() => onSpaceChange(space.id)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   isSelected
-                    ? "bg-emerald-600 text-white shadow-md border border-emerald-600"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "bg-gray-50 text-gray-600 border border-gray-200 hover:border-gray-300"
                 }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {isSelected && <Check size={14} className="text-white" />}
+                {isSelected && <Check size={12} />}
                 {space.name}
               </motion.button>
             );

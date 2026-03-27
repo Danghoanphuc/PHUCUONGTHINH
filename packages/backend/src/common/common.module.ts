@@ -3,6 +3,7 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { ResponseInterceptor } from './interceptors/response.interceptor';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { CacheInterceptor } from './interceptors/cache.interceptor';
 import { LoggerService } from './services/logger.service';
 import { CacheService } from './services/cache.service';
 import { RedisCacheService } from './services/redis-cache.service';
@@ -50,6 +51,10 @@ import { PrismaModule } from '../prisma/prisma.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
     },
   ],
   exports: [

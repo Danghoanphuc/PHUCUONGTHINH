@@ -277,10 +277,10 @@ export default function ProductsPage() {
   // ── Admin mode: layout riêng, gọn nhẹ ──────────────────────────────────────
   if (isAuthenticated && viewMode === "admin") {
     return (
-      <main className="min-h-screen bg-[#f8f9fb]">
+      <main className="min-h-screen bg-[#f8f9fb] pb-24 lg:pb-0">
         {/* Admin toolbar */}
-        <div className="bg-white border-b border-gray-100 px-4 md:px-6 py-3 flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
+        <div className="bg-white border-b border-gray-100 px-4 md:px-6 py-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 max-w-full sm:max-w-sm">
             <Search
               size={14}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -290,7 +290,7 @@ export default function ProductsPage() {
               placeholder="Tìm tên, SKU..."
               value={searchQuery}
               onChange={(e) => executeSearch(e.target.value)}
-              className="w-full pl-8 pr-8 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-gray-50"
+              className="w-full pl-8 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-gray-50"
             />
             {searchQuery && (
               <button
@@ -302,49 +302,54 @@ export default function ProductsPage() {
             )}
           </div>
 
-          <select
-            value={(filters as any).published || "all"}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                published: e.target.value as any,
-                page: 1,
-              }))
-            }
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-gray-600"
-          >
-            <option value="all">Tất cả</option>
-            <option value="true">Đã đăng</option>
-            <option value="false">Nháp</option>
-          </select>
-
-          <div className="ml-auto flex items-center gap-2">
-            <span className="hidden sm:inline text-xs text-gray-400">
-              {products.length} sản phẩm
-            </span>
-            <div className="hidden sm:flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
-              <button
-                onClick={switchToCustomer}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold text-gray-500 hover:text-gray-700 transition-all"
-              >
-                <LayoutGrid size={12} /> Khách
-              </button>
-              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-white text-gray-900 shadow-sm transition-all">
-                <List size={12} /> Admin
-              </button>
-            </div>
-            <Link
-              href="/admin/products/new"
-              className="flex items-center gap-1.5 px-3 py-2 bg-[#0a192f] text-white rounded-lg text-xs font-semibold hover:bg-[#0d2137] transition-colors"
+          <div className="flex items-center gap-2">
+            <select
+              value={(filters as any).published || "all"}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  published: e.target.value as any,
+                  page: 1,
+                }))
+              }
+              className="flex-1 sm:flex-none px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-gray-600"
             >
-              <Plus size={13} /> Thêm
-            </Link>
+              <option value="all">Tất cả</option>
+              <option value="true">Đã đăng</option>
+              <option value="false">Nháp</option>
+            </select>
+
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="hidden sm:inline text-xs text-gray-400 whitespace-nowrap">
+                {products.length} SP
+              </span>
+              <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+                <button
+                  onClick={switchToCustomer}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold text-gray-500 hover:text-gray-700 transition-all"
+                >
+                  <LayoutGrid size={12} />{" "}
+                  <span className="hidden sm:inline">Khách</span>
+                </button>
+                <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-white text-gray-900 shadow-sm transition-all">
+                  <List size={12} />{" "}
+                  <span className="hidden sm:inline">Admin</span>
+                </button>
+              </div>
+              <Link
+                href="/admin/products/new"
+                className="flex items-center gap-1.5 px-3 py-2.5 bg-[#0a192f] text-white rounded-lg text-xs font-semibold hover:bg-[#0d2137] transition-colors whitespace-nowrap"
+              >
+                <Plus size={13} />{" "}
+                <span className="hidden sm:inline">Thêm</span>
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Table */}
+        {/* Table - Mobile Cards / Desktop Table */}
         <div className="px-4 md:px-6 py-4 md:py-5">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="flex justify-center py-16">
                 <div className="w-7 h-7 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -354,35 +359,99 @@ export default function ProductsPage() {
                 Không tìm thấy sản phẩm
               </div>
             ) : (
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50/60">
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Tên
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      SKU
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Trạng thái
-                    </th>
-                    <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Thao tác
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
+              <>
+                {/* Mobile: Card view */}
+                <div className="block lg:hidden divide-y divide-gray-100">
                   {products.map((p) => (
-                    <AdminProductRow
+                    <div
                       key={p.id}
-                      product={p}
-                      onPublish={handleAdminPublish}
-                      onClone={handleAdminClone}
-                      onDelete={handleAdminDelete}
-                    />
+                      className="p-4 hover:bg-gray-50/60 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-sm text-gray-900 mb-1 line-clamp-2">
+                            {p.name}
+                          </h3>
+                          <p className="text-xs text-gray-500 font-mono">
+                            {p.sku}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleAdminPublish(p.id, p.is_published)
+                          }
+                          className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${p.is_published ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}
+                        >
+                          {p.is_published ? (
+                            <>
+                              <Eye size={11} />
+                              Đăng
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff size={11} />
+                              Nháp
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`/admin/products/${p.id}`}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+                        >
+                          <Pencil size={12} /> Sửa
+                        </a>
+                        <button
+                          onClick={() => handleAdminClone(p.id)}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                        >
+                          <Copy size={12} /> Nhân bản
+                        </button>
+                        <button
+                          onClick={() => handleAdminDelete(p.id)}
+                          className="px-3 py-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+
+                {/* Desktop: Table view */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-100 bg-gray-50/60">
+                        <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          Tên
+                        </th>
+                        <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          SKU
+                        </th>
+                        <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          Trạng thái
+                        </th>
+                        <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          Thao tác
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {products.map((p) => (
+                        <AdminProductRow
+                          key={p.id}
+                          product={p}
+                          onPublish={handleAdminPublish}
+                          onClone={handleAdminClone}
+                          onDelete={handleAdminDelete}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
 
@@ -403,13 +472,14 @@ export default function ProductsPage() {
     );
   }
 
-  // ── Customer mode: layout đầy đủ ────────────────────────────────────────────
+  // Customer mode: layout day du
   return (
     <main className="min-h-screen bg-[#F8F9FA] pt-0 pb-20">
-      {/* Header — compact khi đã đăng nhập, đầy đủ khi là khách */}
-      {isAuthenticated ? (
-        <div className="bg-white border-b border-gray-100 px-4 md:px-6 py-3 flex items-center gap-3">
-          <div className="relative flex-1 md:max-w-sm">
+      {/* Unified Header - giong nhau cho ca Admin va Khach */}
+      <div className="bg-white border-b border-gray-100 px-4 md:px-6 py-3">
+        <div className="flex items-center gap-3">
+          {/* Search - flex-1 để chiếm hết không gian */}
+          <div className="relative flex-1">
             <Search
               size={14}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -419,7 +489,7 @@ export default function ProductsPage() {
               placeholder="Tìm tên, SKU..."
               value={searchQuery}
               onChange={(e) => executeSearch(e.target.value)}
-              className="w-full pl-8 pr-8 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-gray-50"
+              className="w-full pl-8 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-gray-50"
             />
             {searchQuery && (
               <button
@@ -431,241 +501,303 @@ export default function ProductsPage() {
             )}
           </div>
 
-          {/* Quick category chips — hidden on mobile */}
-          <div className="hidden md:flex items-center gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden flex-1">
-            {VISUAL_CATEGORIES.slice(0, 6).map((cat) => {
-              const isActive = filters.search === cat.id;
-              return (
+          {/* Các nút còn lại dính sát bên phải */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Filter Button - cho customer mode */}
+            {viewMode === "customer" && (
+              <div className="relative">
                 <button
-                  key={cat.id}
-                  onClick={() => executeSearch(isActive ? "" : cat.id)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                    isActive
-                      ? "bg-emerald-600 text-white border-emerald-600"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-emerald-400 hover:text-emerald-600"
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-all whitespace-nowrap ${
+                    showMobileFilters ||
+                    selectedStyles.length > 0 ||
+                    selectedSpaces.length > 0 ||
+                    Object.keys(technicalSpecs).length > 0
+                      ? "bg-emerald-600 text-white"
+                      : "bg-white text-gray-700 border border-gray-200 hover:border-emerald-500"
                   }`}
                 >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0 ml-auto">
-            <span className="hidden sm:inline text-xs text-gray-400">
-              {products.length} SP
-            </span>
-            <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
-              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-white text-gray-900 shadow-sm">
-                <LayoutGrid size={12} /> Khách
-              </button>
-              <button
-                onClick={switchToAdmin}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold text-gray-500 hover:text-gray-700 transition-all"
-              >
-                <List size={12} /> Admin
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Public header đầy đủ */}
-          <div className="bg-white border-b border-gray-100">
-            <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
-              <nav className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
-                <Link
-                  href="/"
-                  className="hover:text-[#0a192f] transition-colors"
-                >
-                  Trang chủ
-                </Link>
-                <ChevronRight size={14} />
-                <span className="text-emerald-600">Sản Phẩm</span>
-              </nav>
-              <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#0a192f] tracking-tight mb-2 md:mb-3">
-                Vật Liệu Khơi Nguồn Sáng Tạo
-              </h1>
-              <p className="text-gray-500 text-base flex items-center gap-2">
-                <Package size={18} className="text-emerald-500" />
-                Hệ sinh thái giải pháp ốp lát & thiết bị vệ sinh cao cấp
-              </p>
-            </div>
-          </div>
-          {/* Category slider */}
-          <div className="bg-white border-b border-gray-100 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 py-4 md:py-5 relative group">
-              <button
-                onClick={() => scrollSlider("left")}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-emerald-600 hover:scale-105 transition-all opacity-0 group-hover:opacity-100 hidden md:flex"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <div
-                ref={sliderRef}
-                className="flex gap-3 md:gap-5 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-1"
-              >
-                {VISUAL_CATEGORIES.map((cat, idx) => {
-                  const isActive = filters.search === cat.id;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => executeSearch(isActive ? "" : cat.id)}
-                      className={`shrink-0 flex flex-col items-center gap-2.5 p-2 rounded-2xl transition-all w-[90px] md:w-[110px] ${isActive ? "bg-emerald-50/50" : "hover:bg-gray-50"}`}
-                    >
-                      <div
-                        className={`w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden relative shadow-sm transition-all duration-300 border-2 ${isActive ? "border-emerald-500 ring-4 ring-emerald-50" : "border-gray-100"}`}
-                      >
-                        <Image
-                          src={cat.image}
-                          alt={cat.label}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <span
-                        className={`text-[11px] md:text-xs text-center leading-tight ${isActive ? "font-bold text-emerald-700" : "font-medium text-gray-600"}`}
-                      >
-                        {cat.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                onClick={() => scrollSlider("right")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-emerald-600 hover:scale-105 transition-all opacity-0 group-hover:opacity-100 hidden md:flex"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Main Layout */}
-      <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
-        <div
-          className={`grid gap-8 ${isAuthenticated ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-4"}`}
-        >
-          {!isAuthenticated && (
-            <button
-              className="lg:hidden flex items-center justify-center gap-2 w-full bg-white border border-gray-200 py-3.5 rounded-xl font-bold text-gray-700 shadow-sm"
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-            >
-              <SlidersHorizontal size={18} />
-              Bộ Lọc Sản Phẩm
-            </button>
-          )}
-
-          {/* Sidebar lọc — chỉ hiện khi chưa đăng nhập */}
-          {!isAuthenticated && (
-            <aside
-              className={`lg:col-span-1 ${showMobileFilters ? "block" : "hidden lg:block"}`}
-            >
-              <div className="sticky top-20 space-y-4 md:space-y-6">
-                <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Tìm mã SKU, tên SP..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && executeSearch(searchQuery)
-                      }
-                      className="w-full pl-11 pr-10 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50 transition-all"
-                    />
-                    <Search
-                      size={18}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => executeSearch("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
-                      >
-                        <X size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
-                  <FilterTabs
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                  />
-                  <div className="mt-8">
-                    {activeTab === "inspiration" ? (
-                      <InspirationFilters
-                        styles={styles}
-                        spaces={spaces}
-                        selectedStyles={selectedStyles}
-                        selectedSpaces={selectedSpaces}
-                        onStyleChange={handleToggleStyle}
-                        onSpaceChange={handleToggleSpace}
-                      />
-                    ) : (
-                      <TechnicalFilters
-                        onFilterChange={handleTechnicalSpecChange}
-                      />
-                    )}
-                  </div>
+                  <SlidersHorizontal size={16} />
+                  <span className="hidden sm:inline">Lọc</span>
                   {(selectedStyles.length > 0 ||
                     selectedSpaces.length > 0 ||
-                    Object.keys(technicalSpecs).length > 0 ||
-                    filters.search) && (
-                    <button
-                      onClick={clearAllFilters}
-                      className="w-full mt-8 px-4 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-colors"
-                    >
-                      Xóa tất cả bộ lọc
-                    </button>
+                    Object.keys(technicalSpecs).length > 0) && (
+                    <span className="flex items-center justify-center min-w-[20px] h-5 bg-white text-emerald-600 rounded-full text-xs font-black px-1.5">
+                      {selectedStyles.length +
+                        selectedSpaces.length +
+                        Object.keys(technicalSpecs).length}
+                    </span>
                   )}
-                </div>
-              </div>
-            </aside>
-          )}
+                </button>
 
-          {/* Products Grid */}
-          <div className={isAuthenticated ? "col-span-1" : "lg:col-span-3"}>
-            {/* Toolbar count — chỉ hiện khi chưa đăng nhập */}
-            {!isAuthenticated && (
-              <div className="mb-4 flex items-center justify-between bg-white px-4 py-3 md:px-5 md:py-4 rounded-2xl shadow-sm border border-gray-100">
-                <p className="text-xs md:text-sm font-medium text-gray-600">
-                  Hiển thị{" "}
-                  <span className="font-bold text-gray-900">
-                    {products.length > 0 ? (filters.page! - 1) * 20 + 1 : 0}
-                  </span>{" "}
-                  -{" "}
-                  <span className="font-bold text-gray-900">
-                    {Math.min(filters.page! * 20, products?.length || 0)}
-                  </span>{" "}
-                  trên tổng số{" "}
-                  <span className="text-emerald-600 font-black">
-                    {products?.length || 0}
-                  </span>{" "}
-                  mã hàng
-                </p>
-              </div>
-            )}
+                {showMobileFilters && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowMobileFilters(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-[90vw] sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-[80vh] overflow-y-auto">
+                      <div className="p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-black text-gray-900">
+                            Bộ lọc sản phẩm
+                          </h3>
+                          <button
+                            onClick={() => setShowMobileFilters(false)}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <X size={18} />
+                          </button>
+                        </div>
 
-            <ProductGrid products={products} isLoading={isLoading} />
+                        <FilterTabs
+                          activeTab={activeTab}
+                          onTabChange={setActiveTab}
+                        />
 
-            {totalPages > 1 && (
-              <div className="mt-12">
-                <Pagination
-                  currentPage={filters.page || 1}
-                  totalPages={totalPages}
-                  onPageChange={(page) => {
-                    setFilters((prev) => ({ ...prev, page }));
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                />
+                        <div className="mt-5">
+                          {activeTab === "inspiration" ? (
+                            <InspirationFilters
+                              styles={styles}
+                              spaces={spaces}
+                              selectedStyles={selectedStyles}
+                              selectedSpaces={selectedSpaces}
+                              onStyleChange={handleToggleStyle}
+                              onSpaceChange={handleToggleSpace}
+                            />
+                          ) : (
+                            <TechnicalFilters
+                              onFilterChange={handleTechnicalSpecChange}
+                            />
+                          )}
+                        </div>
+
+                        {(selectedStyles.length > 0 ||
+                          selectedSpaces.length > 0 ||
+                          Object.keys(technicalSpecs).length > 0) && (
+                          <button
+                            onClick={clearAllFilters}
+                            className="w-full mt-5 px-4 py-2.5 bg-red-50 text-red-600 text-sm font-bold rounded-xl hover:bg-red-100 transition-colors"
+                          >
+                            Xóa tất cả bộ lọc
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
+
+          {/* Published Filter - cho admin mode */}
+          {viewMode === "admin" && (
+            <select
+              value={(filters as any).published || "all"}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  published: e.target.value as any,
+                  page: 1,
+                }))
+              }
+              className="px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-gray-600"
+            >
+              <option value="all">Tất cả</option>
+              <option value="true">Đã đăng</option>
+              <option value="false">Nháp</option>
+            </select>
+          )}
+
+          {/* Toggle Buttons */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+            <button
+              onClick={switchToCustomer}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                viewMode === "customer"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <LayoutGrid size={12} />
+              <span className="hidden sm:inline">Khách</span>
+            </button>
+            <button
+              onClick={switchToAdmin}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                viewMode === "admin"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <List size={12} />
+              <span className="hidden sm:inline">Admin</span>
+            </button>
+          </div>
+
+          {/* Add Button - chỉ hiện ở admin mode */}
+          {viewMode === "admin" && (
+            <Link
+              href="/admin/products/new"
+              className="flex items-center gap-1.5 px-3 py-2.5 bg-[#0a192f] text-white rounded-lg text-xs font-semibold hover:bg-[#0d2137] transition-colors whitespace-nowrap hidden sm:flex"
+            >
+              <Plus size={13} /> Thêm
+            </Link>
+          )}
         </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
+        {/* Search + Filter bar */}
+        {!isAuthenticated && (
+          <div className="mb-6 flex gap-3">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Tìm mã SKU, tên SP..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && executeSearch(searchQuery)
+                }
+                className="w-full pl-11 pr-10 py-3.5 bg-white border border-gray-200 rounded-xl text-sm font-medium outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 transition-all shadow-sm"
+              />
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => executeSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Popover Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className={`flex items-center gap-2 px-4 py-3.5 rounded-xl font-bold text-sm shadow-sm transition-all ${
+                  showMobileFilters ||
+                  selectedStyles.length > 0 ||
+                  selectedSpaces.length > 0 ||
+                  Object.keys(technicalSpecs).length > 0
+                    ? "bg-emerald-600 text-white"
+                    : "bg-white text-gray-700 border border-gray-200 hover:border-emerald-500"
+                }`}
+              >
+                <SlidersHorizontal size={18} />
+                <span className="hidden sm:inline">Bộ lọc</span>
+                {(selectedStyles.length > 0 ||
+                  selectedSpaces.length > 0 ||
+                  Object.keys(technicalSpecs).length > 0) && (
+                  <span className="flex items-center justify-center w-5 h-5 bg-white text-emerald-600 rounded-full text-xs font-black">
+                    {selectedStyles.length +
+                      selectedSpaces.length +
+                      Object.keys(technicalSpecs).length}
+                  </span>
+                )}
+              </button>
+
+              {/* Filter Dropdown */}
+              {showMobileFilters && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowMobileFilters(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-[90vw] sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-[80vh] overflow-y-auto">
+                    <div className="p-5">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-black text-gray-900">
+                          Bộ lọc sản phẩm
+                        </h3>
+                        <button
+                          onClick={() => setShowMobileFilters(false)}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+
+                      <FilterTabs
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                      />
+
+                      <div className="mt-5">
+                        {activeTab === "inspiration" ? (
+                          <InspirationFilters
+                            styles={styles}
+                            spaces={spaces}
+                            selectedStyles={selectedStyles}
+                            selectedSpaces={selectedSpaces}
+                            onStyleChange={handleToggleStyle}
+                            onSpaceChange={handleToggleSpace}
+                          />
+                        ) : (
+                          <TechnicalFilters
+                            onFilterChange={handleTechnicalSpecChange}
+                          />
+                        )}
+                      </div>
+
+                      {(selectedStyles.length > 0 ||
+                        selectedSpaces.length > 0 ||
+                        Object.keys(technicalSpecs).length > 0) && (
+                        <button
+                          onClick={clearAllFilters}
+                          className="w-full mt-5 px-4 py-2.5 bg-red-50 text-red-600 text-sm font-bold rounded-xl hover:bg-red-100 transition-colors"
+                        >
+                          Xóa tất cả bộ lọc
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Products Grid */}
+        {/* Toolbar count */}
+        <div className="mb-4 flex items-center justify-between bg-white px-4 py-3 md:px-5 md:py-4 rounded-2xl shadow-sm border border-gray-100">
+          <p className="text-xs md:text-sm font-medium text-gray-600">
+            Hiển thị{" "}
+            <span className="font-bold text-gray-900">
+              {products.length > 0 ? (filters.page! - 1) * 20 + 1 : 0}
+            </span>{" "}
+            -{" "}
+            <span className="font-bold text-gray-900">
+              {Math.min(filters.page! * 20, products?.length || 0)}
+            </span>{" "}
+            trên tổng số{" "}
+            <span className="text-emerald-600 font-black">
+              {products?.length || 0}
+            </span>{" "}
+            mã hàng
+          </p>
+        </div>
+
+        <ProductGrid products={products} isLoading={isLoading} />
+
+        {totalPages > 1 && (
+          <div className="mt-12">
+            <Pagination
+              currentPage={filters.page || 1}
+              totalPages={totalPages}
+              onPageChange={(page) => {
+                setFilters((prev) => ({ ...prev, page }));
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
+          </div>
+        )}
       </div>
     </main>
   );

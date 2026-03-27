@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import AdminSidebar, {
-  MobileSidebarDrawer,
-} from "@/components/admin/AdminSidebar";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 import { MobileBottomNav } from "@/components/admin/MobileBottomNav";
 import { MobileTopBar } from "@/components/admin/MobileTopBar";
 import { useAuth } from "@repo/shared-utils";
@@ -26,12 +24,6 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen bg-[#f8f9fb]">
         {/* Desktop sidebar — hidden on mobile */}
         <AdminSidebar />
-
-        {/* Mobile drawer */}
-        <MobileSidebarDrawer
-          open={mobileMenuOpen}
-          onClose={() => setMobileMenuOpen(false)}
-        />
 
         {/* Content — full width on mobile, offset on desktop */}
         <div className="flex-1 min-h-screen lg:ml-60 admin-content flex flex-col">

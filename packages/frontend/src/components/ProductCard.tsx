@@ -31,7 +31,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       transition={{ delay: index * 0.05 }}
       className="group"
     >
-      <div className="relative overflow-hidden rounded-xl bg-gray-100 aspect-square mb-3">
+      <div className="relative overflow-hidden rounded-xl bg-gray-100 aspect-square mb-2 md:mb-3">
         <Link href={`/products/${product.id}`}>
           <Image
             src={imageUrl}
@@ -46,7 +46,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         {/* Wishlist button — min 44px touch target */}
         <button
           onClick={handleLike}
-          className="absolute top-2 right-2 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white/85 backdrop-blur-sm rounded-full shadow-sm active:scale-95 transition-all z-10"
+          className="absolute top-1.5 right-1.5 md:top-2 md:right-2 p-2 md:p-2.5 min-w-[40px] min-h-[40px] md:min-w-[44px] md:min-h-[44px] flex items-center justify-center bg-white/85 backdrop-blur-sm rounded-full shadow-sm active:scale-95 transition-all z-10"
           aria-label={isLiked ? "Bỏ yêu thích" : "Yêu thích"}
         >
           <svg
@@ -55,7 +55,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke={isLiked ? "#ef4444" : "currentColor"}
-            className="w-5 h-5 text-gray-600"
+            className="w-4 h-4 md:w-5 md:h-5 text-gray-600"
           >
             <path
               strokeLinecap="round"
@@ -67,11 +67,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
         {/* Style Tags */}
         {product.style_tags && product.style_tags.length > 0 && (
-          <div className="absolute top-2 left-2 flex gap-1 flex-wrap pointer-events-none">
+          <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 flex gap-1 flex-wrap pointer-events-none">
             {product.style_tags.slice(0, 2).map((tag, i) => (
               <span
                 key={tag.id ?? tag.name ?? i}
-                className="px-1.5 py-0.5 bg-accent text-primary text-[10px] font-semibold rounded"
+                className="px-1.5 py-0.5 bg-accent text-primary text-[9px] md:text-[10px] font-semibold rounded"
               >
                 {tag.name}
               </span>
@@ -80,21 +80,23 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         )}
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-1 md:space-y-1.5">
         <Link href={`/products/${product.id}`}>
-          <h3 className="text-sm md:text-base font-semibold text-primary hover:text-accent transition-colors line-clamp-2 leading-snug">
+          <h3 className="text-xs md:text-sm lg:text-base font-semibold text-primary hover:text-accent transition-colors line-clamp-2 leading-snug">
             {product.name}
           </h3>
         </Link>
 
-        <p className="text-xs text-gray-500">SKU: {product.sku}</p>
+        <p className="text-[10px] md:text-xs text-gray-500">
+          SKU: {product.sku}
+        </p>
 
         {product.space_tags && product.space_tags.length > 0 && (
-          <div className="flex gap-1.5 flex-wrap pt-1">
+          <div className="flex gap-1 md:gap-1.5 flex-wrap pt-0.5 md:pt-1">
             {product.space_tags.slice(0, 3).map((tag, i) => (
               <span
                 key={tag.id ?? tag.name ?? i}
-                className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] md:text-xs rounded"
+                className="px-1.5 md:px-2 py-0.5 bg-gray-100 text-gray-600 text-[9px] md:text-[10px] lg:text-xs rounded"
               >
                 {tag.name}
               </span>
