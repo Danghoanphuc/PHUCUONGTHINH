@@ -5,6 +5,7 @@ export type MediaType =
   | "lifestyle"
   | "cutout"
   | "video"
+  | "showcase"
   | "3d_file"
   | "pdf"
   | "social_link";
@@ -43,7 +44,8 @@ export interface FileValidationResult {
 const ALLOWED_EXTENSIONS: Record<string, string[]> = {
   lifestyle: ["jpg", "jpeg", "png", "webp"],
   cutout: ["jpg", "jpeg", "png", "webp"],
-  video: ["mp4", "mov"],
+  showcase: ["jpg", "jpeg", "png", "webp"],
+  video: ["mp4", "mov", "webm"],
   "3d_file": ["obj", "fbx", "glb", "gltf", "skp"],
   pdf: ["pdf"],
   social_link: [],

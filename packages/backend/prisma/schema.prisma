@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -212,14 +212,25 @@ model ExtractedProduct {
 }
 
 model ProductInternal {
-  id               String   @id @default(cuid())
-  product_id       String   @unique
-  cost_price       Float?
-  supplier_name    String?
-  supplier_contact String?
-  internal_notes   String?
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+  id                       String   @id @default(cuid())
+  product_id               String   @unique
+  cost_price               Float?
+  price_retail             Float?
+  price_wholesale          Float?
+  wholesale_discount_tiers String?
+  price_dealer             Float?
+  price_promo              Float?
+  promo_start_date         String?
+  promo_end_date           String?
+  promo_note               String?
+  warehouse_location       String?
+  stock_status             String?
+  stock_quantity           Int?
+  supplier_name            String?
+  supplier_phone           String?
+  internal_notes           String?
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
 
   product      Product      @relation(fields: [product_id], references: [id], onDelete: Cascade)
   stock_levels StockLevel[]

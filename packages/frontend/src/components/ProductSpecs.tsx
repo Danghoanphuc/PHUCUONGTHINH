@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Download } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Download, ChevronDown } from "lucide-react";
 import { useAuth } from "@repo/shared-utils";
 
 type ProductType = "gach" | "tbvs" | "bep" | "phu-tro";
@@ -22,28 +22,24 @@ function fmt(v: any): string | null {
       .map((i) => fmt(i))
       .filter(Boolean)
       .join(", ");
-  if (typeof v === "object") {
-    // e.g. { width: 600, height: 600 } → "600 x 600"
-    const vals = Object.values(v).filter((x) => x !== null && x !== undefined);
-    return vals.join(" x ");
-  }
+  if (typeof v === "object")
+    return Object.values(v)
+      .filter((x) => x !== null && x !== undefined)
+      .join(" x ");
   return String(v);
 }
 
 function detectType(specs: Record<string, any>): ProductType {
   const t = specs["product_type"];
   if (t === "tbvs" || t === "bep" || t === "phu-tro") return t;
-  // Auto-detect from keys
   if (specs["drain_center"] || specs["flush_volume"] || specs["flush_type"])
     return "tbvs";
   if (specs["size_cutout"] || specs["burner_count"] || specs["power_total"])
     return "bep";
-  if (specs["pieces_per_box"] || specs["m2_per_box"] || specs["faces"])
-    return "gach";
   return "gach";
 }
 
-// ── QuickCalc (gạch only) ─────────────────────────────────────────────────────
+// ── QuickCalc ─────────────────────────────────────────────────────────────────
 function QuickCalc({
   piecesPerBox,
   m2PerBox,
@@ -51,37 +47,55 @@ function QuickCalc({
   piecesPerBox: number;
   m2PerBox: number;
 }) {
+  const [open, setOpen] = useState(false);
   const [area, setArea] = useState("");
-  const totalM2 = Number(area) * 1.1;
-  const boxes = area ? Math.ceil(totalM2 / m2PerBox) : null;
+  const boxes = area ? Math.ceil((Number(area) * 1.1) / m2PerBox) : null;
   const pieces = boxes !== null ? boxes * piecesPerBox : null;
   return (
-    <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-      <p className="text-xs font-semibold text-blue-800 mb-2">
-        🧮 Tính nhanh số lượng cần mua
-      </p>
-      <div className="flex items-center gap-2">
-        <input
-          type="number"
-          min="1"
-          value={area}
-          onChange={(e) => setArea(e.target.value)}
-          placeholder="Diện tích (m²)"
-          className="flex-1 border border-blue-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-        />
-        {boxes !== null && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-right shrink-0"
-          >
-            <p className="text-lg font-black text-blue-700">{boxes} thùng</p>
-            <p className="text-[10px] text-blue-500">
-              {pieces} viên · +10% hao hụt
+    <div className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-200 transition-colors"
+      >
+        🧮 Tính số lượng
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-full mt-2 z-50 w-64 bg-white rounded-xl shadow-xl border border-gray-100 p-4">
+            <p className="text-xs font-semibold text-gray-700 mb-3">
+              🧮 Tính nhanh số lượng cần mua
             </p>
-          </motion.div>
-        )}
-      </div>
+            <input
+              type="number"
+              min="1"
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              placeholder="Diện tích (m²)"
+              autoFocus
+              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {boxes !== null && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between"
+              >
+                <div>
+                  <p className="text-xl font-black text-blue-700">
+                    {boxes} thùng
+                  </p>
+                  <p className="text-[10px] text-gray-400">
+                    {pieces} viên · +10% hao hụt
+                  </p>
+                </div>
+                <div className="text-3xl">📦</div>
+              </motion.div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -118,31 +132,122 @@ export function QRSection({
   );
 }
 
-// ── Row helper ────────────────────────────────────────────────────────────────
-function Row({ label, value }: { label: string; value: string }) {
+// ── UI primitives ─────────────────────────────────────────────────────────────
+
+/** Stat nổi bật — dùng cho thông số chính */
+function StatCard({
+  label,
+  value,
+  sub,
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  accent?: boolean;
+}) {
   return (
-    <div className="flex items-start px-3 py-1.5 text-xs border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-      <span className="w-2/5 text-gray-500 shrink-0">{label}</span>
-      <span className="w-3/5 font-semibold text-primary">{value}</span>
+    <div
+      className={`rounded-xl p-3 flex flex-col gap-0.5 ${accent ? "bg-emerald-50 border border-emerald-200" : "bg-gray-50 border border-gray-100"}`}
+    >
+      <span
+        className={`text-[10px] font-semibold uppercase tracking-wider ${accent ? "text-emerald-600" : "text-gray-400"}`}
+      >
+        {label}
+      </span>
+      <span
+        className={`text-base font-black leading-tight ${accent ? "text-emerald-800" : "text-gray-900"}`}
+      >
+        {value}
+      </span>
+      {sub && (
+        <span
+          className={`text-[10px] ${accent ? "text-emerald-500" : "text-gray-400"}`}
+        >
+          {sub}
+        </span>
+      )}
     </div>
   );
 }
 
-function Group({
+/** Row dạng 2 cột nhỏ gọn */
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-2 py-1.5 border-b border-gray-50 last:border-0">
+      <span className="w-[45%] text-xs text-gray-400 shrink-0 leading-relaxed">
+        {label}
+      </span>
+      <span className="flex-1 text-xs font-semibold text-gray-800 leading-relaxed">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/** Badge pill */
+function Badge({
+  icon,
+  label,
+  color = "gray",
+}: {
+  icon: string;
+  label: string;
+  color?: "blue" | "green" | "amber" | "gray";
+}) {
+  const cls = {
+    blue: "bg-blue-50 border-blue-200 text-blue-700",
+    green: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    amber: "bg-amber-50 border-amber-200 text-amber-700",
+    gray: "bg-gray-50 border-gray-200 text-gray-600",
+  }[color];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${cls}`}
+    >
+      {icon} {label}
+    </span>
+  );
+}
+
+/** Section có thể collapse */
+function Section({
   title,
   children,
+  defaultOpen = true,
 }: {
   title: string;
   children: React.ReactNode;
+  defaultOpen?: boolean;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div>
-      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
-        {title}
-      </p>
-      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-        {children}
-      </div>
+    <div className="border border-gray-100 rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-3.5 py-2.5 bg-gray-50/80 hover:bg-gray-100/60 transition-colors"
+      >
+        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+          {title}
+        </span>
+        <ChevronDown
+          size={14}
+          className={`text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="px-3.5 py-2">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -178,84 +283,86 @@ function GachSpecs({ specs }: { specs: Record<string, any> }) {
 
   return (
     <div className="space-y-3">
-      {(size || thickness || piecesPerBox > 0) && (
-        <Group title="Kích thước & Quy cách">
-          {size && <Row label="Kích thước" value={`${size} mm`} />}
-          {thickness && <Row label="Độ dày" value={`${thickness} mm`} />}
-          {faces && <Row label="Số mặt vân" value={`${faces} faces`} />}
+      {/* Thông số chính — grid nổi bật */}
+      {(size || thickness || piecesPerBox > 0 || m2PerBox > 0) && (
+        <div className="grid grid-cols-2 gap-2">
+          {size && <StatCard label="Kích thước" value={`${size} mm`} accent />}
+          {thickness && <StatCard label="Độ dày" value={`${thickness} mm`} />}
           {piecesPerBox > 0 && (
-            <Row label="Số viên / thùng" value={`${piecesPerBox} viên`} />
+            <StatCard label="Số viên / thùng" value={`${piecesPerBox} viên`} />
           )}
           {m2PerBox > 0 && (
-            <Row label="Diện tích / thùng" value={`${m2PerBox} m²`} />
+            <StatCard label="Diện tích / thùng" value={`${m2PerBox} m²`} />
           )}
           {kgPerBox && (
-            <Row label="Trọng lượng / thùng" value={`${kgPerBox} kg`} />
+            <StatCard label="Trọng lượng / thùng" value={`${kgPerBox} kg`} />
           )}
-        </Group>
+          {faces && <StatCard label="Số mặt vân" value={`${faces} faces`} />}
+        </div>
       )}
 
+      {/* Tính số lượng */}
       {piecesPerBox > 0 && m2PerBox > 0 && (
         <QuickCalc piecesPerBox={piecesPerBox} m2PerBox={m2PerBox} />
       )}
 
-      {(color || pattern) && (
-        <Group title="Màu sắc">
+      {/* Màu sắc & Chất liệu */}
+      {(color || pattern || material || surface) && (
+        <Section title="Chất liệu & Bề mặt">
           {color && <Row label="Màu sắc" value={fmt(color)!} />}
           {pattern && <Row label="Vân / Họa tiết" value={fmt(pattern)!} />}
-        </Group>
-      )}
-
-      {(material || surface || brand || origin) && (
-        <Group title="Chất liệu">
           {material && <Row label="Xương gạch" value={fmt(material)!} />}
           {surface && <Row label="Bề mặt" value={fmt(surface)!} />}
+        </Section>
+      )}
+
+      {/* Xuất xứ */}
+      {(brand || origin) && (
+        <Section title="Thương hiệu & Xuất xứ" defaultOpen={false}>
           {brand && <Row label="Thương hiệu" value={fmt(brand)!} />}
           {origin && <Row label="Xuất xứ" value={fmt(origin)!} />}
-        </Group>
+        </Section>
       )}
 
-      {(pairing || style) && (
-        <Group title="Cách phối & Không gian phù hợp">
+      {/* Phối cảnh */}
+      {(style || pairing) && (
+        <Section title="Phong cách & Gợi ý phối" defaultOpen={false}>
           {style && <Row label="Phong cách" value={fmt(style)!} />}
           {pairing && (
-            <div className="px-3 py-2 text-xs">
-              <p className="text-gray-500 mb-0.5">Gợi ý phối cảnh</p>
-              <p className="text-primary leading-relaxed">{fmt(pairing)}</p>
-            </div>
+            <p className="text-xs text-gray-600 leading-relaxed pt-1">
+              {fmt(pairing)}
+            </p>
           )}
-        </Group>
+        </Section>
       )}
 
+      {/* Giá — chỉ admin */}
       {priceM2 > 0 && isAuthenticated && (
-        <div>
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
-            Giá thành
-          </p>
-          <div className="bg-amber-50 border border-amber-100 rounded-lg overflow-hidden">
-            <div className="flex items-center px-3 py-2 border-b border-amber-100">
-              <span className="w-2/5 text-xs text-amber-700">Giá / m²</span>
-              <span className="w-3/5 text-lg font-black text-primary">
+        <div className="rounded-xl overflow-hidden border border-amber-200">
+          <div className="px-3.5 py-2 bg-amber-50 border-b border-amber-100">
+            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
+              Giá thành
+            </span>
+          </div>
+          <div className="px-3.5 py-3 grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] text-gray-400 mb-0.5">Giá / m²</p>
+              <p className="text-lg font-black text-gray-900">
                 {fmtPrice(priceM2)}
-              </span>
+              </p>
             </div>
             {priceBox > 0 && (
-              <div className="flex items-center px-3 py-2">
-                <span className="w-2/5 text-xs text-amber-700">
-                  Giá / thùng
-                </span>
-                <span className="w-3/5 text-base font-bold text-primary">
+              <div>
+                <p className="text-[10px] text-gray-400 mb-0.5">
+                  Giá / thùng {m2PerBox > 0 && `(${m2PerBox}m²)`}
+                </p>
+                <p className="text-lg font-black text-gray-900">
                   {fmtPrice(priceBox)}
-                  {m2PerBox > 0 && (
-                    <span className="text-[10px] font-normal text-gray-500 ml-1">
-                      ({m2PerBox} m²)
-                    </span>
-                  )}
-                </span>
+                </p>
               </div>
             )}
           </div>
-          <p className="text-[10px] text-gray-400 mt-1 px-1">
+          <p className="px-3.5 pb-2 text-[10px] text-gray-400">
             * Giá tham khảo, chưa bao gồm VAT và phí vận chuyển
           </p>
         </div>
@@ -293,33 +400,34 @@ function TBVSSpecs({ specs }: { specs: Record<string, any> }) {
 
   return (
     <div className="space-y-3">
-      {(drainCenter ||
-        waterPressure ||
-        pipeInlet ||
-        pipeDrain ||
-        installType) && (
-        <Group title="Thông số lắp đặt">
-          {drainCenter && <Row label="Tâm xả" value={fmt(drainCenter)!} />}
-          {installType && (
-            <Row label="Kiểu lắp đặt" value={fmt(installType)!} />
+      {/* Thông số chính */}
+      {(drainCenter || size || installType) && (
+        <div className="grid grid-cols-2 gap-2">
+          {drainCenter && (
+            <StatCard label="Tâm xả" value={fmt(drainCenter)!} accent />
           )}
+          {size && <StatCard label="Kích thước" value={fmt(size)!} />}
+          {installType && (
+            <StatCard label="Kiểu lắp" value={fmt(installType)!} />
+          )}
+          {roughIn && (
+            <StatCard label="Khoảng cách lắp" value={fmt(roughIn)!} />
+          )}
+        </div>
+      )}
+
+      {(waterPressure || pipeInlet || pipeDrain) && (
+        <Section title="Thông số lắp đặt">
           {waterPressure && (
             <Row label="Áp lực nước tối thiểu" value={`${waterPressure} bar`} />
           )}
           {pipeInlet && <Row label="Ống cấp nước" value={fmt(pipeInlet)!} />}
           {pipeDrain && <Row label="Ống thoát nước" value={fmt(pipeDrain)!} />}
-        </Group>
-      )}
-
-      {(size || roughIn) && (
-        <Group title="Kích thước">
-          {size && <Row label="Kích thước" value={fmt(size)!} />}
-          {roughIn && <Row label="Khoảng cách lắp đặt" value={fmt(roughIn)!} />}
-        </Group>
+        </Section>
       )}
 
       {(flushVolume || flushType || waterSaving) && (
-        <Group title="Công năng">
+        <Section title="Công năng">
           {flushVolume && (
             <Row label="Lượng nước xả" value={fmt(flushVolume)!} />
           )}
@@ -327,47 +435,48 @@ function TBVSSpecs({ specs }: { specs: Record<string, any> }) {
           {waterSaving && (
             <Row label="Tiết kiệm nước" value={fmt(waterSaving)!} />
           )}
-        </Group>
+        </Section>
       )}
 
-      {(material || surfaceCoating || color) && (
-        <Group title="Chất liệu & Công nghệ">
+      {(material ||
+        surfaceCoating ||
+        color ||
+        techFeatures ||
+        certifications) && (
+        <Section title="Chất liệu & Tính năng" defaultOpen={false}>
           {material && <Row label="Chất liệu" value={fmt(material)!} />}
           {surfaceCoating && (
-            <Row label="Công nghệ men / Bề mặt" value={fmt(surfaceCoating)!} />
+            <Row label="Công nghệ men" value={fmt(surfaceCoating)!} />
           )}
           {color && <Row label="Màu sắc" value={fmt(color)!} />}
-        </Group>
-      )}
-
-      {(techFeatures || certifications) && (
-        <Group title="Tính năng & Chứng nhận">
           {techFeatures && <Row label="Tính năng" value={fmt(techFeatures)!} />}
           {certifications && (
             <Row label="Chứng nhận" value={fmt(certifications)!} />
           )}
-        </Group>
+        </Section>
       )}
 
       {(brand || origin || warranty) && (
-        <Group title="Xuất xứ & Bảo hành">
+        <Section title="Thương hiệu & Bảo hành" defaultOpen={false}>
           {brand && <Row label="Thương hiệu" value={fmt(brand)!} />}
           {origin && <Row label="Xuất xứ" value={fmt(origin)!} />}
           {warranty && <Row label="Bảo hành" value={fmt(warranty)!} />}
-        </Group>
+        </Section>
       )}
 
       {priceRetail > 0 && isAuthenticated && (
-        <div>
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
-            Giá thành
-          </p>
-          <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-            <p className="text-lg font-black text-primary">
+        <div className="rounded-xl border border-amber-200 overflow-hidden">
+          <div className="px-3.5 py-2 bg-amber-50 border-b border-amber-100">
+            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
+              Giá thành
+            </span>
+          </div>
+          <div className="px-3.5 py-3">
+            <p className="text-lg font-black text-gray-900">
               {fmtPrice(priceRetail)}
             </p>
             <p className="text-[10px] text-gray-400 mt-0.5">
-              * Giá tham khảo, chưa bao gồm VAT và phí vận chuyển
+              * Giá tham khảo, chưa bao gồm VAT
             </p>
           </div>
         </div>
@@ -381,7 +490,6 @@ function BepSpecs({ specs }: { specs: Record<string, any> }) {
   const { isAuthenticated } = useAuth();
   const sizeOverall = val(specs, "size_overall", "size");
   const sizeCutout = val(specs, "size_cutout");
-  const sizePanel = val(specs, "size_panel");
   const powerTotal = val(specs, "power_total");
   const voltage = val(specs, "voltage");
   const burnerCount = val(specs, "burner_count");
@@ -391,14 +499,6 @@ function BepSpecs({ specs }: { specs: Record<string, any> }) {
   const bodyMaterial = val(specs, "body_material");
   const color = val(specs, "color");
   const controlType = val(specs, "control_type");
-  const boostMode = val(specs, "boost_mode");
-  const timer = val(specs, "timer");
-  const inverter = val(specs, "inverter");
-  const safetyChildLock = val(specs, "safety_child_lock");
-  const safetyOverflow = val(specs, "safety_overflow");
-  const safetyResidualHeat = val(specs, "safety_residual_heat");
-  const safetyAutoOff = val(specs, "safety_auto_off");
-  const safetyGasCut = val(specs, "safety_gas_cut");
   const brand = val(specs, "brand");
   const origin = val(specs, "origin");
   const warranty = val(specs, "warranty");
@@ -406,143 +506,138 @@ function BepSpecs({ specs }: { specs: Record<string, any> }) {
   const fmtPrice = (v: number) =>
     new Intl.NumberFormat("vi-VN").format(v) + "đ";
 
-  // Safety features as icons
-  const safetyItems = [
-    { label: "Khóa trẻ em", value: safetyChildLock, icon: "🔒" },
-    { label: "Tự ngắt khi trào nước", value: safetyOverflow, icon: "💧" },
-    { label: "Cảnh báo nhiệt dư", value: safetyResidualHeat, icon: "🌡️" },
-    { label: "Tự tắt khi không dùng", value: safetyAutoOff, icon: "⏱️" },
-    { label: "Tự ngắt gas", value: safetyGasCut, icon: "🔥" },
-  ].filter((s) => s.value === "Có");
-
-  // Tech feature badges
   const techBadges = [
-    { label: "Inverter", active: inverter === "Có", icon: "⚡" },
-    { label: "Boost", active: boostMode === "Có", icon: "🚀" },
-    { label: "Hẹn giờ", active: timer === "Có", icon: "⏰" },
+    { label: "Inverter", active: val(specs, "inverter") === "Có", icon: "⚡" },
+    { label: "Boost", active: val(specs, "boost_mode") === "Có", icon: "🚀" },
+    { label: "Hẹn giờ", active: val(specs, "timer") === "Có", icon: "⏰" },
   ].filter((b) => b.active);
+
+  const safetyItems = [
+    {
+      label: "Khóa trẻ em",
+      value: val(specs, "safety_child_lock"),
+      icon: "🔒",
+    },
+    {
+      label: "Tự ngắt khi trào",
+      value: val(specs, "safety_overflow"),
+      icon: "💧",
+    },
+    {
+      label: "Cảnh báo nhiệt dư",
+      value: val(specs, "safety_residual_heat"),
+      icon: "🌡️",
+    },
+    {
+      label: "Tự tắt khi không dùng",
+      value: val(specs, "safety_auto_off"),
+      icon: "⏱️",
+    },
+    { label: "Tự ngắt gas", value: val(specs, "safety_gas_cut"), icon: "🔥" },
+  ].filter((s) => s.value === "Có");
 
   return (
     <div className="space-y-3">
-      {(sizeOverall || sizeCutout || sizePanel) && (
-        <div>
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
-            Kích thước
-          </p>
-          <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-            {sizeOverall && (
-              <Row label="Kích thước phủ bì" value={fmt(sizeOverall)!} />
-            )}
-            {sizeCutout && (
-              <div className="flex items-start px-3 py-1.5 text-xs border-b border-gray-50 last:border-0 bg-yellow-50">
-                <span className="w-2/5 text-amber-700 shrink-0 font-medium">
-                  Kích thước khoét đá
-                </span>
-                <span className="w-3/5 font-bold text-amber-800">
-                  {fmt(sizeCutout)}
-                </span>
-              </div>
-            )}
-            {sizePanel && (
-              <Row label="Kích thước mặt bếp" value={fmt(sizePanel)!} />
-            )}
-          </div>
-          {sizeCutout && (
-            <p className="text-[10px] text-amber-600 mt-1 px-1">
-              ⚠️ Kích thước khoét đá cần thiết cho thợ thi công
-            </p>
-          )}
-        </div>
+      {/* Thông số chính */}
+      <div className="grid grid-cols-2 gap-2">
+        {sizeOverall && (
+          <StatCard
+            label="Kích thước phủ bì"
+            value={fmt(sizeOverall)!}
+            accent
+          />
+        )}
+        {sizeCutout && (
+          <StatCard
+            label="Kích thước khoét đá"
+            value={fmt(sizeCutout)!}
+            accent
+          />
+        )}
+        {burnerCount && (
+          <StatCard label="Số vùng nấu" value={`${burnerCount} vùng`} />
+        )}
+        {powerTotal && (
+          <StatCard label="Tổng công suất" value={`${powerTotal} W`} />
+        )}
+      </div>
+      {sizeCutout && (
+        <p className="text-[10px] text-amber-600 px-1">
+          ⚠️ Kích thước khoét đá cần thiết cho thợ thi công
+        </p>
       )}
 
-      {(powerTotal || voltage || burnerCount || burnerType || powerZones) && (
-        <Group title="Thông số điện / Kỹ thuật">
+      {(burnerType || voltage || powerZones) && (
+        <Section title="Thông số kỹ thuật">
           {burnerType && <Row label="Loại bếp" value={fmt(burnerType)!} />}
-          {burnerCount && (
-            <Row label="Số vùng nấu" value={`${burnerCount} vùng`} />
-          )}
-          {powerTotal && (
-            <Row label="Tổng công suất" value={`${powerTotal} W`} />
-          )}
           {voltage && <Row label="Điện áp" value={fmt(voltage)!} />}
           {powerZones && (
             <Row label="Công suất từng vùng" value={fmt(powerZones)!} />
           )}
-        </Group>
+        </Section>
       )}
 
-      {(surfaceMaterial || bodyMaterial || color) && (
-        <Group title="Chất liệu">
+      {(surfaceMaterial || bodyMaterial || color || controlType) && (
+        <Section title="Chất liệu & Điều khiển" defaultOpen={false}>
           {surfaceMaterial && (
             <Row label="Mặt bếp" value={fmt(surfaceMaterial)!} />
           )}
           {bodyMaterial && <Row label="Thân bếp" value={fmt(bodyMaterial)!} />}
           {color && <Row label="Màu sắc" value={fmt(color)!} />}
-        </Group>
+          {controlType && <Row label="Điều khiển" value={fmt(controlType)!} />}
+        </Section>
       )}
 
-      {(controlType || techBadges.length > 0) && (
-        <div>
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
-            Tính năng
-          </p>
-          <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-            {controlType && (
-              <Row label="Điều khiển" value={fmt(controlType)!} />
-            )}
-          </div>
+      {(techBadges.length > 0 || safetyItems.length > 0) && (
+        <Section title="Tính năng">
           {techBadges.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
+            <div className="flex flex-wrap gap-1.5 pb-2">
               {techBadges.map((b) => (
-                <span
+                <Badge
                   key={b.label}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-semibold rounded-full"
-                >
-                  {b.icon} {b.label}
-                </span>
+                  icon={b.icon}
+                  label={b.label}
+                  color="blue"
+                />
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {safetyItems.length > 0 && (
-        <div>
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
-            Tính năng an toàn
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {safetyItems.map((s) => (
-              <span
-                key={s.label}
-                className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 border border-green-200 text-green-700 text-[10px] font-semibold rounded-full"
-              >
-                {s.icon} {s.label}
-              </span>
-            ))}
-          </div>
-        </div>
+          {safetyItems.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {safetyItems.map((s) => (
+                <Badge
+                  key={s.label}
+                  icon={s.icon}
+                  label={s.label}
+                  color="green"
+                />
+              ))}
+            </div>
+          )}
+        </Section>
       )}
 
       {(brand || origin || warranty) && (
-        <Group title="Xuất xứ & Bảo hành">
+        <Section title="Thương hiệu & Bảo hành" defaultOpen={false}>
           {brand && <Row label="Thương hiệu" value={fmt(brand)!} />}
           {origin && <Row label="Xuất xứ" value={fmt(origin)!} />}
           {warranty && <Row label="Bảo hành" value={fmt(warranty)!} />}
-        </Group>
+        </Section>
       )}
 
       {priceRetail > 0 && isAuthenticated && (
-        <div>
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
-            Giá thành
-          </p>
-          <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-            <p className="text-lg font-black text-primary">
+        <div className="rounded-xl border border-amber-200 overflow-hidden">
+          <div className="px-3.5 py-2 bg-amber-50 border-b border-amber-100">
+            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
+              Giá thành
+            </span>
+          </div>
+          <div className="px-3.5 py-3">
+            <p className="text-lg font-black text-gray-900">
               {fmtPrice(priceRetail)}
             </p>
             <p className="text-[10px] text-gray-400 mt-0.5">
-              * Giá tham khảo, chưa bao gồm VAT và phí vận chuyển
+              * Giá tham khảo, chưa bao gồm VAT
             </p>
           </div>
         </div>
@@ -552,18 +647,12 @@ function BepSpecs({ specs }: { specs: Record<string, any> }) {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-interface ProductSpecsProps {
-  specs: Record<string, any>;
-}
-
-export function ProductSpecs({ specs }: ProductSpecsProps) {
+export function ProductSpecs({ specs }: { specs: Record<string, any> }) {
   if (!specs || Object.keys(specs).length === 0) return null;
   const type = detectType(specs);
-
   if (type === "tbvs") return <TBVSSpecs specs={specs} />;
   if (type === "bep") return <BepSpecs specs={specs} />;
   return <GachSpecs specs={specs} />;
 }
 
-// Export type for use in page.tsx
 export { detectType as detectProductType };

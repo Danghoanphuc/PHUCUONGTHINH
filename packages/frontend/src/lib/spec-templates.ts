@@ -185,35 +185,6 @@ const GACH_FIELDS: SpecField[] = [
     placeholder: "VD: Tilers, Viglacera, Đồng Tâm",
     group: "Xuất xứ",
   },
-  {
-    key: "stock_status",
-    label: "Tình trạng kho",
-    type: "select",
-    required: true,
-    group: "Kho",
-    options: ["in_stock", "pre_order", "coming_soon", "out_of_stock"],
-  },
-  {
-    key: "warehouse_location",
-    label: "Vị trí trong kho",
-    type: "text",
-    placeholder: "VD: Kệ A3, Hàng 2",
-    group: "Nội bộ",
-  },
-  {
-    key: "supplier_name",
-    label: "Tên nhà cung cấp",
-    type: "text",
-    placeholder: "VD: Công ty TNHH ABC",
-    group: "Nội bộ",
-  },
-  {
-    key: "supplier_phone",
-    label: "SĐT nhà cung cấp",
-    type: "text",
-    placeholder: "VD: 0901234567",
-    group: "Nội bộ",
-  },
 ];
 
 const TBVS_FIELDS: SpecField[] = [
@@ -394,35 +365,6 @@ const TBVS_FIELDS: SpecField[] = [
     type: "text",
     placeholder: "VD: Bảo hành chính hãng 5 năm tại nhà",
     group: "Xuất xứ & Bảo hành",
-  },
-  {
-    key: "stock_status",
-    label: "Tình trạng kho",
-    type: "select",
-    required: true,
-    group: "Kho",
-    options: ["in_stock", "pre_order", "coming_soon", "out_of_stock"],
-  },
-  {
-    key: "warehouse_location",
-    label: "Vị trí trong kho",
-    type: "text",
-    placeholder: "VD: Kệ A3, Hàng 2",
-    group: "Nội bộ",
-  },
-  {
-    key: "supplier_name",
-    label: "Tên nhà cung cấp",
-    type: "text",
-    placeholder: "VD: Công ty TNHH ABC",
-    group: "Nội bộ",
-  },
-  {
-    key: "supplier_phone",
-    label: "SĐT nhà cung cấp",
-    type: "text",
-    placeholder: "VD: 0901234567",
-    group: "Nội bộ",
   },
 ];
 
@@ -684,35 +626,6 @@ const PHU_TRO_FIELDS: SpecField[] = [
     type: "text",
     placeholder: "VD: 12 tháng kể từ ngày sản xuất",
     group: "Xuất xứ",
-  },
-  {
-    key: "stock_status",
-    label: "Tình trạng kho",
-    type: "select",
-    required: true,
-    group: "Kho",
-    options: ["in_stock", "pre_order", "coming_soon", "out_of_stock"],
-  },
-  {
-    key: "warehouse_location",
-    label: "Vị trí trong kho",
-    type: "text",
-    placeholder: "VD: Kệ A3, Hàng 2",
-    group: "Nội bộ",
-  },
-  {
-    key: "supplier_name",
-    label: "Tên nhà cung cấp",
-    type: "text",
-    placeholder: "VD: Công ty TNHH ABC",
-    group: "Nội bộ",
-  },
-  {
-    key: "supplier_phone",
-    label: "SĐT nhà cung cấp",
-    type: "text",
-    placeholder: "VD: 0901234567",
-    group: "Nội bộ",
   },
 ];
 

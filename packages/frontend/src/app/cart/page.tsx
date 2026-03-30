@@ -48,14 +48,20 @@ export default function CartPage() {
       const combinedDetails = `${formData.notes}\n\n=== DANH SÁCH YÊU CẦU ===\n${itemsListText}`;
       const productIds = items.map((item) => item.product.id);
 
-      await leadService.createLead({
+      // Chỉ gửi email nếu có giá trị
+      const leadData: any = {
         name: formData.name,
         phone: formData.phone,
-        email: formData.email,
         inquiry_type: "quote",
         project_details: combinedDetails,
         product_ids: productIds,
-      });
+      };
+
+      if (formData.email && formData.email.trim()) {
+        leadData.email = formData.email.trim();
+      }
+
+      await leadService.createLead(leadData);
 
       setStatus("success");
       clearCart();

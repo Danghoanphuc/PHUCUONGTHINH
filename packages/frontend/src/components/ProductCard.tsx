@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { ShoppingCart } from "lucide-react";
 import { Product } from "@/types";
-import { useWishlist } from "@/lib/wishlist-context";
+import { useWishlist, useQuoteCart } from "@/lib/wishlist-context";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
@@ -17,11 +19,20 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const imageUrl = coverImage?.file_url || "/placeholder-product.svg";
 
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { addItem } = useQuoteCart();
   const isLiked = isInWishlist(product.id);
+  const [isAdded, setIsAdded] = useState(false);
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     toggleWishlist(product.id);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addItem(product, 1, "m2");
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
   return (
@@ -103,6 +114,18 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             ))}
           </div>
         )}
+
+        <button
+          onClick={handleAddToCart}
+          className={`w-full mt-2 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+            isAdded
+              ? "bg-emerald-500 text-white"
+              : "bg-[#0a192f] text-white hover:bg-emerald-600"
+          }`}
+        >
+          <ShoppingCart size={14} />
+          {isAdded ? "Đã thêm!" : "Thêm vào giỏ"}
+        </button>
       </div>
     </motion.div>
   );

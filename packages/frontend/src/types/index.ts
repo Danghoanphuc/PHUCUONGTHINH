@@ -9,8 +9,8 @@ export interface Product {
   created_at: string;
   updated_at: string;
   media?: Media[];
-  style_tags?: Style[];
-  space_tags?: Space[];
+  style_tags?: { id: string; name: string }[];
+  space_tags?: { id: string; name: string }[];
 }
 
 export interface Media {
@@ -18,7 +18,14 @@ export interface Media {
   product_id: string;
   file_url: string;
   file_type: string;
-  media_type: "lifestyle" | "cutout" | "video" | "3d_file" | "pdf";
+  media_type:
+    | "lifestyle"
+    | "cutout"
+    | "showcase"
+    | "video"
+    | "3d_file"
+    | "pdf"
+    | "social_link";
   sort_order: number;
   is_cover: boolean;
   file_size?: number;

@@ -2,7 +2,15 @@ import { IsString, IsOptional, IsBoolean, IsIn } from 'class-validator';
 
 export class UploadMediaDto {
   @IsString()
-  @IsIn(['lifestyle', 'cutout', 'video', '3d_file', 'pdf', 'social_link'])
+  @IsIn([
+    'lifestyle',
+    'cutout',
+    'showcase',
+    'video',
+    '3d_file',
+    'pdf',
+    'social_link',
+  ])
   media_type: string;
 
   @IsOptional()
@@ -15,7 +23,15 @@ export class GetPresignedUrlDto {
   filename: string;
 
   @IsString()
-  @IsIn(['lifestyle', 'cutout', 'video', '3d_file', 'pdf', 'social_link'])
+  @IsIn([
+    'lifestyle',
+    'cutout',
+    'showcase',
+    'video',
+    '3d_file',
+    'pdf',
+    'social_link',
+  ])
   media_type: string;
 
   @IsString()

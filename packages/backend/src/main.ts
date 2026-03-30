@@ -17,24 +17,21 @@ async function bootstrap() {
   app.use(require('express').json({ limit: '50mb' }));
   app.use(require('express').urlencoded({ limit: '50mb', extended: true }));
 
-  // Serve static files from uploads directory
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
-    prefix: '/uploads/',
-  });
-
-  // Get configuration values
-  const port = configService.get<number>('app.port') || 3001;
-  const nodeEnv = configService.get<string>('app.nodeEnv') || 'development';
-  const frontendUrl =
-    configService.get<string>('app.frontend.url') || 'http://localhost:3001';
-  const cmsUrl =
-    configService.get<string>('app.frontend.cmsUrl') || 'http://localhost:3002';
-
+  // CORS phải đặt trước static assets để header được apply cho cả /uploads/
   app.enableCors({
-    origin: true, // Allow all origins - can restrict later
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
+  });
+
+  // Serve static files from uploads directory
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
+    setHeaders: (res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    },
   });
 
   // Apply security headers middleware
@@ -60,6 +57,13 @@ async function bootstrap() {
 
   // Set global API prefix, exclude root path
   app.setGlobalPrefix('api/v1', { exclude: ['/', 'favicon.ico'] });
+
+  const port = configService.get<number>('app.port') || 3001;
+  const nodeEnv = configService.get<string>('app.nodeEnv') || 'development';
+  const frontendUrl =
+    configService.get<string>('app.frontend.url') || 'http://localhost:3001';
+  const cmsUrl =
+    configService.get<string>('app.frontend.cmsUrl') || 'http://localhost:3002';
 
   await app.listen(port);
 

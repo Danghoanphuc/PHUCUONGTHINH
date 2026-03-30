@@ -18,7 +18,15 @@ export class CreateMediaDto {
   file_type: string;
 
   @IsString()
-  @IsIn(['lifestyle', 'cutout', 'video', '3d_file', 'pdf', 'social_link'])
+  @IsIn([
+    'lifestyle',
+    'cutout',
+    'showcase',
+    'video',
+    '3d_file',
+    'pdf',
+    'social_link',
+  ])
   media_type: string;
 
   @IsOptional()

@@ -1,6 +1,11 @@
 import { apiClient, rawApiClient } from "./admin-api-client";
 import { cleanPayload } from "./constants";
 
+export interface ProductTag {
+  id: string;
+  name: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -11,6 +16,22 @@ export interface Product {
   is_published: boolean;
   created_at: string;
   updated_at: string;
+  style_tags?: ProductTag[];
+  space_tags?: ProductTag[];
+  media?: any[];
+}
+
+/** Normalize nested style_tags/space_tags từ backend về dạng flat { id, name } */
+function normalizeTags(product: any): any {
+  return {
+    ...product,
+    style_tags: (product.style_tags ?? []).map((t: any) =>
+      t.style ? { id: t.style.id, name: t.style.name } : t,
+    ),
+    space_tags: (product.space_tags ?? []).map((t: any) =>
+      t.space ? { id: t.space.id, name: t.space.name } : t,
+    ),
+  };
 }
 
 export interface CreateProductRequest {
@@ -121,14 +142,15 @@ class ProductService {
     );
 
     return {
-      products: raw.data ?? [],
+      products: (raw.data ?? []).map(normalizeTags),
       pagination: raw.pagination,
       available_filters: (raw as any).available_filters,
     };
   }
 
   async getProductById(id: string): Promise<Product> {
-    return apiClient.get<Product>(`/products/${id}`);
+    const raw = await apiClient.get<any>(`/products/${id}`);
+    return normalizeTags(raw);
   }
 
   async createProduct(data: CreateProductRequest): Promise<Product> {

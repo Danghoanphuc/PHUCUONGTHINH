@@ -1,9 +1,22 @@
 "use client";
 
-import { useState, useRef, useCallback, DragEvent, ChangeEvent } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  DragEvent,
+  ChangeEvent,
+} from "react";
 import { validateFile, validateSocialUrl } from "@/lib/media-service";
+import { Image as ImageIcon, Video, X, Star } from "lucide-react";
 
-export type MediaType = "lifestyle" | "cutout" | "video" | "social_link";
+export type MediaType =
+  | "lifestyle"
+  | "cutout"
+  | "video"
+  | "showcase"
+  | "social_link";
 
 export interface PendingMedia {
   clientId: string;
@@ -31,85 +44,236 @@ function nextId() {
   return `media-${Date.now()}-${++_idCounter}`;
 }
 
-const SOCIAL_PLATFORM_ICONS: Record<string, string> = {
-  "pinterest.com": "📌",
-  "instagram.com": "📷",
-  "houzz.com": "🏠",
-  "facebook.com": "👍",
-};
-
-function getPlatformIcon(url: string): string {
-  try {
-    const { hostname } = new URL(url);
-    for (const [domain, icon] of Object.entries(SOCIAL_PLATFORM_ICONS)) {
-      if (hostname === domain || hostname.endsWith(`.${domain}`)) return icon;
-    }
-  } catch {
-    /* ignore */
-  }
-  return "🔗";
-}
-
-function getPlatformName(url: string): string {
-  try {
-    const { hostname } = new URL(url);
-    if (hostname.includes("pinterest")) return "Pinterest";
-    if (hostname.includes("instagram")) return "Instagram";
-    if (hostname.includes("houzz")) return "Houzz";
-    if (hostname.includes("facebook")) return "Facebook";
-  } catch {
-    /* ignore */
-  }
-  return "Social Link";
-}
-
 export function setCover(list: PendingMedia[], index: number): PendingMedia[] {
   return list.map((item, i) => ({ ...item, is_cover: i === index }));
 }
 
+// ── Thumbnail item ────────────────────────────────────────────────────────────
+function MediaThumb({
+  item,
+  index,
+  globalIdx,
+  draggedIndex,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+  onSetCover,
+  onRemove,
+}: {
+  item: PendingMedia;
+  index: number;
+  globalIdx: number;
+  draggedIndex: number | null;
+  onDragStart: (i: number) => void;
+  onDragOver: (e: DragEvent<HTMLDivElement>, i: number) => void;
+  onDragEnd: () => void;
+  onSetCover: (i: number) => void;
+  onRemove: (id: string) => void;
+}) {
+  const isVideo = item.media_type === "video";
+  return (
+    <div
+      draggable
+      onDragStart={() => onDragStart(globalIdx)}
+      onDragOver={(e) => onDragOver(e, globalIdx)}
+      onDragEnd={onDragEnd}
+      className={`relative group rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing transition-all ${
+        item.is_cover
+          ? "border-blue-500 shadow-md"
+          : "border-transparent hover:border-gray-300"
+      } ${draggedIndex === globalIdx ? "opacity-40" : ""}`}
+    >
+      <div className="aspect-square bg-gray-100">
+        {item.preview_url && !isVideo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.preview_url}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        ) : item.preview_url && isVideo ? (
+          <video
+            src={item.preview_url}
+            className="w-full h-full object-cover"
+            muted
+            preload="metadata"
+            onLoadedMetadata={(e) => {
+              (e.target as HTMLVideoElement).currentTime = 0.5;
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
+            {isVideo ? "🎬" : "🖼️"}
+          </div>
+        )}
+      </div>
+
+      {item.status === "uploading" && (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
+          <div
+            className="h-full bg-blue-500 transition-all"
+            style={{ width: `${item.progress ?? 0}%` }}
+          />
+        </div>
+      )}
+      {item.status === "error" && (
+        <div className="absolute inset-0 bg-red-500/80 flex items-center justify-center p-1">
+          <p className="text-white text-xs text-center leading-tight">
+            {item.error}
+          </p>
+        </div>
+      )}
+      {item.is_cover && (
+        <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded font-medium flex items-center gap-0.5">
+          <Star size={9} className="fill-white" /> Bìa
+        </div>
+      )}
+
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+        {!item.is_cover && !isVideo && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSetCover(globalIdx);
+            }}
+            className="bg-white text-gray-800 text-xs px-2 py-1 rounded shadow hover:bg-blue-50"
+          >
+            Bìa
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(item.clientId);
+          }}
+          className="bg-red-500 text-white text-xs px-2 py-1 rounded shadow hover:bg-red-600"
+        >
+          Xóa
+        </button>
+      </div>
+      <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+        {index + 1}
+      </div>
+    </div>
+  );
+}
+
+// ── Drop zone ─────────────────────────────────────────────────────────────────
+function DropZone({
+  label,
+  hint,
+  accept,
+  isDragging,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onClick,
+  inputRef,
+  onFileChange,
+  icon,
+  accentColor,
+}: {
+  label: string;
+  hint: string;
+  accept: string;
+  isDragging: boolean;
+  onDragOver: (e: DragEvent<HTMLDivElement>) => void;
+  onDragLeave: () => void;
+  onDrop: (e: DragEvent<HTMLDivElement>) => void;
+  onClick: () => void;
+  inputRef: React.RefObject<HTMLInputElement>;
+  onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  icon: React.ReactNode;
+  accentColor: string;
+}) {
+  return (
+    <div
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onClick={onClick}
+      className={`flex-1 border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 min-h-[110px] ${
+        isDragging
+          ? `${accentColor} border-opacity-100`
+          : "border-gray-200 hover:border-gray-300 bg-gray-50/60 hover:bg-gray-50"
+      }`}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept={accept}
+        className="hidden"
+        onChange={onFileChange}
+      />
+      <div className="pointer-events-none flex flex-col items-center gap-1.5">
+        {icon}
+        <p className="text-xs font-semibold text-gray-600">{label}</p>
+        <p className="text-[10px] text-gray-400">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export function MediaUploader({
   existingMedia = [],
   onChange,
   productName = "",
 }: MediaUploaderProps) {
   const [items, setItems] = useState<PendingMedia[]>(existingMedia);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  // Sync khi existingMedia load xong (edit mode)
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!initializedRef.current && existingMedia.length > 0) {
+      initializedRef.current = true;
+      setItems(existingMedia);
+    }
+  }, [existingMedia]);
+  const [dragging1, setDragging1] = useState(false);
+  const [dragging2, setDragging2] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [socialUrl, setSocialUrl] = useState("");
   const [socialError, setSocialError] = useState("");
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef1 = useRef<HTMLInputElement>(null);
+  const inputRef2 = useRef<HTMLInputElement>(null);
 
-  const addFiles = useCallback(
-    (files: FileList | File[]) => {
+  // Zone 1: ảnh sản phẩm (lifestyle/cutout)
+  const PRODUCT_TYPES: MediaType[] = ["lifestyle", "cutout"];
+  // Zone 2: video + ảnh showcase
+  const SHOWCASE_TYPES: MediaType[] = ["video", "showcase"];
+
+  const addFilesAs = useCallback(
+    (files: FileList | File[], zone: 1 | 2) => {
       const arr = Array.from(files);
       const newItems: PendingMedia[] = [];
 
       for (const file of arr) {
-        const isVideo = file.type.startsWith("video/");
-        const mediaType: MediaType = isVideo ? "video" : "lifestyle";
+        const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+        const isVideo =
+          file.type.startsWith("video/") ||
+          ["mp4", "mov", "webm"].includes(ext);
 
-        const result = validateFile(file, mediaType);
-        if (!result.valid) {
-          newItems.push({
-            clientId: nextId(),
-            file,
-            media_type: mediaType,
-            is_cover: false,
-            sort_order: 0,
-            status: "error",
-            error: result.error,
-          });
-          continue;
+        let mediaType: MediaType;
+        if (zone === 1) {
+          mediaType = "lifestyle";
+        } else {
+          mediaType = isVideo ? "video" : "showcase";
         }
 
+        const result = validateFile(file, mediaType);
         newItems.push({
           clientId: nextId(),
           file,
           media_type: mediaType,
           is_cover: false,
           sort_order: 0,
-          preview_url: URL.createObjectURL(file),
-          status: "pending",
+          preview_url: result.valid ? URL.createObjectURL(file) : undefined,
+          status: result.valid ? "pending" : "error",
+          error: result.valid ? undefined : result.error,
         });
       }
 
@@ -120,42 +284,17 @@ export function MediaUploader({
           sort_order: base + i,
         }));
         const next = [...prev, ...withOrder];
-
-        const hasCover = next.some((item) => item.is_cover);
-        if (!hasCover) {
-          const firstImage = next.find(
-            (item) =>
-              item.media_type === "lifestyle" || item.media_type === "cutout",
-          );
-          if (firstImage) firstImage.is_cover = true;
+        // Auto-set cover nếu chưa có
+        if (!next.some((i) => i.is_cover)) {
+          const first = next.find((i) => PRODUCT_TYPES.includes(i.media_type));
+          if (first) first.is_cover = true;
         }
-
         onChange(next);
         return next;
       });
     },
     [onChange],
   );
-
-  const handleFileInput = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.length) {
-      addFiles(e.target.files);
-      e.target.value = "";
-    }
-  };
-
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDraggingOver(true);
-  };
-
-  const handleDragLeave = () => setIsDraggingOver(false);
-
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDraggingOver(false);
-    if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
-  };
 
   const removeItem = (clientId: string) => {
     setItems((prev) => {
@@ -167,20 +306,19 @@ export function MediaUploader({
     });
   };
 
-  const handleSetCover = (index: number) => {
+  const handleSetCover = (globalIdx: number) => {
     setItems((prev) => {
-      const next = setCover(prev, index);
+      const next = setCover(prev, globalIdx);
       onChange(next);
       return next;
     });
   };
 
   const handleItemDragStart = (index: number) => setDraggedIndex(index);
-
+  const handleItemDragEnd = () => setDraggedIndex(null);
   const handleItemDragOver = (e: DragEvent<HTMLDivElement>, index: number) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index) return;
-
     setItems((prev) => {
       const next = [...prev];
       const [moved] = next.splice(draggedIndex, 1);
@@ -192,43 +330,16 @@ export function MediaUploader({
     });
   };
 
-  const handleItemDragEnd = () => setDraggedIndex(null);
-
-  const handleAltChange = (clientId: string, alt: string) => {
-    setItems((prev) => {
-      const next = prev.map((item) =>
-        item.clientId === clientId ? { ...item, alt_text: alt } : item,
-      );
-      onChange(next);
-      return next;
-    });
-  };
-
-  const handleCopyAltAll = () => {
-    if (!productName.trim()) return;
-    setItems((prev) => {
-      const next = prev.map((item) =>
-        item.media_type !== "social_link"
-          ? { ...item, alt_text: productName }
-          : item,
-      );
-      onChange(next);
-      return next;
-    });
-  };
-
   const handleAddSocialLink = () => {
     setSocialError("");
     const trimmed = socialUrl.trim();
     if (!trimmed) return;
-
     if (!validateSocialUrl(trimmed)) {
       setSocialError(
-        "URL không hợp lệ. Chỉ chấp nhận: pinterest.com, instagram.com, houzz.com, facebook.com",
+        "Chỉ chấp nhận: pinterest.com, instagram.com, houzz.com, facebook.com",
       );
       return;
     }
-
     setItems((prev) => {
       const next = [
         ...prev,
@@ -247,206 +358,182 @@ export function MediaUploader({
     setSocialUrl("");
   };
 
-  const fileItems = items.filter((i) => i.media_type !== "social_link");
+  const productItems = items.filter((i) =>
+    PRODUCT_TYPES.includes(i.media_type),
+  );
+  const showcaseItems = items.filter((i) =>
+    SHOWCASE_TYPES.includes(i.media_type),
+  );
   const socialItems = items.filter((i) => i.media_type === "social_link");
 
+  const thumbProps = (item: PendingMedia, zoneItems: PendingMedia[]) => ({
+    item,
+    index: zoneItems.indexOf(item),
+    globalIdx: items.indexOf(item),
+    draggedIndex,
+    onDragStart: handleItemDragStart,
+    onDragOver: handleItemDragOver,
+    onDragEnd: handleItemDragEnd,
+    onSetCover: handleSetCover,
+    onRemove: removeItem,
+  });
+
   return (
-    <div className="space-y-6">
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-          isDraggingOver
-            ? "border-blue-400 bg-blue-50"
-            : "border-gray-300 hover:border-gray-400 bg-gray-50"
-        }`}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept=".jpg,.jpeg,.png,.webp,.mp4,.mov"
-          className="hidden"
-          onChange={handleFileInput}
-        />
-        <div className="flex flex-col items-center gap-2 pointer-events-none">
-          <svg
-            className="w-10 h-10 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          <p className="text-sm font-medium text-gray-600">
-            Kéo thả ảnh/video vào đây hoặc{" "}
-            <span className="text-blue-600">chọn file</span>
-          </p>
-          <p className="text-xs text-gray-400">
-            JPG, PNG, WEBP, MP4, MOV — tối đa 50MB mỗi file
-          </p>
+    <div className="space-y-4">
+      {/* ── 2 Drop zones ── */}
+      <div className="flex gap-3">
+        {/* Zone 1: Ảnh sản phẩm — 70% */}
+        <div className="flex flex-col gap-2" style={{ flex: "7" }}>
+          <DropZone
+            label="Ảnh sản phẩm"
+            hint="JPG, PNG, WEBP · Hiện trong gallery chính"
+            accept=".jpg,.jpeg,.png,.webp"
+            isDragging={dragging1}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging1(true);
+            }}
+            onDragLeave={() => setDragging1(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging1(false);
+              if (e.dataTransfer.files?.length)
+                addFilesAs(e.dataTransfer.files, 1);
+            }}
+            onClick={() => inputRef1.current?.click()}
+            inputRef={inputRef1}
+            onFileChange={(e) => {
+              if (e.target.files?.length) {
+                addFilesAs(e.target.files, 1);
+                e.target.value = "";
+              }
+            }}
+            icon={<ImageIcon size={22} className="text-blue-400" />}
+            accentColor="border-blue-400 bg-blue-50/60"
+          />
+          {productItems.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {productItems.map((item) => (
+                <MediaThumb
+                  key={item.clientId}
+                  {...thumbProps(item, productItems)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Zone 2: Video & Showcase — 30% */}
+        <div className="flex flex-col gap-2" style={{ flex: "3" }}>
+          <DropZone
+            label="Video & Thư viện"
+            hint="MP4, MOV, JPG · Hiện trong showcase"
+            accept=".jpg,.jpeg,.png,.webp,.mp4,.mov"
+            isDragging={dragging2}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging2(true);
+            }}
+            onDragLeave={() => setDragging2(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging2(false);
+              if (e.dataTransfer.files?.length)
+                addFilesAs(e.dataTransfer.files, 2);
+            }}
+            onClick={() => inputRef2.current?.click()}
+            inputRef={inputRef2}
+            onFileChange={(e) => {
+              if (e.target.files?.length) {
+                addFilesAs(e.target.files, 2);
+                e.target.value = "";
+              }
+            }}
+            icon={<Video size={22} className="text-purple-400" />}
+            accentColor="border-purple-400 bg-purple-50/60"
+          />
+          {showcaseItems.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {showcaseItems.map((item) => (
+                <MediaThumb
+                  key={item.clientId}
+                  {...thumbProps(item, showcaseItems)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {fileItems.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-gray-500">
-              Kéo để sắp xếp · Click ảnh bìa để đặt làm cover
+      {/* ── Alt text ── */}
+      {productItems.filter((i) => i.status !== "error").length > 0 && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-gray-500">
+              Alt text ảnh sản phẩm
             </p>
             {productName && (
               <button
                 type="button"
-                onClick={handleCopyAltAll}
+                onClick={() => {
+                  setItems((prev) => {
+                    const next = prev.map((item) =>
+                      PRODUCT_TYPES.includes(item.media_type)
+                        ? { ...item, alt_text: productName }
+                        : item,
+                    );
+                    onChange(next);
+                    return next;
+                  });
+                }}
                 className="text-xs text-blue-600 hover:text-blue-800 underline underline-offset-2"
               >
-                Copy tên SP vào Alt tất cả ảnh
+                Copy tên SP vào tất cả
               </button>
             )}
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-            {fileItems.map((item, idx) => {
-              const globalIdx = items.indexOf(item);
-              const isVideo = item.media_type === "video";
-              return (
-                <div
-                  key={item.clientId}
-                  draggable
-                  onDragStart={() => handleItemDragStart(globalIdx)}
-                  onDragOver={(e) => handleItemDragOver(e, globalIdx)}
-                  onDragEnd={handleItemDragEnd}
-                  className={`relative group rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing transition-all ${
-                    item.is_cover
-                      ? "border-blue-500 shadow-md"
-                      : "border-transparent hover:border-gray-300"
-                  } ${draggedIndex === globalIdx ? "opacity-50" : ""}`}
-                >
-                  <div className="aspect-square bg-gray-100">
-                    {item.preview_url && !isVideo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.preview_url}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    ) : item.preview_url && isVideo ? (
-                      <video
-                        src={item.preview_url}
-                        className="w-full h-full object-cover"
-                        muted
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
-                        {isVideo ? "🎬" : "🖼️"}
-                      </div>
-                    )}
-                  </div>
-
-                  {item.status === "uploading" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
-                      <div
-                        className="h-full bg-blue-500 transition-all"
-                        style={{ width: `${item.progress ?? 0}%` }}
-                      />
-                    </div>
-                  )}
-
-                  {item.status === "error" && (
-                    <div className="absolute inset-0 bg-red-500/80 flex items-center justify-center p-1">
-                      <p className="text-white text-xs text-center leading-tight">
-                        {item.error}
-                      </p>
-                    </div>
-                  )}
-
-                  {item.is_cover && (
-                    <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                      Bìa
-                    </div>
-                  )}
-
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    {!item.is_cover && item.media_type !== "video" && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSetCover(globalIdx);
-                        }}
-                        className="bg-white text-gray-800 text-xs px-2 py-1 rounded shadow hover:bg-blue-50"
-                      >
-                        Bìa
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeItem(item.clientId);
-                      }}
-                      className="bg-red-500 text-white text-xs px-2 py-1 rounded shadow hover:bg-red-600"
-                    >
-                      Xóa
-                    </button>
-                  </div>
-
-                  <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                    {idx + 1}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-3 space-y-2">
-            {fileItems.map((item) => (
+          {productItems
+            .filter((i) => i.status !== "error")
+            .map((item) => (
               <div
                 key={`alt-${item.clientId}`}
                 className="flex items-center gap-2"
               >
-                <div className="w-8 h-8 rounded overflow-hidden shrink-0 bg-gray-100">
-                  {item.preview_url && item.media_type !== "video" ? (
+                <div className="w-7 h-7 rounded overflow-hidden shrink-0 bg-gray-100">
+                  {item.preview_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={item.preview_url}
                       alt=""
                       className="w-full h-full object-cover"
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                      {item.media_type === "video" ? "🎬" : "🖼️"}
-                    </div>
                   )}
                 </div>
                 <input
                   type="text"
                   value={item.alt_text ?? ""}
-                  onChange={(e) =>
-                    handleAltChange(item.clientId, e.target.value)
-                  }
+                  onChange={(e) => {
+                    setItems((prev) => {
+                      const next = prev.map((m) =>
+                        m.clientId === item.clientId
+                          ? { ...m, alt_text: e.target.value }
+                          : m,
+                      );
+                      onChange(next);
+                      return next;
+                    });
+                  }}
                   placeholder={`Alt text ảnh ${item.sort_order + 1}...`}
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
                 />
               </div>
             ))}
-          </div>
         </div>
       )}
 
-      <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-        <h4 className="text-sm font-semibold text-gray-700">
-          Link mạng xã hội
-        </h4>
-        <p className="text-xs text-gray-400">
-          Pinterest, Instagram, Houzz, Facebook
-        </p>
-
+      {/* ── Social links ── */}
+      <div className="border border-gray-200 rounded-xl p-3 space-y-2">
+        <p className="text-xs font-semibold text-gray-600">Link mạng xã hội</p>
         <div className="flex gap-2">
           <input
             type="url"
@@ -462,53 +549,34 @@ export function MediaUploader({
               }
             }}
             placeholder="https://www.pinterest.com/pin/..."
-            className={`flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${socialError ? "border-red-400" : "border-gray-300"}`}
+            className={`flex-1 border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${socialError ? "border-red-400" : "border-gray-200"}`}
           />
           <button
             type="button"
             onClick={handleAddSocialLink}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+            className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
           >
             Thêm
           </button>
         </div>
         {socialError && <p className="text-xs text-red-500">{socialError}</p>}
-
         {socialItems.length > 0 && (
-          <ul className="space-y-2">
+          <ul className="space-y-1.5">
             {socialItems.map((item) => (
               <li
                 key={item.clientId}
-                className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg"
+                className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg text-xs"
               >
-                <span className="text-xl" aria-hidden>
-                  {getPlatformIcon(item.url ?? "")}
+                <span className="text-base">🔗</span>
+                <span className="flex-1 truncate text-gray-500">
+                  {item.url}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-700">
-                    {getPlatformName(item.url ?? "")}
-                  </p>
-                  <p className="text-xs text-gray-400 truncate">{item.url}</p>
-                </div>
                 <button
                   type="button"
                   onClick={() => removeItem(item.clientId)}
-                  className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                  aria-label="Xóa link"
+                  className="text-gray-400 hover:text-red-500"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <X size={13} />
                 </button>
               </li>
             ))}

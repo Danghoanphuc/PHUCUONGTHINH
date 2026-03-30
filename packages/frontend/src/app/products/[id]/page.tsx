@@ -19,6 +19,7 @@ import {
   Clock,
   ChevronRight,
   ChevronLeft,
+  Pencil,
 } from "lucide-react";
 import { useQuoteCart } from "@/lib/wishlist-context";
 import { productService } from "@/lib/product-service";
@@ -34,8 +35,238 @@ import {
 import { MediaShowcase } from "@/components/MediaShowcase";
 import { Product } from "@/types";
 import { useAuth } from "@repo/shared-utils";
-import InternalProductInfo from "@/components/internal/InternalProductInfo";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { apiClient } from "@/lib/admin-api-client";
+import { ShareButton } from "@/components/ShareButton";
+
+// ── Block thông tin nội bộ (chỉ admin) ───────────────────────────────────────
+function InternalProductBlock({ productId }: { productId: string }) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiClient
+      .get<any>(`/products/${productId}/internal`)
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, [productId]);
+
+  if (loading) return null;
+  if (!data)
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-700">
+        Chưa có thông tin nội bộ — thêm từ trang chỉnh sửa sản phẩm.
+      </div>
+    );
+
+  const fmt = (v: number) => new Intl.NumberFormat("vi-VN").format(v) + "đ";
+  const stockLabels: Record<string, { label: string; cls: string }> = {
+    in_stock: {
+      label: "Còn hàng",
+      cls: "text-emerald-700 bg-emerald-50 border-emerald-200",
+    },
+    low_stock: {
+      label: "Sắp hết",
+      cls: "text-amber-700 bg-amber-50 border-amber-200",
+    },
+    out_of_stock: {
+      label: "Hết hàng",
+      cls: "text-red-700 bg-red-50 border-red-200",
+    },
+    pre_order: {
+      label: "Đặt trước",
+      cls: "text-blue-700 bg-blue-50 border-blue-200",
+    },
+    discontinued: {
+      label: "Ngừng kinh doanh",
+      cls: "text-gray-700 bg-gray-50 border-gray-200",
+    },
+  };
+  const stock = data.stock_status ? stockLabels[data.stock_status] : null;
+
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-amber-200 bg-amber-100/60 flex items-center justify-between">
+        <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">
+          🔒 Thông tin nội bộ
+        </span>
+        {stock && (
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${stock.cls}`}
+          >
+            {stock.label}
+          </span>
+        )}
+      </div>
+      <div className="px-4 py-3 space-y-4">
+        {/* Giá bán */}
+        {(data.price_retail != null ||
+          data.price_wholesale != null ||
+          data.price_dealer != null ||
+          data.price_promo != null) && (
+          <div>
+            <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2">
+              Giá bán
+            </p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+              {data.price_retail != null && (
+                <div className="text-xs">
+                  <p className="text-amber-600 mb-0.5">Giá bán lẻ</p>
+                  <p className="font-bold text-amber-900">
+                    {fmt(data.price_retail)}
+                  </p>
+                </div>
+              )}
+              {data.price_dealer != null && (
+                <div className="text-xs">
+                  <p className="text-amber-600 mb-0.5">Giá đại lý</p>
+                  <p className="font-bold text-amber-900">
+                    {fmt(data.price_dealer)}
+                  </p>
+                </div>
+              )}
+              {data.price_wholesale != null && (
+                <div className="text-xs">
+                  <p className="text-amber-600 mb-0.5">Giá bán sỉ</p>
+                  <p className="font-bold text-amber-900">
+                    {fmt(data.price_wholesale)}
+                  </p>
+                </div>
+              )}
+              {data.price_promo != null && (
+                <div className="text-xs">
+                  <p className="text-amber-600 mb-0.5">Giá khuyến mãi</p>
+                  <p className="font-bold text-red-700">
+                    {fmt(data.price_promo)}
+                  </p>
+                </div>
+              )}
+            </div>
+            {data.wholesale_discount_tiers && (
+              <div className="text-xs mt-2 pt-2 border-t border-amber-200">
+                <p className="text-amber-600 mb-0.5">Khung chiết khấu</p>
+                <p className="text-amber-900 text-[11px] leading-relaxed">
+                  {data.wholesale_discount_tiers}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Khuyến mãi */}
+        {(data.promo_start_date || data.promo_end_date || data.promo_note) && (
+          <div className="pt-3 border-t border-amber-200">
+            <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2">
+              Khuyến mãi
+            </p>
+            <div className="text-xs space-y-1">
+              {(data.promo_start_date || data.promo_end_date) && (
+                <p className="text-amber-900">
+                  <span className="text-amber-600">Thời gian: </span>
+                  {data.promo_start_date || "..."} →{" "}
+                  {data.promo_end_date || "..."}
+                </p>
+              )}
+              {data.promo_note && (
+                <p className="text-amber-900">
+                  <span className="text-amber-600">Ghi chú: </span>
+                  {data.promo_note}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Kho hàng */}
+        {(data.warehouse_location ||
+          data.stock_quantity != null ||
+          data.stock_levels?.length > 0) && (
+          <div className="pt-3 border-t border-amber-200">
+            <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2">
+              Kho hàng
+            </p>
+            <div className="text-xs space-y-1.5">
+              {data.warehouse_location && (
+                <p className="text-amber-900">
+                  <span className="text-amber-600">Vị trí: </span>
+                  {data.warehouse_location}
+                </p>
+              )}
+              {data.stock_quantity != null && (
+                <p className="text-amber-900">
+                  <span className="text-amber-600">Số lượng: </span>
+                  <span className="font-bold">{data.stock_quantity}</span>
+                </p>
+              )}
+              {data.stock_levels?.length > 0 && (
+                <div>
+                  <p className="text-amber-600 mb-1">Tồn kho chi tiết:</p>
+                  {data.stock_levels.map((sl: any) => (
+                    <div
+                      key={sl.id}
+                      className="flex justify-between text-[11px] ml-2"
+                    >
+                      <span className="text-amber-700">
+                        {sl.warehouse?.name}
+                        {sl.warehouse?.location
+                          ? ` — ${sl.warehouse.location}`
+                          : ""}
+                      </span>
+                      <span
+                        className={`font-bold ${sl.quantity > 0 ? "text-emerald-700" : "text-red-600"}`}
+                      >
+                        {sl.quantity}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Nhà cung cấp */}
+        {(data.supplier_name || data.supplier_phone) && (
+          <div className="pt-3 border-t border-amber-200">
+            <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2">
+              Nhà cung cấp
+            </p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+              {data.supplier_name && (
+                <div>
+                  <p className="text-amber-600 mb-0.5">Tên</p>
+                  <p className="font-semibold text-amber-900">
+                    {data.supplier_name}
+                  </p>
+                </div>
+              )}
+              {data.supplier_phone && (
+                <div>
+                  <p className="text-amber-600 mb-0.5">Số điện thoại</p>
+                  <p className="font-semibold text-amber-900">
+                    {data.supplier_phone}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Ghi chú */}
+        {data.internal_notes && (
+          <div className="pt-3 border-t border-amber-200">
+            <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1">
+              Ghi chú nội bộ
+            </p>
+            <p className="text-xs text-amber-900 leading-relaxed">
+              {data.internal_notes}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const ZALO_URL = "https://zalo.me/0901234567";
 const TRUST_BADGES = [
@@ -227,8 +458,6 @@ export default function ProductDetailPage({
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
-  const [activeTab, setActiveTab] = useState<"specs" | "internal">("specs");
-  const [internalQueryClient] = useState(() => new QueryClient());
   const ctaRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, user } = useAuth();
 
@@ -294,16 +523,26 @@ export default function ProductDetailPage({
   const images =
     product.media?.filter(
       (m) =>
-        m.file_type?.startsWith("image") ||
-        m.file_url?.match(/\.(jpg|jpeg|png|webp|svg)$/i),
+        m.media_type === "lifestyle" ||
+        m.media_type === "cutout" ||
+        (!m.media_type &&
+          (m.file_type?.startsWith("image") ||
+            m.file_url?.match(/\.(jpg|jpeg|png|webp|svg)$/i))),
     ) ?? [];
-  const videos =
-    product.media?.filter(
-      (m) =>
-        m.media_type === "video" ||
-        m.file_type?.startsWith("video") ||
-        m.file_url?.match(/\.(mp4|mov|webm)$/i),
-    ) ?? [];
+  const videos = product.media?.filter((m) => m.media_type === "video") ?? [];
+  const showcaseImages =
+    product.media?.filter((m) => m.media_type === "showcase") ?? [];
+  // Debug: xóa sau khi confirm
+  if (typeof window !== "undefined" && product.media?.length) {
+    console.log(
+      "[media types]",
+      product.media.map((m) => ({
+        id: m.id,
+        type: m.media_type,
+        url: m.file_url,
+      })),
+    );
+  }
   const pdfFiles =
     product.media?.filter(
       (m) => m.media_type === "pdf" || m.file_url?.endsWith(".pdf"),
@@ -361,6 +600,23 @@ export default function ProductDetailPage({
               <span className="text-emerald-600 truncate max-w-[200px] sm:max-w-xs">
                 {product.sku}
               </span>
+              <div className="ml-auto flex items-center gap-2">
+                <ShareButton
+                  url={`/products/${product.id}`}
+                  title={product.name}
+                  text={`Xem sản phẩm ${product.name} (SKU: ${product.sku})`}
+                  className="normal-case tracking-normal"
+                />
+                {isAuthenticated && (
+                  <Link
+                    href={`/admin/products/${product.id}`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0a192f] text-white rounded-lg text-xs font-semibold hover:bg-[#0d2137] transition-colors normal-case tracking-normal"
+                  >
+                    <Pencil size={12} />
+                    Chỉnh sửa
+                  </Link>
+                )}
+              </div>{" "}
             </nav>
 
             {/* ── LEFT: Cột Hình ảnh (STICKY) ── */}
@@ -383,6 +639,35 @@ export default function ProductDetailPage({
                         <div className="bg-white/90 p-3 rounded-full shadow-lg text-gray-800">
                           <ZoomIn size={24} />
                         </div>
+                      </div>
+                      {/* Badges đè lên ảnh — góc trên trái */}
+                      <div
+                        className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <StockBadge status={stockStatus} />
+                        {(specs.badges as string[] | undefined)?.map(
+                          (badge) => (
+                            <span
+                              key={badge}
+                              className="self-start px-2.5 py-1 bg-amber-500 text-white text-[11px] font-bold rounded-full shadow-sm"
+                            >
+                              {badge}
+                            </span>
+                          ),
+                        )}
+                      </div>
+                      {/* Share ảnh hiện tại */}
+                      <div
+                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ShareButton
+                          url={activeImage}
+                          title={`${product.name} - Ảnh sản phẩm`}
+                          compact
+                          className="bg-white/90 backdrop-blur-sm rounded-full shadow-md"
+                        />
                       </div>
                       {images.length > 1 && (
                         <>
@@ -435,18 +720,12 @@ export default function ProductDetailPage({
               </div>
             </div>
 
-            {/* ── RIGHT: Cột Thông tin (Bố cục gọn gàng, đẩy CTA lên cao) ── */}
+            {/* ── RIGHT: Cột Thông tin ── */}
             <div className="lg:col-span-7 flex flex-col gap-4">
-              {/* Block 1: Header (Tên, SKU, Tags, Trạng thái) */}
-              <div className="border-b border-gray-100 pb-3">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <StockBadge status={stockStatus} />
-                  <span className="text-xs font-semibold text-gray-500 bg-gray-100/80 px-2.5 py-1 rounded-lg tracking-wider">
-                    SKU: {product.sku}
-                  </span>
-                </div>
-
-                <div className="flex items-start justify-between gap-4">
+              {/* Block 1: Header */}
+              <div className="border-b border-gray-100 pb-4">
+                {/* Tên + QR */}
+                <div className="flex items-start justify-between gap-3 mb-1.5">
                   <h1 className="text-2xl md:text-3xl font-black text-[#0a192f] tracking-tight leading-tight">
                     {product.name}
                   </h1>
@@ -464,28 +743,10 @@ export default function ProductDetailPage({
                   )}
                 </div>
 
-                {/* Tags */}
-                {((product.style_tags?.length ?? 0) > 0 ||
-                  (product.space_tags?.length ?? 0) > 0) && (
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {product.style_tags?.map((s) => (
-                      <span
-                        key={`style-${s.id}`}
-                        className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-100"
-                      >
-                        {s.name}
-                      </span>
-                    ))}
-                    {product.space_tags?.map((s) => (
-                      <span
-                        key={`space-${s.id}`}
-                        className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100"
-                      >
-                        {s.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {/* SKU nhỏ */}
+                <p className="text-[11px] font-mono text-gray-400">
+                  SKU: {product.sku}
+                </p>
               </div>
 
               {/* Mô tả ngắn */}
@@ -497,10 +758,26 @@ export default function ProductDetailPage({
 
               {/* Block 2: Thông số kỹ thuật */}
               <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
-                  <h2 className="text-sm font-semibold text-gray-700">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80 flex items-center gap-2 flex-wrap">
+                  <h2 className="text-sm font-semibold text-gray-700 mr-1">
                     Thông số kỹ thuật
                   </h2>
+                  {product.style_tags?.map((s) => (
+                    <span
+                      key={`style-${s.id}`}
+                      className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-semibold rounded-full border border-emerald-100"
+                    >
+                      {s.name}
+                    </span>
+                  ))}
+                  {product.space_tags?.map((s) => (
+                    <span
+                      key={`space-${s.id}`}
+                      className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-semibold rounded-full border border-blue-100"
+                    >
+                      {s.name}
+                    </span>
+                  ))}
                 </div>
 
                 <div className="p-3.5">
@@ -511,19 +788,15 @@ export default function ProductDetailPage({
                       Chưa có thông số kỹ thuật
                     </p>
                   )}
-
-                  {/* Thông tin nội bộ - chỉ hiện khi đã đăng nhập */}
-                  {isAuthenticated && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <QueryClientProvider client={internalQueryClient}>
-                        <InternalProductInfo productId={product.id} />
-                      </QueryClientProvider>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* Block 3: Khu vực CTA (Đưa xuống sau) */}
+              {/* Block nội bộ — chỉ admin */}
+              {isAuthenticated && (
+                <InternalProductBlock productId={product.id} />
+              )}
+
+              {/* Block 3: Khu vực CTA */}
               <div
                 ref={ctaRef}
                 className="bg-gray-50/70 p-3.5 rounded-xl border border-gray-100 space-y-3"
@@ -598,10 +871,10 @@ export default function ProductDetailPage({
 
           {/* ── Các Khu vực bổ sung phía dưới ── */}
           <div className="mt-16 space-y-16">
-            {(videos.length > 0 || images.length > 0) && (
+            {(videos.length > 0 || showcaseImages.length > 0) && (
               <MediaShowcase
                 videos={videos}
-                images={images}
+                images={showcaseImages}
                 productName={product.name}
                 onLightbox={setLightboxSrc}
               />

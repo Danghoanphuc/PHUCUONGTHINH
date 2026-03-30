@@ -51,6 +51,7 @@ export class LocalStorageService {
     const allowedTypes = {
       lifestyle: ['jpg', 'jpeg', 'png', 'webp'],
       cutout: ['jpg', 'jpeg', 'png', 'webp'],
+      showcase: ['jpg', 'jpeg', 'png', 'webp'],
       video: ['mp4', 'webm', 'mov'],
       '3d_file': ['dwg', 'obj', 'fbx', 'dae', 'blend', 'glb', 'gltf', 'skp'],
       pdf: ['pdf'],

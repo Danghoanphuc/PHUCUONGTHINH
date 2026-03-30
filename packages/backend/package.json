@@ -31,6 +31,7 @@
     "sync:export": "node scripts/export-production-data.js",
     "sync:import": "node scripts/import-from-backup.js",
     "sync:from-prod": "node scripts/sync-from-production.js",
+    "sync:to-prod": "node scripts/push-to-production.js",
     "db:reset:sqlite": "prisma migrate reset --force --schema=prisma/schema.sqlite.prisma",
     "db:studio": "prisma studio",
     "db:studio:sqlite": "prisma studio --schema=prisma/schema.sqlite.prisma",

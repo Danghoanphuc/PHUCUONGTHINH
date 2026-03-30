@@ -99,6 +99,7 @@ export class ProductsService {
       },
     });
 
+    this.combinedFilterService.clearProductCaches();
     this.eventsService.emit({
       type: 'created',
       productId: product.id,
@@ -297,6 +298,7 @@ export class ProductsService {
       },
     });
 
+    this.combinedFilterService.clearProductCaches(id);
     this.eventsService.emit({
       type: 'updated',
       productId: id,
@@ -312,6 +314,7 @@ export class ProductsService {
       where: { id },
     });
 
+    this.combinedFilterService.clearProductCaches(id);
     this.eventsService.emit({
       type: 'deleted',
       productId: id,

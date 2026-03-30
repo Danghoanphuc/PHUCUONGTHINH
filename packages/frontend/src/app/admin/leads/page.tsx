@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { leadService, Lead } from "@/lib/lead-service";
+import { leadService, Lead } from "@/lib/lead-service-admin";
 
 const STATUS_COLORS: Record<string, string> = {
   new: "bg-blue-100 text-blue-800",
@@ -37,10 +37,22 @@ export default function AdminLeadsPage() {
         limit,
         statusFilter || undefined,
       );
+      console.log("Leads response:", res);
+
+      // Kiểm tra cấu trúc response
+      if (!res || typeof res !== "object") {
+        throw new Error("Invalid response format");
+      }
+
       setLeads(res.leads || []);
       setTotal(res.pagination?.total || 0);
     } catch (err: any) {
-      setError(err.response?.data?.error?.message || "Không thể tải leads");
+      console.error("Error loading leads:", err);
+      setError(
+        err.message ||
+          err.response?.data?.error?.message ||
+          "Không thể tải leads",
+      );
       setLeads([]);
     } finally {
       setIsLoading(false);

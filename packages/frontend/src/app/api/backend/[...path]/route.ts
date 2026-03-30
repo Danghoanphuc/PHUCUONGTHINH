@@ -7,6 +7,17 @@ const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:3001/api/v1";
 
+function buildHeaders(
+  request: NextRequest,
+  contentType?: string,
+): Record<string, string> {
+  const headers: Record<string, string> = {};
+  const auth = request.headers.get("authorization");
+  if (auth) headers["authorization"] = auth;
+  if (contentType) headers["Content-Type"] = contentType;
+  return headers;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { path: string[] } },
@@ -14,14 +25,10 @@ export async function GET(
   const path = params.path.join("/");
   const search = request.nextUrl.search;
   const url = `${BACKEND_URL}/${path}${search}`;
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const auth = request.headers.get("authorization");
-  if (auth) headers["authorization"] = auth;
-
-  const res = await fetch(url, { headers, cache: "no-store" });
+  const res = await fetch(url, {
+    headers: buildHeaders(request, "application/json"),
+    cache: "no-store",
+  });
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });
 }
@@ -32,15 +39,26 @@ export async function POST(
 ) {
   const path = params.path.join("/");
   const url = `${BACKEND_URL}/${path}`;
+  const contentType = request.headers.get("content-type") ?? "";
+
+  // Multipart: forward body as-is, don't touch Content-Type (browser sets boundary)
+  if (contentType.includes("multipart/form-data")) {
+    const body = await request.arrayBuffer();
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { ...buildHeaders(request), "Content-Type": contentType },
+      body,
+    });
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  }
+
   const body = await request.text();
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const auth = request.headers.get("authorization");
-  if (auth) headers["authorization"] = auth;
-
-  const res = await fetch(url, { method: "POST", headers, body });
+  const res = await fetch(url, {
+    method: "POST",
+    headers: buildHeaders(request, "application/json"),
+    body,
+  });
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });
 }
@@ -52,14 +70,11 @@ export async function PUT(
   const path = params.path.join("/");
   const url = `${BACKEND_URL}/${path}`;
   const body = await request.text();
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const auth = request.headers.get("authorization");
-  if (auth) headers["authorization"] = auth;
-
-  const res = await fetch(url, { method: "PUT", headers, body });
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: buildHeaders(request, "application/json"),
+    body,
+  });
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });
 }
@@ -71,14 +86,11 @@ export async function PATCH(
   const path = params.path.join("/");
   const url = `${BACKEND_URL}/${path}`;
   const body = await request.text();
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const auth = request.headers.get("authorization");
-  if (auth) headers["authorization"] = auth;
-
-  const res = await fetch(url, { method: "PATCH", headers, body });
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: buildHeaders(request, "application/json"),
+    body,
+  });
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });
 }
@@ -89,14 +101,10 @@ export async function DELETE(
 ) {
   const path = params.path.join("/");
   const url = `${BACKEND_URL}/${path}`;
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const auth = request.headers.get("authorization");
-  if (auth) headers["authorization"] = auth;
-
-  const res = await fetch(url, { method: "DELETE", headers });
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: buildHeaders(request, "application/json"),
+  });
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });
 }

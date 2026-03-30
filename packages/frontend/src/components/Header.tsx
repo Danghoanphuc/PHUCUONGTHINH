@@ -13,10 +13,13 @@ import {
   LogOut,
   LayoutDashboard,
   CalendarDays,
+  ShoppingCart,
 } from "lucide-react";
 import { MegaMenu } from "@/components/MegaMenu";
 import { useAuth } from "@repo/shared-utils";
 import { authService } from "@/lib/auth-service";
+import { useQuoteCart } from "@/lib/wishlist-context";
+import { LeadNotificationBadge } from "@/components/admin/LeadNotificationBadge";
 
 // Bảng màu
 const palette = {
@@ -44,6 +47,7 @@ export function Header() {
   const isProductDetailPage =
     pathname.startsWith("/products/") && pathname !== "/products";
   const { isAuthenticated, user, logout } = useAuth();
+  const { itemCount } = useQuoteCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -98,6 +102,7 @@ export function Header() {
                 <LayoutDashboard size={12} />
                 <span className="hidden sm:inline">Dashboard</span>
               </Link>
+              <LeadNotificationBadge />
               <Link
                 href="/admin/products"
                 className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
@@ -176,6 +181,23 @@ export function Header() {
               style={{ backgroundColor: palette.lightBrown }}
               className="w-px h-5 opacity-40"
             />
+            <Link
+              href="/cart"
+              style={{ color: palette.brown }}
+              className="relative p-2 hover:text-opacity-80 transition-colors"
+              title="Giỏ hàng"
+            >
+              <ShoppingCart size={16} />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+            <span
+              style={{ backgroundColor: palette.lightBrown }}
+              className="w-px h-5 opacity-40"
+            />
             <a
               href="https://zalo.me"
               target="_blank"
@@ -211,6 +233,7 @@ export function Header() {
               <LayoutDashboard size={12} />
               <span className="hidden sm:inline">Dashboard</span>
             </Link>
+            <LeadNotificationBadge />
             <Link
               href={`/admin/products`}
               className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
@@ -300,6 +323,25 @@ export function Header() {
               >
                 {searchOpen ? <X size={18} /> : <Search size={18} />}
               </button>
+
+              <span
+                style={{ backgroundColor: dividerColor }}
+                className="w-px h-5 transition-colors duration-300"
+              />
+
+              <Link
+                href="/cart"
+                style={{ color: textColor }}
+                className="relative p-2 transition-opacity hover:opacity-70"
+                aria-label="Giỏ hàng"
+              >
+                <ShoppingCart size={18} />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                    {itemCount}
+                  </span>
+                )}
+              </Link>
 
               <span
                 style={{ backgroundColor: dividerColor }}
