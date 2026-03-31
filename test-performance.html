@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Performance Test Tool</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      h1 {
+        color: #0a192f;
+        margin-top: 0;
+      }
+      h2 {
+        color: #334155;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 8px;
+      }
+      .test-group {
+        margin: 20px 0;
+      }
+      button {
+        background: #0a192f;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+      button:hover {
+        background: #0d2137;
+      }
+      button:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+      }
+      .result {
+        background: #f8fafc;
+        border-left: 4px solid #3b82f6;
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+      }
+      .result.success {
+        border-left-color: #10b981;
+        background: #f0fdf4;
+      }
+      .result.error {
+        border-left-color: #ef4444;
+        background: #fef2f2;
+      }
+      .result.warning {
+        border-left-color: #f59e0b;
+        background: #fffbeb;
+      }
+      .metric {
+        display: inline-block;
+        background: #e0f2fe;
+        padding: 4px 12px;
+        border-radius: 4px;
+        margin: 4px;
+        font-weight: 600;
+        color: #0369a1;
+      }
+      .metric.slow {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .metric.fast {
+        background: #dcfce7;
+        color: #166534;
+      }
+      input {
+        padding: 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        width: 400px;
+        font-size: 14px;
+        margin-right: 10px;
+      }
+      .status {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      .status.online {
+        background: #10b981;
+      }
+      .status.offline {
+        background: #ef4444;
+      }
+      .status.unknown {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 Performance Test Tool</h1>
+      <p>Tool để test performance và phát hiện điểm nghẽn</p>
+    </div>
+
+    <div class="container">
+      <h2>⚙️ Configuration</h2>
+      <div class="test-group">
+        <label>Backend API URL:</label><br />
+        <input
+          type="text"
+          id="apiUrl"
+          value="http://localhost:3001/api/v1"
+          placeholder="http://localhost:3001/api/v1"
+        />
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>1️⃣ Connection Tests</h2>
+      <div class="test-group">
+        <button onclick="testConnection()">Test API Connection</button>
+        <button onclick="testSSE()">Test SSE Connection</button>
+        <button onclick="testCORS()">Test CORS</button>
+        <div id="connectionResults"></div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>2️⃣ API Performance Tests</h2>
+      <div class="test-group">
+        <button onclick="testAPISpeed()">Test API Speed</button>
+        <button onclick="testParallelRequests()">Test Parallel Requests</button>
+        <button onclick="testCacheHeaders()">Check Cache Headers</button>
+        <div id="apiResults"></div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>3️⃣ Cloudflare Detection</h2>
+      <div class="test-group">
+        <button onclick="detectCloudflare()">Detect Cloudflare</button>
+        <button onclick="checkCacheStatus()">Check CF Cache Status</button>
+        <div id="cloudflareResults"></div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>4️⃣ Upload Performance</h2>
+      <div class="test-group">
+        <input type="file" id="testFile" accept="image/*" />
+        <button onclick="testUploadSpeed()">Test Upload Speed</button>
+        <div id="uploadResults"></div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>5️⃣ Network Information</h2>
+      <div class="test-group">
+        <button onclick="showNetworkInfo()">Show Network Info</button>
+        <div id="networkResults"></div>
+      </div>
+    </div>
+
+    <script>
+      function getApiUrl() {
+        return document.getElementById("apiUrl").value;
+      }
+
+      function addResult(containerId, html, type = "info") {
+        const container = document.getElementById(containerId);
+        const result = document.createElement("div");
+        result.className = `result ${type}`;
+        result.innerHTML = html;
+        container.appendChild(result);
+      }
+
+      function clearResults(containerId) {
+        document.getElementById(containerId).innerHTML = "";
+      }
+
+      function formatTime(ms) {
+        if (ms < 100)
+          return `<span class="metric fast">${ms.toFixed(0)}ms</span>`;
+        if (ms < 500) return `<span class="metric">${ms.toFixed(0)}ms</span>`;
+        return `<span class="metric slow">${ms.toFixed(0)}ms</span>`;
+      }
+
+      async function testConnection() {
+        clearResults("connectionResults");
+        const apiUrl = getApiUrl();
+
+        try {
+          const start = performance.now();
+          const response = await fetch(`${apiUrl}/products?limit=1`);
+          const end = performance.now();
+          const data = await response.json();
+
+          if (response.ok) {
+            addResult(
+              "connectionResults",
+              `✅ Connection successful! ${formatTime(end - start)}`,
+              "success",
+            );
+          } else {
+            addResult(
+              "connectionResults",
+              `❌ Connection failed: ${response.status} ${response.statusText}`,
+              "error",
+            );
+          }
+        } catch (error) {
+          addResult(
+            "connectionResults",
+            `❌ Connection error: ${error.message}`,
+            "error",
+          );
+        }
+      }
+
+      async function testSSE() {
+        clearResults("connectionResults");
+        const apiUrl = getApiUrl();
+
+        addResult("connectionResults", "🔄 Testing SSE connection...", "info");
+
+        const eventSource = new EventSource(`${apiUrl}/products/events`);
+        let connected = false;
+
+        const timeout = setTimeout(() => {
+          if (!connected) {
+            eventSource.close();
+            addResult(
+              "connectionResults",
+              "❌ SSE connection timeout (10s)",
+              "error",
+            );
+          }
+        }, 10000);
+
+        eventSource.onopen = () => {
+          connected = true;
+          clearTimeout(timeout);
+          addResult(
+            "connectionResults",
+            "✅ SSE connected successfully!",
+            "success",
+          );
+          setTimeout(() => eventSource.close(), 2000);
+        };
+
+        eventSource.onerror = (error) => {
+          clearTimeout(timeout);
+          eventSource.close();
+          addResult("connectionResults", "❌ SSE connection failed", "error");
+        };
+      }
+
+      async function testCORS() {
+        clearResults("connectionResults");
+        const apiUrl = getApiUrl();
+
+        try {
+          const response = await fetch(`${apiUrl}/products?limit=1`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const corsHeaders = {
+            "Access-Control-Allow-Origin": response.headers.get(
+              "access-control-allow-origin",
+            ),
+            "Access-Control-Allow-Methods": response.headers.get(
+              "access-control-allow-methods",
+            ),
+            "Access-Control-Allow-Headers": response.headers.get(
+              "access-control-allow-headers",
+            ),
+          };
+
+          addResult(
+            "connectionResults",
+            `✅ CORS Headers:<br>${JSON.stringify(corsHeaders, null, 2)}`,
+            "success",
+          );
+        } catch (error) {
+          addResult(
+            "connectionResults",
+            `❌ CORS test failed: ${error.message}`,
+            "error",
+          );
+        }
+      }
+
+      async function testAPISpeed() {
+        clearResults("apiResults");
+        const apiUrl = getApiUrl();
+
+        addResult("apiResults", "🔄 Testing API speed (5 requests)...", "info");
+
+        const times = [];
+        for (let i = 0; i < 5; i++) {
+          const start = performance.now();
+          await fetch(`${apiUrl}/products?limit=10&_=${Date.now()}`);
+          const end = performance.now();
+          times.push(end - start);
+        }
+
+        const avg = times.reduce((a, b) => a + b, 0) / times.length;
+        const min = Math.min(...times);
+        const max = Math.max(...times);
+
+        addResult(
+          "apiResults",
+          `📊 Results:<br>
+        Average: ${formatTime(avg)}<br>
+        Min: ${formatTime(min)}<br>
+        Max: ${formatTime(max)}<br>
+        All: ${times.map((t) => formatTime(t)).join(" ")}`,
+          avg < 500 ? "success" : "warning",
+        );
+      }
+
+      async function testParallelRequests() {
+        clearResults("apiResults");
+        const apiUrl = getApiUrl();
+
+        addResult("apiResults", "🔄 Testing 10 parallel requests...", "info");
+
+        const start = performance.now();
+        const promises = Array(10)
+          .fill(0)
+          .map(() => fetch(`${apiUrl}/products?limit=5&_=${Date.now()}`));
+        await Promise.all(promises);
+        const end = performance.now();
+
+        addResult(
+          "apiResults",
+          `✅ 10 parallel requests completed in ${formatTime(end - start)}`,
+          "success",
+        );
+      }
+
+      async function testCacheHeaders() {
+        clearResults("apiResults");
+        const apiUrl = getApiUrl();
+
+        const response = await fetch(`${apiUrl}/products?limit=1`);
+        const headers = {
+          "Cache-Control": response.headers.get("cache-control"),
+          Pragma: response.headers.get("pragma"),
+          Expires: response.headers.get("expires"),
+          ETag: response.headers.get("etag"),
+          "Last-Modified": response.headers.get("last-modified"),
+        };
+
+        addResult(
+          "apiResults",
+          `📋 Cache Headers:<br><pre>${JSON.stringify(headers, null, 2)}</pre>`,
+          "info",
+        );
+      }
+
+      async function detectCloudflare() {
+        clearResults("cloudflareResults");
+        const apiUrl = getApiUrl();
+
+        const response = await fetch(`${apiUrl}/products?limit=1`);
+        const cfHeaders = {
+          "CF-Ray": response.headers.get("cf-ray"),
+          "CF-Cache-Status": response.headers.get("cf-cache-status"),
+          "CF-Request-ID": response.headers.get("cf-request-id"),
+          Server: response.headers.get("server"),
+        };
+
+        const isCloudflare =
+          cfHeaders["CF-Ray"] || cfHeaders["Server"]?.includes("cloudflare");
+
+        if (isCloudflare) {
+          addResult(
+            "cloudflareResults",
+            `☁️ Cloudflare DETECTED!<br><pre>${JSON.stringify(cfHeaders, null, 2)}</pre>`,
+            "warning",
+          );
+        } else {
+          addResult(
+            "cloudflareResults",
+            `✅ No Cloudflare detected (direct connection)`,
+            "success",
+          );
+        }
+      }
+
+      async function checkCacheStatus() {
+        clearResults("cloudflareResults");
+        const apiUrl = getApiUrl();
+
+        addResult(
+          "cloudflareResults",
+          "🔄 Checking cache status (3 requests)...",
+          "info",
+        );
+
+        for (let i = 1; i <= 3; i++) {
+          const response = await fetch(`${apiUrl}/products?limit=1`);
+          const cacheStatus = response.headers.get("cf-cache-status") || "N/A";
+          const age = response.headers.get("age") || "N/A";
+
+          addResult(
+            "cloudflareResults",
+            `Request ${i}: CF-Cache-Status = <strong>${cacheStatus}</strong>, Age = ${age}s`,
+            cacheStatus === "HIT" ? "warning" : "success",
+          );
+
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      }
+
+      async function testUploadSpeed() {
+        clearResults("uploadResults");
+        const fileInput = document.getElementById("testFile");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          addResult("uploadResults", "❌ Please select a file first", "error");
+          return;
+        }
+
+        addResult(
+          "uploadResults",
+          `🔄 Uploading ${file.name} (${(file.size / 1024).toFixed(0)} KB)...`,
+          "info",
+        );
+
+        // This is a mock test - in real scenario, you'd upload to your presigned URL
+        const start = performance.now();
+
+        // Simulate upload by reading file
+        const reader = new FileReader();
+        reader.onload = () => {
+          const end = performance.now();
+          const speed = file.size / 1024 / ((end - start) / 1000); // KB/s
+
+          addResult(
+            "uploadResults",
+            `✅ Upload simulation completed in ${formatTime(end - start)}<br>
+          Speed: ${speed.toFixed(0)} KB/s`,
+            "success",
+          );
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      function showNetworkInfo() {
+        clearResults("networkResults");
+
+        // Connection info
+        if ("connection" in navigator) {
+          const conn =
+            navigator.connection ||
+            navigator.mozConnection ||
+            navigator.webkitConnection;
+          if (conn) {
+            addResult(
+              "networkResults",
+              `📡 Connection Info:<br>
+            Type: ${conn.effectiveType || "unknown"}<br>
+            Downlink: ${conn.downlink || "unknown"} Mbps<br>
+            RTT: ${conn.rtt || "unknown"} ms<br>
+            Save Data: ${conn.saveData ? "Yes" : "No"}`,
+              "info",
+            );
+          }
+        }
+
+        // Online status
+        const status = navigator.onLine ? "online" : "offline";
+        addResult(
+          "networkResults",
+          `<span class="status ${status}"></span> Status: ${status.toUpperCase()}`,
+          status === "online" ? "success" : "error",
+        );
+
+        // Performance timing
+        if (window.performance && window.performance.timing) {
+          const timing = window.performance.timing;
+          const dns = timing.domainLookupEnd - timing.domainLookupStart;
+          const tcp = timing.connectEnd - timing.connectStart;
+          const ttfb = timing.responseStart - timing.requestStart;
+
+          addResult(
+            "networkResults",
+            `⏱️ Page Load Timing:<br>
+          DNS Lookup: ${dns}ms<br>
+          TCP Connection: ${tcp}ms<br>
+          Time to First Byte: ${ttfb}ms`,
+            "info",
+          );
+        }
+      }
+
+      // Auto-run network info on load
+      window.addEventListener("load", () => {
+        showNetworkInfo();
+      });
+    </script>
+  </body>
+</html>
