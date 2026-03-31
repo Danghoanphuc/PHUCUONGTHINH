@@ -59,7 +59,8 @@ export class CloudinaryService {
           },
           (error, result) => {
             if (error) reject(error);
-            else resolve(result);
+            else if (result) resolve(result);
+            else reject(new Error('Upload failed: no result'));
           },
         );
 
@@ -74,7 +75,10 @@ export class CloudinaryService {
               resource_type: 'auto',
               overwrite: true,
             })
-            .then(resolve)
+            .then((res) => {
+              if (res) resolve(res);
+              else reject(new Error('Upload failed: no result'));
+            })
             .catch(reject);
         }
       });
