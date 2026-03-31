@@ -15,32 +15,25 @@ export class RedisCacheService implements OnModuleInit, OnModuleDestroy {
   >();
   private useRedis = false;
 
-  constructor(private configService: ConfigService) {
-    console.log('🔧 RedisCacheService constructor called');
-  }
+  constructor(private configService: ConfigService) {}
 
   async onModuleInit() {
-    console.log('🚀 RedisCacheService onModuleInit called');
     await this.initializeRedis();
   }
 
   private async initializeRedis() {
     const redisUrl = this.configService.get<string>('REDIS_URL');
 
-    console.log('🔍 Checking REDIS_URL:', redisUrl ? 'Found' : 'Not found');
-
     if (!redisUrl) {
-      console.log('⚠️  Redis URL not configured, using in-memory cache');
       return;
     }
 
     try {
-      console.log('🔌 Attempting to connect to Redis...');
       this.redis = new Redis(redisUrl, {
         maxRetriesPerRequest: 3,
         retryStrategy: (times: number) => {
           if (times > 3) {
-            console.error('❌ Redis connection failed, falling back to memory');
+            console.error('Redis connection failed, falling back to memory');
             this.useRedis = false;
             return null;
           }
@@ -49,21 +42,19 @@ export class RedisCacheService implements OnModuleInit, OnModuleDestroy {
       });
 
       this.redis.on('connect', () => {
-        console.log('✅ Redis connected successfully');
         this.useRedis = true;
       });
 
       this.redis.on('error', (err: Error) => {
-        console.error('❌ Redis error:', err.message);
+        console.error('Redis error:', err.message);
         this.useRedis = false;
       });
 
       this.redis.on('ready', () => {
-        console.log('✅ Redis is ready to accept commands');
         this.useRedis = true;
       });
     } catch (error) {
-      console.error('❌ Failed to initialize Redis:', error);
+      console.error('Failed to initialize Redis:', error);
       this.useRedis = false;
     }
   }

@@ -55,7 +55,6 @@ export class PrismaService
 
   async onModuleInit() {
     await this.$connect();
-    console.log('🚀 Database connected with EXTREME performance mode');
   }
 
   async onModuleDestroy() {

@@ -106,16 +106,14 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  loggerService.log(`Application started on port ${port}`, {
-    environment: nodeEnv,
-    timestamp: new Date().toISOString(),
-    frontendUrl,
-    cmsUrl,
-  });
-
-  console.log(
-    `📡 SSE endpoint: http://localhost:${port}/api/v1/products/events`,
-  );
+  if (process.env.NODE_ENV !== 'production') {
+    loggerService.log(`Application started on port ${port}`, {
+      environment: nodeEnv,
+      timestamp: new Date().toISOString(),
+      frontendUrl,
+      cmsUrl,
+    });
+  }
 }
 
 bootstrap().catch((error) => {

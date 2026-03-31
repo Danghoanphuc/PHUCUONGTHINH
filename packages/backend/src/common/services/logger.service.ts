@@ -41,12 +41,14 @@ export class LoggerService {
   }
 
   logRequest(method: string, endpoint: string, requestId: string) {
-    this.log(`Incoming ${method} request`, {
-      endpoint,
-      method,
-      requestId,
-      timestamp: new Date().toISOString(),
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      this.log(`Incoming ${method} request`, {
+        endpoint,
+        method,
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   logResponse(
@@ -56,14 +58,28 @@ export class LoggerService {
     duration: number,
     requestId: string,
   ) {
-    this.log(`${method} ${endpoint} completed`, {
-      endpoint,
-      method,
-      statusCode,
-      duration: duration,
-      requestId,
-      timestamp: new Date().toISOString(),
-    });
+    // Only log slow requests or errors in production
+    if (process.env.NODE_ENV === 'production') {
+      if (statusCode >= 400 || duration > 1000) {
+        this.log(`${method} ${endpoint} completed`, {
+          endpoint,
+          method,
+          statusCode,
+          duration: duration,
+          requestId,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } else {
+      this.log(`${method} ${endpoint} completed`, {
+        endpoint,
+        method,
+        statusCode,
+        duration: duration,
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   logDatabaseOperation(

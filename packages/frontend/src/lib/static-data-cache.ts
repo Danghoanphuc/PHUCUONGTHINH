@@ -26,13 +26,17 @@ function getFromCache<T>(key: string): T | null {
 
     const entry: CacheEntry<T> = JSON.parse(cached);
     if (isCacheValid(entry.timestamp)) {
-      console.log(`✅ Cache hit for ${key}`);
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`✅ Cache hit for ${key}`);
+      }
       return entry.data;
     }
 
     // Cache expired
     localStorage.removeItem(key);
-    console.log(`⏰ Cache expired for ${key}`);
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`⏰ Cache expired for ${key}`);
+    }
     return null;
   } catch {
     return null;
@@ -48,7 +52,9 @@ function setToCache<T>(key: string, data: T): void {
       timestamp: Date.now(),
     };
     localStorage.setItem(key, JSON.stringify(entry));
-    console.log(`💾 Cached ${key}`);
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`💾 Cached ${key}`);
+    }
   } catch (err) {
     console.warn("Failed to cache data:", err);
   }
@@ -82,6 +88,8 @@ export const staticDataCache = {
   clearAll(): void {
     if (typeof window === "undefined") return;
     Object.values(CACHE_KEYS).forEach((key) => localStorage.removeItem(key));
-    console.log("🗑️ Cleared all static data cache");
+    if (process.env.NODE_ENV !== "production") {
+      console.log("🗑️ Cleared all static data cache");
+    }
   },
 };
