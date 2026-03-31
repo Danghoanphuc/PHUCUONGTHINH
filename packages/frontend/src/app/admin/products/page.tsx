@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { productService, Product } from "@/lib/product-service";
+import { useProductEvents } from "@/hooks/useProductEvents";
 import {
   Eye,
   EyeOff,
@@ -337,6 +338,13 @@ export default function AdminProductsPage() {
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  // Listen for real-time product updates
+  useProductEvents(() => {
+    console.log("📡 [ProductList] Product event received, reloading...");
+    loadProducts();
+  });
+
   useEffect(() => {
     setSelected(new Set());
   }, [page, search]);
