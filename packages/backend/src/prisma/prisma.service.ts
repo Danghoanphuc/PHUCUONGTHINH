@@ -1,8 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaBetterSQLite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaLibSql } from '@prisma/adapter-libsql';
-import { createClient } from '@libsql/client';
 
 @Injectable()
 export class PrismaService
@@ -12,16 +10,13 @@ export class PrismaService
   constructor() {
     const dbUrl = process.env.DATABASE_URL || 'file:./dev.db';
 
-    // Debug logging
     console.log('🔍 DATABASE_URL:', dbUrl);
-    console.log('🔍 TURSO_AUTH_TOKEN exists:', !!process.env.TURSO_AUTH_TOKEN);
 
     // Check database type
     const isPostgreSQL =
       dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://');
     const isTurso =
-      (dbUrl.startsWith('libsql://') || dbUrl.startsWith('https://')) &&
-      !!process.env.TURSO_AUTH_TOKEN;
+      dbUrl.startsWith('libsql://') || dbUrl.startsWith('https://');
     const isSQLite = dbUrl.startsWith('file:');
 
     console.log(
@@ -33,9 +28,14 @@ export class PrismaService
       isSQLite,
     );
 
-    if (isPostgreSQL) {
-      // Use PostgreSQL directly without adapter
+    if (isPostgreSQL || isTurso) {
+      // Use PostgreSQL or Turso directly (Prisma supports libsql:// URLs natively)
       super({
+        datasources: {
+          db: {
+            url: dbUrl,
+          },
+        },
         log:
           process.env.NODE_ENV === 'test'
             ? ['error']
@@ -43,32 +43,6 @@ export class PrismaService
               ? ['error', 'warn']
               : ['query', 'info', 'warn', 'error'],
       });
-    } else if (isTurso) {
-      // Use Turso (libSQL) adapter
-      console.log('🔍 Creating Turso client with URL:', dbUrl);
-      console.log(
-        '🔍 Auth token length:',
-        process.env.TURSO_AUTH_TOKEN?.length,
-      );
-
-      const libsql = createClient({
-        url: dbUrl,
-        authToken: process.env.TURSO_AUTH_TOKEN,
-      });
-
-      console.log('🔍 Turso client created successfully');
-      const adapter = new PrismaLibSql(libsql as any);
-      console.log('🔍 Turso adapter created successfully');
-
-      super({
-        adapter,
-        log:
-          process.env.NODE_ENV === 'test'
-            ? ['error']
-            : process.env.NODE_ENV === 'production'
-              ? ['error', 'warn']
-              : ['query', 'info', 'warn', 'error'],
-      } as any);
     } else if (isSQLite) {
       // Use local SQLite with adapter and performance optimizations
       const adapter = new PrismaBetterSQLite3({ url: dbUrl });
