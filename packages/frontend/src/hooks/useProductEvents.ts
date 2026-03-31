@@ -1,25 +1,52 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clientCache } from "@/lib/cache-utils";
 
 /**
  * Subscribes to backend SSE stream at /products/events.
  * Calls `onEvent` whenever a product is created, updated, or deleted.
  * If `productId` is provided, only fires when that specific product changes.
- * Auto-reconnects on disconnect.
+ * Auto-reconnects with exponential backoff on disconnect.
  */
 export function useProductEvents(onEvent: () => void, productId?: string) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectAttemptsRef = useRef(0);
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
+    // Listen for online/offline events
+    const handleOnline = () => {
+      console.log("🌐 Network online, reconnecting SSE...");
+      setIsOnline(true);
+      reconnectAttemptsRef.current = 0;
+      connect();
+    };
+
+    const handleOffline = () => {
+      console.log("📡 Network offline, pausing SSE...");
+      setIsOnline(false);
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
     // Get backend URL from environment
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
     const url = `${backendUrl}/api/v1/products/events`;
 
     const connect = () => {
+      // Don't connect if offline
+      if (!navigator.onLine) {
+        console.log("📡 Network offline, skipping SSE connection");
+        return;
+      }
+
       try {
         // Close existing connection
         if (eventSourceRef.current) {
@@ -32,6 +59,7 @@ export function useProductEvents(onEvent: () => void, productId?: string) {
 
         eventSource.onopen = () => {
           console.log("✅ SSE connected to product events");
+          reconnectAttemptsRef.current = 0; // Reset on successful connection
         };
 
         eventSource.onmessage = (event) => {
@@ -60,11 +88,20 @@ export function useProductEvents(onEvent: () => void, productId?: string) {
           console.error("❌ SSE error:", error);
           eventSource.close();
 
-          // Auto-reconnect after 3 seconds
+          // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
+          reconnectAttemptsRef.current++;
+          const delay = Math.min(
+            1000 * Math.pow(2, reconnectAttemptsRef.current - 1),
+            30000,
+          );
+
+          console.log(
+            `🔄 Reconnecting SSE in ${delay / 1000}s (attempt ${reconnectAttemptsRef.current})...`,
+          );
+
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log("🔄 Reconnecting SSE...");
             connect();
-          }, 3000);
+          }, delay);
         };
       } catch (err) {
         console.error("Failed to create EventSource:", err);
@@ -75,6 +112,9 @@ export function useProductEvents(onEvent: () => void, productId?: string) {
 
     // Cleanup
     return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }

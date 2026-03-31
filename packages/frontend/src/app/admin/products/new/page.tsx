@@ -12,6 +12,7 @@ import {
 } from "@/lib/product-service";
 import { categoryService, Category } from "@/lib/category-service";
 import { tagService, Tag } from "@/lib/tag-service";
+import { staticDataCache } from "@/lib/static-data-cache";
 
 export default function AdminNewProductPage() {
   const router = useRouter();
@@ -28,17 +29,37 @@ export default function AdminNewProductPage() {
 
   const loadData = async () => {
     try {
-      const [cats, stls, sps] = await Promise.all([
-        categoryService.getCategories(),
-        tagService.getStyles(),
-        tagService.getSpaces(),
-      ]);
-      setCategories(cats);
-      setStyles(stls);
-      setSpaces(sps);
+      // Try to get from cache first
+      const cachedCategories = staticDataCache.getCategories();
+      const cachedStyles = staticDataCache.getStyles();
+      const cachedSpaces = staticDataCache.getSpaces();
+
+      if (cachedCategories && cachedStyles && cachedSpaces) {
+        console.log("✅ Using cached static data");
+        setCategories(cachedCategories);
+        setStyles(cachedStyles);
+        setSpaces(cachedSpaces);
+        setIsLoadingData(false);
+      } else {
+        console.log("🔄 Fetching fresh static data");
+        const [cats, stls, sps] = await Promise.all([
+          categoryService.getCategories(),
+          tagService.getStyles(),
+          tagService.getSpaces(),
+        ]);
+
+        // Cache for future use
+        staticDataCache.setCategories(cats);
+        staticDataCache.setStyles(stls);
+        staticDataCache.setSpaces(sps);
+
+        setCategories(cats);
+        setStyles(stls);
+        setSpaces(sps);
+        setIsLoadingData(false);
+      }
     } catch (err: any) {
       setError("Không thể tải dữ liệu form");
-    } finally {
       setIsLoadingData(false);
     }
   };

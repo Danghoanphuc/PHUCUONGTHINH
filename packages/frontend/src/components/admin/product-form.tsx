@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   Product,
   CreateProductRequest,
@@ -35,6 +35,18 @@ import {
   Copy,
   DollarSign,
 } from "lucide-react";
+
+// Debounce utility
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
 
 export interface ProductFormProps {
   product?: Product & { media?: MediaRecord[] };
@@ -242,6 +254,15 @@ export function ProductForm({
   const skuRef = useRef<HTMLInputElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
 
+  // Debounced slug generation
+  const debouncedSlugUpdate = useMemo(
+    () =>
+      debounce((name: string) => {
+        setFormData((prev) => ({ ...prev, slug: toSlug(name) }));
+      }, 300),
+    [],
+  );
+
   const setField = useCallback(
     <K extends keyof FormState>(key: K, value: FormState[K]) => {
       setFormData((prev) => ({ ...prev, [key]: value }));
@@ -315,8 +336,10 @@ export function ProductForm({
         ),
       }));
     };
-    for (const item of pending) {
-      if (!item.file) continue;
+
+    // Upload files in parallel for better performance
+    const uploadPromises = pending.map(async (item) => {
+      if (!item.file) return;
       updateItemStatus(item.clientId, { status: "uploading", progress: 0 });
       try {
         const { upload_url, public_url } = await getPresignedUrl(
@@ -344,12 +367,17 @@ export function ProductForm({
         updateItemStatus(item.clientId, { status: "error", error: msg });
         throw new Error(`Upload "${item.file.name}" thất bại: ${msg}`);
       }
-    }
+    });
+
+    // Wait for all uploads to complete
+    await Promise.all(uploadPromises);
+
+    // Handle social links
     const socialPending = formData.pendingMedia.filter(
       (m) => m.status === "pending" && m.media_type === "social_link" && m.url,
     );
-    for (const item of socialPending) {
-      if (!item.url) continue;
+    const socialPromises = socialPending.map(async (item) => {
+      if (!item.url) return;
       try {
         await createMediaRecord({
           product_id: productId,
@@ -362,7 +390,8 @@ export function ProductForm({
       } catch {
         /* non-fatal */
       }
-    }
+    });
+    await Promise.all(socialPromises);
   };
 
   const syncMediaForEdit = async (
@@ -466,26 +495,46 @@ export function ProductForm({
       }
       setToast({ message: "Đã lưu sản phẩm", type: "success" });
 
-      // Redirect after a delay to ensure backend processing
+      // Redirect with polling-based check instead of fixed delay
       if (productId) {
         console.log("✅ Product saved successfully");
 
-        // Show processing message
-        setTimeout(() => {
-          setToast({ message: "⏳ Đang xử lý media...", type: "success" });
-        }, 1000);
+        // Check if media processing is needed
+        const hasPendingMedia = formData.pendingMedia.some(
+          (m) => m.status === "pending" || m.status === "uploading",
+        );
 
-        setTimeout(() => {
-          console.log("🔄 Redirecting to product page...");
-          setToast({
-            message: "✅ Hoàn tất! Đang chuyển trang...",
-            type: "success",
-          });
+        if (!hasPendingMedia) {
+          // No media to process, redirect immediately
+          console.log("🔄 No pending media, redirecting immediately...");
           setTimeout(() => {
-            // Use replace to avoid back button issues
             window.location.replace(`/products/${productId}`);
-          }, 400);
-        }, 3000);
+          }, 500);
+        } else {
+          // Poll for media completion
+          setToast({ message: "⏳ Đang xử lý media...", type: "success" });
+          let pollCount = 0;
+          const maxPolls = 20; // Max 10 seconds (20 * 500ms)
+
+          const pollInterval = setInterval(() => {
+            pollCount++;
+            const stillProcessing = formData.pendingMedia.some(
+              (m) => m.status === "uploading",
+            );
+
+            if (!stillProcessing || pollCount >= maxPolls) {
+              clearInterval(pollInterval);
+              console.log("🔄 Media processing complete, redirecting...");
+              setToast({
+                message: "✅ Hoàn tất! Đang chuyển trang...",
+                type: "success",
+              });
+              setTimeout(() => {
+                window.location.replace(`/products/${productId}`);
+              }, 300);
+            }
+          }, 500);
+        }
       }
     } catch (err: any) {
       const msg =
@@ -519,11 +568,8 @@ export function ProductForm({
                 value={formData.name}
                 onChange={(e) => {
                   const name = e.target.value;
-                  setFormData((prev) => ({
-                    ...prev,
-                    name,
-                    slug: toSlug(name),
-                  }));
+                  setFormData((prev) => ({ ...prev, name }));
+                  debouncedSlugUpdate(name);
                   setErrors((prev) => {
                     const n = { ...prev };
                     delete n.name;

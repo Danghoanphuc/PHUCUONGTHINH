@@ -252,26 +252,51 @@ export default function ProductsPage() {
 
   const handleAdminDelete = async (id: string) => {
     if (!confirm("Xóa sản phẩm này?")) return;
+
+    // Optimistic update - remove from UI immediately
+    const deletedProduct = products.find((p) => p.id === id);
+    setProducts((p) => p.filter((x) => x.id !== id));
+
     try {
       await productService.deleteProduct(id);
-      setProducts((p) => p.filter((x) => x.id !== id));
-    } catch {}
+    } catch (err) {
+      // Rollback on error
+      if (deletedProduct) {
+        setProducts((p) => [...p, deletedProduct]);
+      }
+      alert("Xóa sản phẩm thất bại");
+    }
   };
 
   const handleAdminClone = async (id: string) => {
     try {
       const cloned = await productService.cloneProduct(id);
+      // Add to top of list
       setProducts((p) => [cloned, ...p]);
-    } catch {}
+    } catch (err) {
+      alert("Nhân bản sản phẩm thất bại");
+    }
   };
 
   const handleAdminPublish = async (id: string, isPublished: boolean) => {
+    // Optimistic update - toggle immediately
+    setProducts((p) =>
+      p.map((x) => (x.id === id ? { ...x, is_published: !isPublished } : x)),
+    );
+
     try {
       const updated = isPublished
         ? await productService.unpublishProduct(id)
         : await productService.publishProduct(id);
+      // Update with server response
       setProducts((p) => p.map((x) => (x.id === id ? updated : x)));
-    } catch {}
+    } catch (err) {
+      // Rollback on error
+      setProducts((p) =>
+        p.map((x) => (x.id === id ? { ...x, is_published: isPublished } : x)),
+      );
+      alert("Cập nhật trạng thái thất bại");
+    }
   };
 
   // ── Admin mode: layout riêng, gọn nhẹ ──────────────────────────────────────

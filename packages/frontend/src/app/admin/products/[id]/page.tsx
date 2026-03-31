@@ -13,6 +13,7 @@ import { categoryService, Category } from "@/lib/category-service";
 import { tagService, Tag } from "@/lib/tag-service";
 import { MediaRecord } from "@/lib/media-service";
 import { apiClient } from "@/lib/admin-api-client";
+import { staticDataCache } from "@/lib/static-data-cache";
 
 export default function AdminEditProductPage() {
   const router = useRouter();
@@ -30,24 +31,55 @@ export default function AdminEditProductPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      productService.getProductById(productId),
-      apiClient
-        .get<MediaRecord[]>(`/media/product/${productId}`)
-        .catch(() => []),
-      categoryService.getCategories(),
-      tagService.getStyles(),
-      tagService.getSpaces(),
-    ])
-      .then(([prod, media, cats, stls, sps]) => {
-        setProduct({ ...prod, media: media || [] });
+    loadData();
+  }, [productId]);
+
+  const loadData = async () => {
+    try {
+      // Try to get static data from cache first
+      const cachedCategories = staticDataCache.getCategories();
+      const cachedStyles = staticDataCache.getStyles();
+      const cachedSpaces = staticDataCache.getSpaces();
+
+      // Load product and media (always fresh)
+      const [prod, media] = await Promise.all([
+        productService.getProductById(productId),
+        apiClient
+          .get<MediaRecord[]>(`/media/product/${productId}`)
+          .catch(() => []),
+      ]);
+
+      setProduct({ ...prod, media: media || [] });
+
+      // Use cached data if available, otherwise fetch
+      if (cachedCategories && cachedStyles && cachedSpaces) {
+        console.log("✅ Using cached static data");
+        setCategories(cachedCategories);
+        setStyles(cachedStyles);
+        setSpaces(cachedSpaces);
+      } else {
+        console.log("🔄 Fetching fresh static data");
+        const [cats, stls, sps] = await Promise.all([
+          categoryService.getCategories(),
+          tagService.getStyles(),
+          tagService.getSpaces(),
+        ]);
+
+        // Cache for future use
+        staticDataCache.setCategories(cats);
+        staticDataCache.setStyles(stls);
+        staticDataCache.setSpaces(sps);
+
         setCategories(cats);
         setStyles(stls);
         setSpaces(sps);
-      })
-      .catch(() => setError("Không thể tải sản phẩm"))
-      .finally(() => setIsLoadingData(false));
-  }, [productId]);
+      }
+    } catch (err) {
+      setError("Không thể tải sản phẩm");
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const handleSubmit = async (
     data: UpdateProductRequest,
