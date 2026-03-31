@@ -8,7 +8,7 @@ import { CategoriesService } from '../categories/categories.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductFiltersDto } from './dto/product-filters.dto';
-import { Product } from '@prisma/client';
+import type { Product } from '@prisma/client';
 import { CombinedFilterService } from './services/combined-filter.service';
 import { ProductsEventService } from './products-events.service';
 

@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateContentItemDto } from './dto/create-content-item.dto';
 import { UpdateContentItemDto } from './dto/update-content-item.dto';
-import { ContentItem } from '@prisma/client';
+import type { ContentItem } from '@prisma/client';
 
 const VALID_TYPES = ['design', 'project', 'construction'];
 

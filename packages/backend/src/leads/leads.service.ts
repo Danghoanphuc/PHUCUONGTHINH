@@ -8,7 +8,7 @@ import { NotificationService } from './notification.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadFiltersDto } from './dto/lead-filters.dto';
-import { Lead } from '@prisma/client';
+import type { Lead } from '@prisma/client';
 
 @Injectable()
 export class LeadsService {

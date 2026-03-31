@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import { Lead } from '@prisma/client';
+import type { Lead } from '@prisma/client';
 
 @Injectable()
 export class NotificationService {

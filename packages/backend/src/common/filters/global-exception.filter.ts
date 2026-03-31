@@ -9,7 +9,11 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ApiErrorResponse } from '../dto/api-response.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+} from '@prisma/client/runtime/library';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -46,19 +50,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         message = exception.message;
         code = this.getErrorCodeFromStatus(status);
       }
-    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+    } else if (exception instanceof PrismaClientKnownRequestError) {
       // Handle Prisma database errors
       status = HttpStatus.BAD_REQUEST;
       const prismaError = this.handlePrismaError(exception);
       code = prismaError.code;
       message = prismaError.message;
       details = prismaError.details;
-    } else if (exception instanceof Prisma.PrismaClientValidationError) {
+    } else if (exception instanceof PrismaClientValidationError) {
       // Handle Prisma validation errors
       status = HttpStatus.BAD_REQUEST;
       code = 'VALIDATION_ERROR';
       message = 'Invalid data provided';
-      details = exception.message;
+      details = (exception as Error).message;
     } else if (exception instanceof Error) {
       // Handle generic errors
       status = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -122,7 +126,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
   }
 
-  private handlePrismaError(exception: Prisma.PrismaClientKnownRequestError): {
+  private handlePrismaError(exception: PrismaClientKnownRequestError): {
     code: string;
     message: string;
     details?: any;
