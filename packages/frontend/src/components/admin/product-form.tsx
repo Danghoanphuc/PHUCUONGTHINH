@@ -466,11 +466,36 @@ export function ProductForm({
       }
       setToast({ message: "Đã lưu sản phẩm", type: "success" });
 
-      // Redirect to public product page after successful save
+      // Wait a bit longer for backend to process and cache to invalidate
       if (productId) {
+        console.log("✅ Product saved, waiting for backend processing...");
+
+        // Invalidate cache immediately
+        if (typeof window !== "undefined") {
+          const { clientCache } = await import("@/lib/cache-utils");
+          clientCache.invalidateProduct(productId);
+        }
+
+        // Wait 3 seconds for:
+        // 1. Backend to process media changes (delete + upload)
+        // 2. SSE event to propagate
+        // 3. Cache to be cleared
+
+        // Show processing message
         setTimeout(() => {
-          window.location.href = `/products/${productId}`;
+          setToast({ message: "⏳ Đang xử lý media...", type: "success" });
         }, 1000);
+
+        setTimeout(() => {
+          console.log("🔄 Redirecting to product page...");
+          setToast({
+            message: "✅ Hoàn tất! Đang chuyển trang...",
+            type: "success",
+          });
+          setTimeout(() => {
+            window.location.href = `/products/${productId}`;
+          }, 400);
+        }, 3000);
       }
     } catch (err: any) {
       const msg =
