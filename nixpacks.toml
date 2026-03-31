@@ -5,4 +5,4 @@ cmds = ["cd packages/backend && npm install --legacy-peer-deps"]
 cmds = ["cd packages/backend && npm run build"]
 
 [start]
-cmd = "cd packages/backend && npm run start:prod"
+cmd = "cd packages/backend && npx prisma migrate deploy && npm run start:prod"
