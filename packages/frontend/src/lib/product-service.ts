@@ -150,20 +150,17 @@ class ProductService {
   }
 
   async getProductById(id: string): Promise<Product> {
-    // Try cache first
-    const cacheKey = `product:${id}`;
-    const cached = clientCache.get<Product>(cacheKey);
-    if (cached) {
-      console.log("✅ Cache hit for product:", id);
-      return cached;
-    }
-
-    console.log("❌ Cache miss for product:", id);
-    const raw = await apiClient.get<any>(`/products/${id}`);
+    // Add cache busting timestamp
+    const cacheBuster = Date.now();
+    const raw = await apiClient.get<any>(`/products/${id}?_t=${cacheBuster}`);
     const product = normalizeTags(raw);
 
-    // Cache for only 5 seconds (shorter for faster updates)
-    clientCache.set(cacheKey, product, 5000);
+    console.log(
+      "✅ Product fetched (no cache):",
+      product.name,
+      "at",
+      new Date().toISOString(),
+    );
 
     return product;
   }

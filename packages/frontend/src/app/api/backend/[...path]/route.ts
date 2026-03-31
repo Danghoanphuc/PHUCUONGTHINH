@@ -30,7 +30,16 @@ export async function GET(
     cache: "no-store",
   });
   const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
+
+  // Add cache control headers to prevent browser caching
+  return NextResponse.json(data, {
+    status: res.status,
+    headers: {
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
 }
 
 export async function POST(

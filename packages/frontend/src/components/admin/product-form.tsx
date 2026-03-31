@@ -466,20 +466,9 @@ export function ProductForm({
       }
       setToast({ message: "Đã lưu sản phẩm", type: "success" });
 
-      // Wait a bit longer for backend to process and cache to invalidate
+      // Redirect after a delay to ensure backend processing
       if (productId) {
-        console.log("✅ Product saved, waiting for backend processing...");
-
-        // Invalidate cache immediately
-        if (typeof window !== "undefined") {
-          const { clientCache } = await import("@/lib/cache-utils");
-          clientCache.invalidateProduct(productId);
-        }
-
-        // Wait 3 seconds for:
-        // 1. Backend to process media changes (delete + upload)
-        // 2. SSE event to propagate
-        // 3. Cache to be cleared
+        console.log("✅ Product saved successfully");
 
         // Show processing message
         setTimeout(() => {
@@ -493,7 +482,8 @@ export function ProductForm({
             type: "success",
           });
           setTimeout(() => {
-            window.location.href = `/products/${productId}`;
+            // Use replace to avoid back button issues
+            window.location.replace(`/products/${productId}`);
           }, 400);
         }, 3000);
       }
