@@ -125,21 +125,13 @@ export function Header() {
         >
           <div className="bg-[#FDF5E6] rounded-full shadow-lg border border-gray-200/50 p-2 pr-3 flex items-center gap-3">
             <Link href="/" className="flex items-center gap-1.5 shrink-0 pl-1">
-              <div
-                style={{ backgroundColor: palette.brown }}
-                className="size-8 flex items-center justify-center rounded-xl"
-              >
-                <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
-                  <rect width="22" height="22" fill="#8B2E16" rx="4" />
-                  <path d="M4 4h6v3H7v2h3v3H7v6H4V4z" fill="#F5F0E8" />
-                  <path
-                    d="M12 4h6v14h-3v-5.5h-3V9.5h3V7h-3V4z"
-                    fill="#F5F0E8"
-                  />
-                </svg>
-              </div>
+              <img
+                src="/favicon.png"
+                alt="Phú Cường Thịnh"
+                className="size-8 rounded-xl object-cover"
+              />
               <span
-                style={{ color: palette.brown }}
+                style={{ color: "#8B1A1A" }}
                 className="font-black text-[12px] tracking-tight uppercase leading-none"
               >
                 Phú Cường Thịnh

@@ -41,6 +41,23 @@ async function bootstrap() {
     Object.entries(headers).forEach(([key, value]) => {
       res.setHeader(key, value);
     });
+
+    // Disable Cloudflare/CDN caching for all API responses
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate',
+    );
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('CDN-Cache-Control', 'no-store');
+
+    // SSE endpoint: disable buffering (critical for Cloudflare/nginx)
+    if (req.path.includes('/events')) {
+      res.setHeader('X-Accel-Buffering', 'no');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+    }
+
     next();
   });
 

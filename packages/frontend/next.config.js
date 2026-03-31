@@ -13,6 +13,23 @@ const nextConfig = {
   },
   // Giảm overhead
   productionBrowserSourceMaps: false,
+
+  // Headers: disable caching for API proxy routes
+  async headers() {
+    return [
+      {
+        source: "/api/backend/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate",
+          },
+          { key: "CDN-Cache-Control", value: "no-store" },
+        ],
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       {
@@ -60,7 +77,7 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1",
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",
   },
 };
 

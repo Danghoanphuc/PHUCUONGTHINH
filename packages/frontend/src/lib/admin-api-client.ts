@@ -19,13 +19,19 @@ function onUnauthorized(): void {
   }
 }
 
+// Direct backend URL - bypass Next.js proxy to eliminate double-hop latency
+// Browser calls backend directly, no proxy overhead
+const DIRECT_BACKEND = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1`
+  : null;
+
 const API_URL =
   typeof window !== "undefined"
-    ? "/api/backend"
+    ? DIRECT_BACKEND || "/api/backend" // prefer direct if env is set
     : process.env.BACKEND_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
       "http://localhost:3001/api/v1";
-// v5
+// v6 - direct backend
 
 export const adminApiClient: ApiClient = createApiClient({
   baseURL: API_URL,
