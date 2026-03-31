@@ -24,6 +24,11 @@ export class RateLimitMiddleware implements NestMiddleware {
       return next();
     }
 
+    // Skip rate limiting for SSE endpoints (long-lived connections)
+    if (req.path.includes('/events')) {
+      return next();
+    }
+
     // Get client IP
     const clientIp =
       (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
