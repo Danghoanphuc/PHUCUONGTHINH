@@ -26,7 +26,7 @@ import { ProductGrid } from "@/components/ProductGrid";
 import { Pagination } from "@/components/Pagination";
 import { productService } from "@/lib/product-service";
 import { Product, Style, Space, FilterState } from "@/types";
-import { useProductEvents } from "@/hooks/useProductEvents";
+// import { useProductEvents } from "@/hooks/useProductEvents"; // DISABLED: Causing infinite reload loop
 import { useAuth } from "@repo/shared-utils";
 
 // ─── VISUAL CATEGORIES ────────────────────────────────
@@ -217,7 +217,8 @@ export default function ProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-  useProductEvents(fetchProducts);
+  // DISABLED: SSE causing infinite reload loop - users can manually refresh (F5) to see updates
+  // useProductEvents(fetchProducts);
 
   const handleToggleStyle = (id: string) => {
     setSelectedStyles((prev) =>

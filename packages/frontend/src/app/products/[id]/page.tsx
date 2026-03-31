@@ -39,7 +39,7 @@ import { Product } from "@/types";
 import { useAuth } from "@repo/shared-utils";
 import { apiClient } from "@/lib/admin-api-client";
 import { ShareButton } from "@/components/ShareButton";
-import { useProductEvents } from "@/hooks/useProductEvents";
+// import { useProductEvents } from "@/hooks/useProductEvents"; // DISABLED: Causing infinite reload loop
 
 // ── Block thông tin nội bộ (chỉ admin) ───────────────────────────────────────
 function InternalProductBlock({ productId }: { productId: string }) {
@@ -534,10 +534,12 @@ export default function ProductDetailPage({
     return () => observer.disconnect();
   }, [product]);
 
-  // Listen for real-time product updates via SSE
-  useProductEvents(() => {
-    loadProduct(true); // bust cache on SSE event
-  }, params.id);
+  // DISABLED: SSE causing infinite reload loop on public pages
+  // Users can manually refresh (F5) to see latest updates
+  // TODO: Implement proper WebSocket with room-based events instead of SSE
+  // useProductEvents(() => {
+  //   loadProduct(true); // bust cache on SSE event
+  // }, params.id);
 
   if (isLoading)
     return (
