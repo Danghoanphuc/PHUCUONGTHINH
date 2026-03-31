@@ -68,12 +68,14 @@ import { RedisCacheService } from '../common/services/redis-cache.service';
           invalidateProductCache: async (productId?: string) => {
             if (productId) {
               console.log(`🗑️  Invalidating cache for product: ${productId}`);
-              return await redisCache.invalidatePattern(
-                `product:${productId}*`,
-              );
+              await redisCache.invalidatePattern(`product:${productId}*`);
+              await redisCache.invalidatePattern(`*${productId}*`);
+              return;
             }
             console.log('🗑️  Invalidating all product caches');
-            return await redisCache.invalidatePattern('product:*');
+            await redisCache.invalidatePattern('product:*');
+            await redisCache.invalidatePattern('api:*products*');
+            await redisCache.invalidatePattern('api:*product*');
           },
           getStats: () => {
             return { message: 'Using Redis cache', type: 'redis' };

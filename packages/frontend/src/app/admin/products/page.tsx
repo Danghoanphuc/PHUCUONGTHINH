@@ -138,8 +138,16 @@ function DesktopTable({
                     )}
                   </button>
                 </td>
-                <td className="px-4 py-3.5 text-sm font-medium text-gray-900 max-w-[260px] truncate">
-                  {product.name}
+                <td
+                  className="px-4 py-3.5 text-sm font-medium text-gray-900 max-w-[260px] truncate"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Link
+                    href={`/products/${product.id}`}
+                    className="hover:text-blue-600 hover:underline"
+                  >
+                    {product.name}
+                  </Link>
                 </td>
                 <td className="px-4 py-3.5 text-sm text-gray-500 font-mono">
                   {product.sku}
@@ -240,9 +248,12 @@ function MobileCardList({
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">
+                <Link
+                  href={`/products/${product.id}`}
+                  className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 hover:text-blue-600"
+                >
                   {product.name}
-                </p>
+                </Link>
                 <p className="text-xs text-gray-400 font-mono mt-0.5">
                   {product.sku}
                 </p>
