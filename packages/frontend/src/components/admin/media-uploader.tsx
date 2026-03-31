@@ -296,6 +296,7 @@ export function MediaUploader({
     // Skip notification on initial mount
     if (isInitialMount.current) {
       isInitialMount.current = false;
+      console.log("⏭️ [MediaUploader] Skipping onChange on initial mount");
       return;
     }
 
@@ -305,12 +306,19 @@ export function MediaUploader({
 
     if (existingKey === currentKey && existingMedia.length === items.length) {
       // This is likely a sync from existingMedia, not a user action
+      console.log(
+        "⏭️ [MediaUploader] Skipping onChange - sync from existingMedia",
+      );
       return;
     }
 
     // Always notify parent when items change (user action)
+    console.log(
+      "📢 [MediaUploader] Calling onChange with items:",
+      items.map((m) => ({ id: m.clientId, status: m.status })),
+    );
     onChange(items);
-  }, [items, onChange, existingMedia]);
+  }, [items, onChange]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [dragging1, setDragging1] = useState(false);
   const [dragging2, setDragging2] = useState(false);
@@ -403,10 +411,17 @@ export function MediaUploader({
   );
 
   const removeItem = (clientId: string) => {
+    console.log("🗑️ [MediaUploader] Removing media:", clientId);
     setItems((prev) => {
       const next = prev
         .filter((i) => i.clientId !== clientId)
         .map((item, idx) => ({ ...item, sort_order: idx }));
+      console.log("📋 [MediaUploader] Items after removal:", {
+        before: prev.length,
+        after: next.length,
+        removed: clientId,
+        remaining: next.map((m) => m.clientId),
+      });
       return next;
     });
 

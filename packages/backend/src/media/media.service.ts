@@ -10,6 +10,7 @@ import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
 import { GetPresignedUrlDto } from './dto/upload-media.dto';
 import { CombinedFilterService } from '../products/services/combined-filter.service';
+import { ProductsEventService } from '../products/products-events.service';
 
 interface StorageService {
   getPresignedUploadUrl(
@@ -29,6 +30,7 @@ export class MediaService {
     private prisma: PrismaService,
     @Inject('STORAGE_SERVICE') private storageService: StorageService,
     private combinedFilterService: CombinedFilterService,
+    private eventsService: ProductsEventService,
   ) {}
 
   async create(createMediaDto: CreateMediaDto) {
@@ -65,6 +67,13 @@ export class MediaService {
       data: createMediaDto,
     });
     this.combinedFilterService.clearProductCaches(createMediaDto.product_id);
+
+    // Emit event for real-time updates
+    this.eventsService.emit({
+      type: 'updated',
+      productId: createMediaDto.product_id,
+    });
+
     return media;
   }
 
@@ -131,6 +140,13 @@ export class MediaService {
       data: updateMediaDto,
     });
     this.combinedFilterService.clearProductCaches(existingMedia.product_id);
+
+    // Emit event for real-time updates
+    this.eventsService.emit({
+      type: 'updated',
+      productId: existingMedia.product_id,
+    });
+
     return result;
   }
 
@@ -138,6 +154,13 @@ export class MediaService {
     const media = await this.findOne(id);
     const result = await this.prisma.media.delete({ where: { id } });
     this.combinedFilterService.clearProductCaches(media.product_id);
+
+    // Emit event for real-time updates
+    this.eventsService.emit({
+      type: 'updated',
+      productId: media.product_id,
+    });
+
     return result;
   }
 

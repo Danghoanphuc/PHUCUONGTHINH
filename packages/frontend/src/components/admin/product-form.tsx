@@ -271,12 +271,26 @@ export function ProductForm({
       setFormData(d);
       originalMediaRef.current = d.pendingMedia;
       pendingMediaRef.current = d.pendingMedia;
+      console.log(
+        "🔄 [ProductForm] Product loaded, originalMediaRef:",
+        originalMediaRef.current.map((m) => ({
+          id: m.clientId,
+          status: m.status,
+        })),
+      );
     }
   }, [product]);
 
   // Keep pendingMediaRef in sync with latest formData.pendingMedia
   useEffect(() => {
     pendingMediaRef.current = formData.pendingMedia;
+    console.log(
+      "🔄 [ProductForm] pendingMediaRef synced:",
+      pendingMediaRef.current.map((m) => ({
+        id: m.clientId,
+        status: m.status,
+      })),
+    );
   }, [formData.pendingMedia]);
 
   const [productType, setProductType] = useState<ProductType>(
@@ -332,6 +346,15 @@ export function ProductForm({
 
   const setField = useCallback(
     <K extends keyof FormState>(key: K, value: FormState[K]) => {
+      if (key === "pendingMedia") {
+        console.log(
+          "📝 [ProductForm] setField pendingMedia:",
+          (value as PendingMedia[]).map((m) => ({
+            id: m.clientId,
+            status: m.status,
+          })),
+        );
+      }
       setFormData((p) => ({ ...p, [key]: value }));
       setErrors((p) => {
         if (!p[key]) return p;
@@ -444,6 +467,12 @@ export function ProductForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+
+    console.log(
+      "🚀 [ProductForm] handleSubmit - formData.pendingMedia:",
+      formData.pendingMedia.map((m) => ({ id: m.clientId, status: m.status })),
+    );
+
     setIsSaving(true);
     try {
       const payload: CreateProductRequest | UpdateProductRequest = {
@@ -486,8 +515,30 @@ export function ProductForm({
               m.status === "done" && m.clientId && !currentIds.has(m.clientId),
           );
 
+          console.log("🔍 [ProductForm] Media deletion:", {
+            original: originalMediaRef.current.map((m) => ({
+              id: m.clientId,
+              status: m.status,
+            })),
+            current: pendingMediaRef.current.map((m) => ({
+              id: m.clientId,
+              status: m.status,
+            })),
+            currentIds: Array.from(currentIds),
+            toDelete: toDelete.map((m) => m.clientId),
+          });
+
           await Promise.all(
-            toDelete.map((m) => deleteMedia(m.clientId).catch(() => {})),
+            toDelete.map((m) => {
+              console.log("🗑️ [ProductForm] Deleting media:", m.clientId);
+              return deleteMedia(m.clientId).catch((err) => {
+                console.error(
+                  "❌ [ProductForm] Failed to delete media:",
+                  m.clientId,
+                  err,
+                );
+              });
+            }),
           );
         }
 

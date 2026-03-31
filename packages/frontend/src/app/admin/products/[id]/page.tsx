@@ -14,6 +14,7 @@ import { tagService, Tag } from "@/lib/tag-service";
 import { MediaRecord } from "@/lib/media-service";
 import { apiClient } from "@/lib/admin-api-client";
 import { staticDataCache } from "@/lib/static-data-cache";
+import { useProductEvents } from "@/hooks/useProductEvents";
 
 export default function AdminEditProductPage() {
   const router = useRouter();
@@ -34,6 +35,18 @@ export default function AdminEditProductPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Listen for real-time product updates (e.g., media changes from other tabs/users)
+  useProductEvents(() => {
+    console.log("📡 [EditPage] Product event received, reloading media...");
+    // Reload media only, don't reload entire product to avoid losing form state
+    apiClient
+      .get<MediaRecord[]>(`/media/product/${productId}`)
+      .then((media) => {
+        setProduct((prev) => (prev ? { ...prev, media: media || [] } : null));
+      })
+      .catch((err) => console.error("Failed to reload media:", err));
+  }, productId);
 
   useEffect(() => {
     // Load product + media (critical path)

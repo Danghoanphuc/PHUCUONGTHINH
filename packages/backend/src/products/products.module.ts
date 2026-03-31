@@ -86,6 +86,6 @@ import { RedisCacheService } from '../common/services/redis-cache.service';
     },
     PerformanceService,
   ],
-  exports: [ProductsService, CombinedFilterService],
+  exports: [ProductsService, CombinedFilterService, ProductsEventService],
 })
 export class ProductsModule {}
