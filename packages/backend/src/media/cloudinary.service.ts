@@ -165,4 +165,70 @@ export class CloudinaryService {
       return url;
     }
   }
+
+  /**
+   * Validate file type for upload
+   */
+  validateFileType(filename: string, mediaType: string): boolean {
+    const fileExtension = filename.toLowerCase().split('.').pop();
+
+    const allowedTypes = {
+      lifestyle: ['jpg', 'jpeg', 'png', 'webp'],
+      cutout: ['jpg', 'jpeg', 'png', 'webp'],
+      showcase: ['jpg', 'jpeg', 'png', 'webp'],
+      video: ['mp4', 'webm', 'mov'],
+      '3d_file': ['dwg', 'obj', 'fbx', 'dae', 'blend', 'glb', 'gltf', 'skp'],
+      pdf: ['pdf'],
+    };
+
+    return allowedTypes[mediaType]?.includes(fileExtension) || false;
+  }
+
+  /**
+   * Generate S3-compatible key for Cloudinary
+   */
+  generateS3Key(
+    productId: string,
+    filename: string,
+    mediaType: string,
+  ): string {
+    const timestamp = Date.now();
+    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+    return `products/${productId}/${mediaType}/${timestamp}_${sanitizedFilename}`;
+  }
+
+  /**
+   * Get presigned upload URL (not used with Cloudinary, but required by interface)
+   */
+  async getPresignedUploadUrl(
+    key: string,
+    contentType: string,
+    expiresIn: number = 3600,
+  ): Promise<string> {
+    // Cloudinary doesn't use presigned URLs, return a placeholder
+    return `cloudinary://upload/${key}`;
+  }
+
+  /**
+   * Get presigned download URL (returns public URL)
+   */
+  async getPresignedDownloadUrl(
+    key: string,
+    expiresIn: number = 3600,
+  ): Promise<string> {
+    return this.getPublicUrl(key);
+  }
+
+  /**
+   * Get public URL for a Cloudinary asset
+   */
+  getPublicUrl(key: string): string {
+    // If already a full URL, return as-is
+    if (key.startsWith('http')) {
+      return key;
+    }
+    // Otherwise construct Cloudinary URL
+    const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME');
+    return `https://res.cloudinary.com/${cloudName}/image/upload/${key}`;
+  }
 }
