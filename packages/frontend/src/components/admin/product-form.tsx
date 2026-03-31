@@ -441,41 +441,6 @@ export function ProductForm({
     );
   };
 
-  const syncMediaForEdit = async (
-    productId: string,
-    originalMedia: PendingMedia[],
-  ) => {
-    const currentPendingMedia = pendingMediaRef.current;
-    const currentIds = new Set(
-      currentPendingMedia
-        .filter((m) => m.status === "done" && m.clientId)
-        .map((m) => m.clientId),
-    );
-    await Promise.all(
-      originalMedia
-        .filter(
-          (m) =>
-            m.status === "done" && m.clientId && !currentIds.has(m.clientId),
-        )
-        .map((m) => deleteMedia(m.clientId).catch(() => {})),
-    );
-    await uploadPendingMedia(productId);
-    const existingIds = new Set(originalMedia.map((m) => m.clientId));
-    const doneItems = currentPendingMedia.filter(
-      (m) => m.status === "done" && m.clientId && existingIds.has(m.clientId),
-    );
-    if (doneItems.length > 0) {
-      try {
-        await updateSortOrder(
-          productId,
-          doneItems.map((m) => ({ id: m.clientId, sort_order: m.sort_order })),
-        );
-      } catch {
-        /* non-fatal */
-      }
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -503,15 +468,53 @@ export function ProductForm({
       // Ensure pendingMediaRef is always fresh before sync
       pendingMediaRef.current = formData.pendingMedia;
 
-      // Save internal info (fast, non-blocking after)
       const hasInternal = Object.values(internalData).some(
         (v) => v != null && v !== "",
       );
 
-      // Fire media sync + internal save in background — don't await
       if (productId) {
-        const mediaPromise = product?.id
-          ? syncMediaForEdit(product.id, originalMediaRef.current)
+        // DELETE phải await — không được chạy background
+        if (product?.id) {
+          const currentIds = new Set(
+            pendingMediaRef.current
+              .filter((m) => m.status === "done" && m.clientId)
+              .map((m) => m.clientId),
+          );
+          await Promise.all(
+            originalMediaRef.current
+              .filter(
+                (m) =>
+                  m.status === "done" &&
+                  m.clientId &&
+                  !currentIds.has(m.clientId),
+              )
+              .map((m) => deleteMedia(m.clientId).catch(() => {})),
+          );
+        }
+
+        // Upload mới + internal + sort-order chạy background
+        const uploadPromise = product?.id
+          ? (async () => {
+              await uploadPendingMedia(productId);
+              const existingIds = new Set(
+                originalMediaRef.current.map((m) => m.clientId),
+              );
+              const doneItems = pendingMediaRef.current.filter(
+                (m) =>
+                  m.status === "done" &&
+                  m.clientId &&
+                  existingIds.has(m.clientId),
+              );
+              if (doneItems.length > 0) {
+                await updateSortOrder(
+                  productId,
+                  doneItems.map((m) => ({
+                    id: m.clientId,
+                    sort_order: m.sort_order,
+                  })),
+                ).catch(() => {});
+              }
+            })()
           : result?.id
             ? uploadPendingMedia(result.id)
             : Promise.resolve();
@@ -524,8 +527,7 @@ export function ProductForm({
               )
           : Promise.resolve();
 
-        // Don't await — redirect immediately
-        Promise.all([mediaPromise, internalPromise]).catch(() => {});
+        Promise.all([uploadPromise, internalPromise]).catch(() => {});
       }
 
       setToast({ message: "✅ Đã lưu sản phẩm", type: "success" });
