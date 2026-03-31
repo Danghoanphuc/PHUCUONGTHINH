@@ -1,6 +1,8 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaBetterSQLite3 } from '@prisma/adapter-better-sqlite3';
+import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { createClient } from '@libsql/client';
 
 @Injectable()
 export class PrismaService
@@ -28,14 +30,9 @@ export class PrismaService
       isSQLite,
     );
 
-    if (isPostgreSQL || isTurso) {
-      // Use PostgreSQL or Turso directly (Prisma supports libsql:// URLs natively)
+    if (isPostgreSQL) {
+      // Use PostgreSQL directly
       super({
-        datasources: {
-          db: {
-            url: dbUrl,
-          },
-        },
         log:
           process.env.NODE_ENV === 'test'
             ? ['error']
@@ -43,6 +40,28 @@ export class PrismaService
               ? ['error', 'warn']
               : ['query', 'info', 'warn', 'error'],
       });
+    } else if (isTurso) {
+      // Use Turso with libSQL adapter
+      console.log('🔍 Initializing Turso connection');
+
+      const libsql = createClient({
+        url: dbUrl,
+        authToken: process.env.TURSO_AUTH_TOKEN,
+      });
+
+      const adapter = new PrismaLibSql(libsql as any);
+
+      super({
+        adapter: adapter as any,
+        log:
+          process.env.NODE_ENV === 'test'
+            ? ['error']
+            : process.env.NODE_ENV === 'production'
+              ? ['error', 'warn']
+              : ['query', 'info', 'warn', 'error'],
+      });
+
+      console.log('🔍 Turso adapter initialized');
     } else if (isSQLite) {
       // Use local SQLite with adapter and performance optimizations
       const adapter = new PrismaBetterSQLite3({ url: dbUrl });
@@ -61,14 +80,14 @@ export class PrismaService
       }
 
       super({
-        adapter,
+        adapter: adapter as any,
         log:
           process.env.NODE_ENV === 'test'
             ? ['error']
             : process.env.NODE_ENV === 'production'
               ? ['error', 'warn']
               : ['query', 'info', 'warn', 'error'],
-      } as any);
+      });
     } else {
       throw new Error(`Unsupported database URL: ${dbUrl}`);
     }
