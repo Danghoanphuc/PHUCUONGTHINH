@@ -530,7 +530,7 @@ export function ProductForm({
                 type: "success",
               });
               setTimeout(() => {
-                window.location.replace(`/products/${productId}`);
+                window.location.replace(`/products/${productId}?_updated=1`);
               }, 300);
             }
           }, 500);

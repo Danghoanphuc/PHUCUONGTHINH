@@ -14,17 +14,14 @@ const nextConfig = {
   // Giảm overhead
   productionBrowserSourceMaps: false,
 
-  // Headers: disable caching for API proxy routes
+  // Headers: only disable cache for SSE endpoint
   async headers() {
     return [
       {
-        source: "/api/backend/:path*",
+        source: "/api/backend/products/events",
         headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate",
-          },
-          { key: "CDN-Cache-Control", value: "no-store" },
+          { key: "Cache-Control", value: "no-cache" },
+          { key: "X-Accel-Buffering", value: "no" },
         ],
       },
     ];

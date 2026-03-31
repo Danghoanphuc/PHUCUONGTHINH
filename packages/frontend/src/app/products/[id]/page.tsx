@@ -473,44 +473,56 @@ export default function ProductDetailPage({
   const ctaRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
 
-  const loadProduct = useCallback(() => {
-    if (!params.id) return;
-    setIsLoading(true);
+  const loadProduct = useCallback(
+    (bustCache = false) => {
+      if (!params.id) return;
+      setIsLoading(true);
 
-    console.log("🔄 Loading product:", params.id);
+      // Only invalidate cache when explicitly requested (e.g. after edit)
+      if (bustCache) {
+        clientCache.invalidateProduct(params.id);
+      }
 
-    // Force bypass cache by invalidating first
-    clientCache.invalidateProduct(params.id);
-
-    productService
-      .getProductById(params.id)
-      .then(async (data) => {
-        console.log("✅ Product loaded:", data.name);
-        setProduct(data);
-        setActiveImageIndex(0);
-        saveRecentProduct(data);
-        setRecentProducts(getRecentProducts(data.id));
-        const styleIds = data.style_tags?.map((s) => s.id) ?? [];
-        if (styleIds.length > 0) {
-          try {
-            const related = await productService.getProducts({
-              styles: styleIds,
-              limit: 5,
-            });
-            setRelatedProducts(
-              (related.products ?? [])
-                .filter((p) => p.id !== data.id)
-                .slice(0, 4),
-            );
-          } catch {}
-        }
-      })
-      .catch(() => setProduct(null))
-      .finally(() => setIsLoading(false));
-  }, [params.id]);
+      productService
+        .getProductById(params.id, bustCache)
+        .then(async (data) => {
+          console.log("✅ Product loaded:", data.name);
+          setProduct(data);
+          setActiveImageIndex(0);
+          saveRecentProduct(data);
+          setRecentProducts(getRecentProducts(data.id));
+          const styleIds = data.style_tags?.map((s) => s.id) ?? [];
+          if (styleIds.length > 0) {
+            try {
+              const related = await productService.getProducts({
+                styles: styleIds,
+                limit: 5,
+              });
+              setRelatedProducts(
+                (related.products ?? [])
+                  .filter((p) => p.id !== data.id)
+                  .slice(0, 4),
+              );
+            } catch {}
+          }
+        })
+        .catch(() => setProduct(null))
+        .finally(() => setIsLoading(false));
+    },
+    [params.id],
+  );
 
   useEffect(() => {
-    loadProduct();
+    // Bust cache only when redirected from edit (?_updated=1)
+    const fromEdit =
+      typeof window !== "undefined" &&
+      window.location.search.includes("_updated=1");
+    loadProduct(fromEdit);
+    if (fromEdit && typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("_updated");
+      window.history.replaceState({}, "", url.toString());
+    }
   }, [loadProduct]);
 
   useEffect(() => {
@@ -522,10 +534,9 @@ export default function ProductDetailPage({
     return () => observer.disconnect();
   }, [product]);
 
-  // Listen for real-time product updates
+  // Listen for real-time product updates via SSE
   useProductEvents(() => {
-    console.log("🔄 Product updated, reloading...");
-    loadProduct();
+    loadProduct(true); // bust cache on SSE event
   }, params.id);
 
   if (isLoading)

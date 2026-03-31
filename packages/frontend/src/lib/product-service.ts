@@ -149,19 +149,12 @@ class ProductService {
     };
   }
 
-  async getProductById(id: string): Promise<Product> {
-    // Add cache busting timestamp
-    const cacheBuster = Date.now();
-    const raw = await apiClient.get<any>(`/products/${id}?_t=${cacheBuster}`);
+  async getProductById(id: string, bustCache = false): Promise<Product> {
+    const url = bustCache
+      ? `/products/${id}?_t=${Date.now()}`
+      : `/products/${id}`;
+    const raw = await apiClient.get<any>(url);
     const product = normalizeTags(raw);
-
-    console.log(
-      "✅ Product fetched (no cache):",
-      product.name,
-      "at",
-      new Date().toISOString(),
-    );
-
     return product;
   }
 

@@ -31,14 +31,8 @@ export async function GET(
   });
   const data = await res.json();
 
-  // Add cache control headers to prevent browser caching
   return NextResponse.json(data, {
     status: res.status,
-    headers: {
-      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      Pragma: "no-cache",
-      Expires: "0",
-    },
   });
 }
 
