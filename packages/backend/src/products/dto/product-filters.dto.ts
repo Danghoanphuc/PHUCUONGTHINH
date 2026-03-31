@@ -1,23 +1,30 @@
-import { IsOptional, IsArray, IsString, IsObject, IsNumber, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsArray,
+  IsString,
+  IsObject,
+  IsNumber,
+  Min,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 export class ProductFiltersDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => Array.isArray(value) ? value : [value])
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   categories?: string[];
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => Array.isArray(value) ? value : [value])
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   styles?: string[];
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => Array.isArray(value) ? value : [value])
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   spaces?: string[];
 
   @IsOptional()
@@ -43,4 +50,8 @@ export class ProductFiltersDto {
   @IsOptional()
   @IsString()
   published?: 'true' | 'false' | 'all' = 'true';
+
+  @IsOptional()
+  @IsString()
+  _t?: string; // Cache-busting timestamp, ignored by backend
 }
