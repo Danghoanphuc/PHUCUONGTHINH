@@ -8,7 +8,12 @@ import { LoggerService } from './common/services/logger.service';
 import { SecurityHeadersService } from './common/services/security-headers.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger:
+      process.env.NODE_ENV === 'production'
+        ? ['error', 'warn'] // Only errors and warnings in production
+        : ['log', 'error', 'warn', 'debug', 'verbose'], // All logs in development
+  });
   const configService = app.get(ConfigService);
   const loggerService = app.get(LoggerService);
   const securityHeadersService = app.get(SecurityHeadersService);
