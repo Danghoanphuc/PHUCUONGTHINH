@@ -341,7 +341,6 @@ export default function AdminProductsPage() {
 
   // Listen for real-time product updates
   useProductEvents(() => {
-    console.log("📡 [ProductList] Product event received, reloading...");
     loadProducts();
   });
 

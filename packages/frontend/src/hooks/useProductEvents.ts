@@ -71,7 +71,6 @@ export function useProductEvents(onEvent: () => void, productId?: string) {
         eventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log("📡 Product event received:", data);
 
             // Invalidate cache for the affected product
             if (data.productId) {
