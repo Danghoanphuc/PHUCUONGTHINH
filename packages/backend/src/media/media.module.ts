@@ -21,8 +21,9 @@ import { PrismaModule } from '../prisma/prisma.module';
         localStorageService: LocalStorageService,
       ) => {
         const useS3 =
-          configService.get('AWS_ACCESS_KEY_ID') &&
-          configService.get('AWS_SECRET_ACCESS_KEY');
+          (configService.get('AWS_ACCESS_KEY_ID') &&
+            configService.get('AWS_SECRET_ACCESS_KEY')) ||
+          configService.get('R2_ENDPOINT');
         return useS3 ? s3Service : localStorageService;
       },
       inject: [ConfigService, S3Service, LocalStorageService],

@@ -16,8 +16,11 @@ export class S3Service {
     const accessKeyId = this.configService.get('AWS_ACCESS_KEY_ID');
     const secretAccessKey = this.configService.get('AWS_SECRET_ACCESS_KEY');
 
+    const r2Endpoint = this.configService.get('R2_ENDPOINT'); // https://<account_id>.r2.cloudflarestorage.com
+
     const config: any = {
-      region: this.configService.get('AWS_REGION') || 'us-east-1',
+      region: this.configService.get('AWS_REGION') || 'auto',
+      ...(r2Endpoint && { endpoint: r2Endpoint }),
     };
 
     if (accessKeyId && secretAccessKey) {
@@ -95,10 +98,11 @@ export class S3Service {
   }
 
   getPublicUrl(key: string): string {
-    const cdnDomain = this.configService.get('CDN_DOMAIN');
+    const cdnDomain = this.configService.get('CDN_DOMAIN'); // R2 public domain hoặc custom domain
     if (cdnDomain) {
       return `https://${cdnDomain}/${key}`;
     }
+    // fallback S3
     return `https://${this.bucketName}.s3.amazonaws.com/${key}`;
   }
 }
