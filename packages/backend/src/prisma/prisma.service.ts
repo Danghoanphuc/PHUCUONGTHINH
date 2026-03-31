@@ -20,7 +20,9 @@ export class PrismaService
         log:
           process.env.NODE_ENV === 'test'
             ? ['error']
-            : ['query', 'info', 'warn', 'error'],
+            : process.env.NODE_ENV === 'production'
+              ? ['error', 'warn']
+              : ['query', 'info', 'warn', 'error'],
       });
     } else {
       // Use SQLite with adapter and performance optimizations
@@ -44,7 +46,9 @@ export class PrismaService
         log:
           process.env.NODE_ENV === 'test'
             ? ['error']
-            : ['query', 'info', 'warn', 'error'],
+            : process.env.NODE_ENV === 'production'
+              ? ['error', 'warn']
+              : ['query', 'info', 'warn', 'error'],
       } as any);
     }
   }

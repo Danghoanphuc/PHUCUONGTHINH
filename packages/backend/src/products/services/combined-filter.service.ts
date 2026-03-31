@@ -158,14 +158,20 @@ export class CombinedFilterService {
 
     // Try cache first
     const cacheKey = `products:${JSON.stringify(finalWhere)}:${page}:${limit}`;
-    console.log(`📦 Checking cache for key: ${cacheKey}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`📦 Checking cache for key: ${cacheKey}`);
+    }
 
     const cached = await this.cacheService.get(cacheKey);
     if (cached) {
-      console.log('✅ CACHE HIT!');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ CACHE HIT!');
+      }
       return cached as FilterResponse;
     }
-    console.log('❌ CACHE MISS - fetching from database');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('❌ CACHE MISS - fetching from database');
+    }
 
     // Execute queries with optimized select
     const [products, total, availableFilters] = await Promise.all([

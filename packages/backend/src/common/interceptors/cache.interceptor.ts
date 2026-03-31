@@ -31,11 +31,15 @@ export class CacheInterceptor implements NestInterceptor {
     // Try to get from cache
     const cachedResponse = this.cacheService.get(cacheKey);
     if (cachedResponse) {
-      console.log(`⚡ Cache HIT: ${cacheKey}`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`⚡ Cache HIT: ${cacheKey}`);
+      }
       return of(cachedResponse);
     }
 
-    console.log(`💾 Cache MISS: ${cacheKey}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`💾 Cache MISS: ${cacheKey}`);
+    }
 
     // Execute request and cache the response
     return next.handle().pipe(
