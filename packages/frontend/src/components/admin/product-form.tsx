@@ -499,56 +499,40 @@ export function ProductForm({
       };
       const result = await onSubmit(payload);
       const productId = product?.id || result?.id;
+
+      // Ensure pendingMediaRef is always fresh before sync
+      pendingMediaRef.current = formData.pendingMedia;
+
+      // Save internal info (fast, non-blocking after)
+      const hasInternal = Object.values(internalData).some(
+        (v) => v != null && v !== "",
+      );
+
+      // Fire media sync + internal save in background — don't await
       if (productId) {
-        // Ensure pendingMediaRef is always fresh before sync
-        pendingMediaRef.current = formData.pendingMedia;
-        if (product?.id)
-          await syncMediaForEdit(product.id, originalMediaRef.current);
-        else if (result?.id) await uploadPendingMedia(result.id);
-        const hasInternal = Object.values(internalData).some(
-          (v) => v != null && v !== "",
-        );
-        if (hasInternal) {
-          try {
-            await apiClient.patch(
-              `/products/${productId}/internal`,
-              internalData,
-            );
-          } catch (err) {
-            console.error("Failed to save internal info:", err);
-          }
-        }
+        const mediaPromise = product?.id
+          ? syncMediaForEdit(product.id, originalMediaRef.current)
+          : result?.id
+            ? uploadPendingMedia(result.id)
+            : Promise.resolve();
+
+        const internalPromise = hasInternal
+          ? apiClient
+              .patch(`/products/${productId}/internal`, internalData)
+              .catch((err) =>
+                console.error("Failed to save internal info:", err),
+              )
+          : Promise.resolve();
+
+        // Don't await — redirect immediately
+        Promise.all([mediaPromise, internalPromise]).catch(() => {});
       }
+
       setToast({ message: "✅ Đã lưu sản phẩm", type: "success" });
-      if (productId) {
-        const hasPending = formData.pendingMedia.some(
-          (m) => m.status === "pending" || m.status === "uploading",
-        );
-        if (!hasPending) {
-          setTimeout(
-            () => window.location.replace(`/products/${productId}?_updated=1`),
-            600,
-          );
-        } else {
-          setToast({ message: "⏳ Đang xử lý media...", type: "success" });
-          let polls = 0;
-          const iv = setInterval(() => {
-            polls++;
-            const still = formData.pendingMedia.some(
-              (m) => m.status === "uploading",
-            );
-            if (!still || polls >= 20) {
-              clearInterval(iv);
-              setToast({ message: "✅ Hoàn tất!", type: "success" });
-              setTimeout(
-                () =>
-                  window.location.replace(`/products/${productId}?_updated=1`),
-                300,
-              );
-            }
-          }, 500);
-        }
-      }
+      // Redirect after short delay to show toast
+      setTimeout(() => {
+        window.location.replace(`/admin/products`);
+      }, 500);
     } catch (err: any) {
       const msg =
         err?.response?.data?.error?.message ||
