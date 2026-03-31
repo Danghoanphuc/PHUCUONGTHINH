@@ -24,6 +24,27 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     exposedHeaders: ['Content-Type', 'Cache-Control'],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
+
+  // Handle OPTIONS preflight explicitly (needed when behind Cloudflare)
+  app.use((req: any, res: any, next: any) => {
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.setHeader(
+        'Access-Control-Allow-Methods',
+        'GET,POST,PUT,DELETE,PATCH,OPTIONS',
+      );
+      res.setHeader(
+        'Access-Control-Allow-Headers',
+        'Content-Type,Authorization,Accept',
+      );
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Max-Age', '86400'); // cache preflight 24h
+      return res.status(204).send();
+    }
+    next();
   });
 
   // Serve static files from uploads directory
