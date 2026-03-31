@@ -163,6 +163,7 @@ export default function ProductsPage() {
   const [technicalSpecs, setTechnicalSpecs] = useState<Record<string, any>>({});
 
   const [searchQuery, setSearchQuery] = useState("");
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -239,7 +240,10 @@ export default function ProductsPage() {
 
   const executeSearch = (query: string) => {
     setSearchQuery(query);
-    setFilters((prev) => ({ ...prev, search: query, page: 1 }));
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setFilters((prev) => ({ ...prev, search: query, page: 1 }));
+    }, 350);
   };
 
   const clearAllFilters = () => {

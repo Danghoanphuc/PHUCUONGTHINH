@@ -5,6 +5,7 @@ import { Package } from "lucide-react";
 import { Product } from "@/types";
 import { productService } from "@/lib/product-service";
 import { ProductCard } from "./ProductCard";
+import { clientCache } from "@/lib/cache-utils";
 
 type ProductType = "gach" | "tbvs" | "bep" | "phu-tro";
 
@@ -34,17 +35,21 @@ export function CrossSellSection({
       return;
     }
 
+    const cacheKey = `crosssell:${currentCategoryId}`;
+    const cached = clientCache.get<Product[]>(cacheKey);
+    if (cached) {
+      setProducts(cached.filter((p) => p.id !== currentProductId).slice(0, 4));
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     productService
-      .getProducts({
-        categories: [currentCategoryId],
-        limit: 4,
-      })
+      .getProducts({ categories: [currentCategoryId], limit: 6 })
       .then((result) => {
-        const filtered = (result.products ?? []).filter(
-          (p) => p.id !== currentProductId,
-        );
-        setProducts(filtered.slice(0, 4));
+        const all = result.products ?? [];
+        clientCache.set(cacheKey, all, 5 * 60 * 1000);
+        setProducts(all.filter((p) => p.id !== currentProductId).slice(0, 4));
       })
       .catch(() => setProducts([]))
       .finally(() => setIsLoading(false));

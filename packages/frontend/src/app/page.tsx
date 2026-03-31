@@ -211,13 +211,13 @@ function AdminDashboard({
   const [recentProducts, setRecentProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    Promise.all([
-      productService.getProducts(1, 5, ""),
-      productService.getProducts({ page: 1, limit: 5, published: true }),
-    ])
-      .then(([all, pub]) => {
+    productService
+      .getProducts({ page: 1, limit: 5, published: "all" as any })
+      .then((all) => {
         const total = all.pagination?.total ?? 0;
-        const published = pub.pagination?.total ?? 0;
+        const published = (all.products ?? []).filter(
+          (p) => p.is_published,
+        ).length;
         setStats({ total, published, draft: total - published });
         setRecentProducts(all.products.slice(0, 5));
       })

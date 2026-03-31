@@ -23,63 +23,45 @@ export default function AdminEditProductPage() {
   const [product, setProduct] = useState<
     (Product & { media?: MediaRecord[] }) | null
   >(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [styles, setStyles] = useState<Tag[]>([]);
-  const [spaces, setSpaces] = useState<Tag[]>([]);
+  const [categories, setCategories] = useState<Category[]>(
+    () => staticDataCache.getCategories() ?? [],
+  );
+  const [styles, setStyles] = useState<Tag[]>(
+    () => staticDataCache.getStyles() ?? [],
+  );
+  const [spaces, setSpaces] = useState<Tag[]>(
+    () => staticDataCache.getSpaces() ?? [],
+  );
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    loadData();
-  }, [productId]);
+    // Load product + media (critical path)
+    Promise.all([
+      productService.getProductById(productId),
+      apiClient
+        .get<MediaRecord[]>(`/media/product/${productId}`)
+        .catch(() => []),
+    ])
+      .then(([prod, media]) => setProduct({ ...prod, media: media || [] }))
+      .catch(() => setError("Không thể tải sản phẩm"));
 
-  const loadData = async () => {
-    try {
-      // Try to get static data from cache first
-      const cachedCategories = staticDataCache.getCategories();
-      const cachedStyles = staticDataCache.getStyles();
-      const cachedSpaces = staticDataCache.getSpaces();
-
-      // Load product and media (always fresh)
-      const [prod, media] = await Promise.all([
-        productService.getProductById(productId),
-        apiClient
-          .get<MediaRecord[]>(`/media/product/${productId}`)
-          .catch(() => []),
-      ]);
-
-      setProduct({ ...prod, media: media || [] });
-
-      // Use cached data if available, otherwise fetch
-      if (cachedCategories && cachedStyles && cachedSpaces) {
-        console.log("✅ Using cached static data");
-        setCategories(cachedCategories);
-        setStyles(cachedStyles);
-        setSpaces(cachedSpaces);
-      } else {
-        console.log("🔄 Fetching fresh static data");
-        const [cats, stls, sps] = await Promise.all([
-          categoryService.getCategories(),
-          tagService.getStyles(),
-          tagService.getSpaces(),
-        ]);
-
-        // Cache for future use
+    // Load static data (non-blocking, only if not cached)
+    if (!staticDataCache.getCategories()) {
+      Promise.all([
+        categoryService.getCategories(),
+        tagService.getStyles(),
+        tagService.getSpaces(),
+      ]).then(([cats, stls, sps]) => {
         staticDataCache.setCategories(cats);
         staticDataCache.setStyles(stls);
         staticDataCache.setSpaces(sps);
-
         setCategories(cats);
         setStyles(stls);
         setSpaces(sps);
-      }
-    } catch (err) {
-      setError("Không thể tải sản phẩm");
-    } finally {
-      setIsLoadingData(false);
+      });
     }
-  };
+  }, [productId]);
 
   const handleSubmit = async (
     data: UpdateProductRequest,
@@ -96,13 +78,25 @@ export default function AdminEditProductPage() {
     }
   };
 
-  if (isLoadingData) return <div className="text-center py-8">Đang tải...</div>;
-  if (!product)
+  if (error)
+    return <div className="text-center py-8 text-red-600">{error}</div>;
+
+  // Render form immediately — show skeleton while product loads
+  if (!product) {
     return (
-      <div className="text-center py-8 text-red-600">
-        {error || "Không tìm thấy sản phẩm"}
+      <div className="p-4 md:p-6 animate-pulse">
+        <div className="h-4 w-20 bg-gray-200 rounded mb-5" />
+        <div className="h-6 w-48 bg-gray-200 rounded mb-6" />
+        <div className="h-12 bg-gray-100 rounded-2xl mb-4" />
+        <div className="h-10 bg-gray-100 rounded-xl mb-3" />
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-12 bg-gray-100 rounded-xl" />
+          ))}
+        </div>
       </div>
     );
+  }
 
   return (
     <div className="p-4 md:p-6">
@@ -117,11 +111,6 @@ export default function AdminEditProductPage() {
           Chỉnh sửa sản phẩm
         </h1>
       </div>
-      {error && (
-        <div className="mb-4 p-3.5 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm">
-          {error}
-        </div>
-      )}
       <ProductForm
         product={product}
         categories={categories}

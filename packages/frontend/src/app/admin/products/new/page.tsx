@@ -16,53 +16,32 @@ import { staticDataCache } from "@/lib/static-data-cache";
 
 export default function AdminNewProductPage() {
   const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [styles, setStyles] = useState<Tag[]>([]);
-  const [spaces, setSpaces] = useState<Tag[]>([]);
+  const [categories, setCategories] = useState<Category[]>(
+    () => staticDataCache.getCategories() ?? [],
+  );
+  const [styles, setStyles] = useState<Tag[]>(
+    () => staticDataCache.getStyles() ?? [],
+  );
+  const [spaces, setSpaces] = useState<Tag[]>(
+    () => staticDataCache.getSpaces() ?? [],
+  );
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    loadData();
+    if (staticDataCache.getCategories()) return; // already cached
+    Promise.all([
+      categoryService.getCategories(),
+      tagService.getStyles(),
+      tagService.getSpaces(),
+    ]).then(([cats, stls, sps]) => {
+      staticDataCache.setCategories(cats);
+      staticDataCache.setStyles(stls);
+      staticDataCache.setSpaces(sps);
+      setCategories(cats);
+      setStyles(stls);
+      setSpaces(sps);
+    });
   }, []);
-
-  const loadData = async () => {
-    try {
-      // Try to get from cache first
-      const cachedCategories = staticDataCache.getCategories();
-      const cachedStyles = staticDataCache.getStyles();
-      const cachedSpaces = staticDataCache.getSpaces();
-
-      if (cachedCategories && cachedStyles && cachedSpaces) {
-        console.log("✅ Using cached static data");
-        setCategories(cachedCategories);
-        setStyles(cachedStyles);
-        setSpaces(cachedSpaces);
-        setIsLoadingData(false);
-      } else {
-        console.log("🔄 Fetching fresh static data");
-        const [cats, stls, sps] = await Promise.all([
-          categoryService.getCategories(),
-          tagService.getStyles(),
-          tagService.getSpaces(),
-        ]);
-
-        // Cache for future use
-        staticDataCache.setCategories(cats);
-        staticDataCache.setStyles(stls);
-        staticDataCache.setSpaces(sps);
-
-        setCategories(cats);
-        setStyles(stls);
-        setSpaces(sps);
-        setIsLoadingData(false);
-      }
-    } catch (err: any) {
-      setError("Không thể tải dữ liệu form");
-      setIsLoadingData(false);
-    }
-  };
 
   const handleSubmit = async (
     data: CreateProductRequest | UpdateProductRequest,
@@ -81,10 +60,6 @@ export default function AdminNewProductPage() {
     }
   };
 
-  if (isLoadingData) {
-    return <div className="text-center py-8">Đang tải...</div>;
-  }
-
   return (
     <div className="p-4 md:p-6">
       <div className="mb-5">
@@ -98,13 +73,6 @@ export default function AdminNewProductPage() {
           Tạo sản phẩm mới
         </h1>
       </div>
-
-      {error && (
-        <div className="mb-4 p-3.5 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm">
-          {error}
-        </div>
-      )}
-
       <ProductForm
         categories={categories}
         styles={styles}

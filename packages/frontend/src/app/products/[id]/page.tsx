@@ -541,8 +541,37 @@ export default function ProductDetailPage({
 
   if (isLoading)
     return (
-      <main className="min-h-screen bg-[#F8F9FA] py-12 px-4 pt-24 flex justify-center">
-        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      <main className="min-h-screen bg-[#F8F9FA] pt-20 sm:pt-24 px-2 sm:px-4">
+        <div className="max-w-7xl mx-auto py-4 sm:py-8">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm border border-gray-100 animate-pulse">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-14">
+              {/* Image skeleton */}
+              <div className="lg:col-span-5">
+                <div className="aspect-square bg-gray-100 rounded-2xl" />
+                <div className="flex gap-2 mt-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-16 h-16 bg-gray-100 rounded-xl shrink-0"
+                    />
+                  ))}
+                </div>
+              </div>
+              {/* Info skeleton */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="h-3 w-24 bg-gray-100 rounded" />
+                <div className="h-7 w-3/4 bg-gray-100 rounded" />
+                <div className="h-5 w-1/3 bg-gray-100 rounded" />
+                <div className="space-y-2 pt-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-4 bg-gray-100 rounded" />
+                  ))}
+                </div>
+                <div className="h-11 bg-gray-100 rounded-xl mt-6" />
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     );
 
@@ -572,17 +601,6 @@ export default function ProductDetailPage({
   const videos = product.media?.filter((m) => m.media_type === "video") ?? [];
   const showcaseImages =
     product.media?.filter((m) => m.media_type === "showcase") ?? [];
-  // Debug: xóa sau khi confirm
-  if (typeof window !== "undefined" && product.media?.length) {
-    console.log(
-      "[media types]",
-      product.media.map((m) => ({
-        id: m.id,
-        type: m.media_type,
-        url: m.file_url,
-      })),
-    );
-  }
   const pdfFiles =
     product.media?.filter(
       (m) => m.media_type === "pdf" || m.file_url?.endsWith(".pdf"),
