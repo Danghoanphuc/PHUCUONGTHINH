@@ -276,16 +276,20 @@ export function MediaUploader({
   } | null>(null);
   const [newItemIds, setNewItemIds] = useState<Set<string>>(new Set());
 
-  // Sync khi existingMedia load xong (edit mode)
-  const initializedRef = useRef(false);
+  // Sync khi existingMedia thay đổi (edit mode: product load async)
+  const prevMediaKey = useRef<string>("");
   useEffect(() => {
-    if (!initializedRef.current && existingMedia.length > 0) {
-      initializedRef.current = true;
-      setItems(existingMedia);
+    // Create a key from media IDs to detect real changes
+    const key = existingMedia.map((m) => m.clientId).join(",");
+    if (key !== prevMediaKey.current) {
+      prevMediaKey.current = key;
+      if (existingMedia.length > 0) {
+        setItems(existingMedia);
+      }
     }
   }, [existingMedia]);
 
-  // Notify parent sau mỗi thay đổi, bỏ qua lần set từ existingMedia sync
+  // Notify parent sau mỗi thay đổi do user (không notify khi sync từ existingMedia)
   const skipNextNotify = useRef(false);
   const mountedRef = useRef(false);
   useEffect(() => {
@@ -300,9 +304,10 @@ export function MediaUploader({
     onChange(items);
   }, [items]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Đánh dấu skip khi sync từ existingMedia
+  // Khi sync từ existingMedia, skip notify để tránh loop
   useEffect(() => {
-    if (!initializedRef.current) return;
+    const key = existingMedia.map((m) => m.clientId).join(",");
+    if (key !== prevMediaKey.current) return; // chỉ skip khi vừa sync
     skipNextNotify.current = true;
   }, [existingMedia]);
   const [dragging1, setDragging1] = useState(false);

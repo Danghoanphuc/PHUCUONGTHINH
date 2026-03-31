@@ -204,6 +204,21 @@ export function ProductForm({
   const [formData, setFormData] = useState<FormState>(() =>
     initFormData(product),
   );
+
+  const originalMediaRef = useRef<PendingMedia[]>(
+    initFormData(product).pendingMedia,
+  );
+
+  // Re-initialize form when product data loads (async edit mode)
+  const initializedProductId = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (product?.id && product.id !== initializedProductId.current) {
+      initializedProductId.current = product.id;
+      const data = initFormData(product);
+      setFormData(data);
+      originalMediaRef.current = data.pendingMedia;
+    }
+  }, [product]);
   const [productType, setProductType] = useState<ProductType>(
     () =>
       (product?.technical_specs?.product_type as ProductType) ??
@@ -247,9 +262,6 @@ export function ProductForm({
       .catch(() => {});
   }, [product?.id]);
 
-  const originalMediaRef = useRef<PendingMedia[]>(
-    initFormData(product).pendingMedia,
-  );
   const nameRef = useRef<HTMLInputElement>(null);
   const skuRef = useRef<HTMLInputElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
