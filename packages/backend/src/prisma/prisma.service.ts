@@ -16,7 +16,8 @@ export class PrismaService
     const isPostgreSQL =
       dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://');
     const isTurso =
-      dbUrl.startsWith('libsql://') || dbUrl.startsWith('https://');
+      (dbUrl.startsWith('libsql://') || dbUrl.startsWith('https://')) &&
+      !!process.env.TURSO_AUTH_TOKEN;
     const isSQLite = dbUrl.startsWith('file:');
 
     if (isPostgreSQL) {
