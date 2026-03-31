@@ -63,10 +63,13 @@ export class CombinedFilterService {
   ) {}
 
   async filterProducts(filters: CombinedFilters): Promise<FilterResponse> {
-    console.log(
-      '🔍 CombinedFilterService.filterProducts called with:',
-      JSON.stringify(filters),
-    );
+    // Debug logging disabled in production
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(
+        '🔍 CombinedFilterService.filterProducts called with:',
+        JSON.stringify(filters),
+      );
+    }
 
     const {
       categories,
@@ -255,7 +258,9 @@ export class CombinedFilterService {
     };
 
     // Cache for 5 minutes
-    console.log(`💾 Caching result for key: ${cacheKey}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`💾 Caching result for key: ${cacheKey}`);
+    }
     await this.cacheService.set(cacheKey, result, { ttl: 300 });
 
     return result;
