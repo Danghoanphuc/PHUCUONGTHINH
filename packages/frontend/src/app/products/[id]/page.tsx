@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Pencil,
+  RefreshCw,
 } from "lucide-react";
 import { useQuoteCart } from "@/lib/wishlist-context";
 import { productService } from "@/lib/product-service";
@@ -27,6 +28,7 @@ import { AppointmentForm } from "@/components/AppointmentForm";
 import { ProductCard } from "@/components/ProductCard";
 import { CrossSellSection } from "@/components/CrossSellSection";
 import { ShippingPolicies } from "@/components/ShippingPolicies";
+import { clientCache } from "@/lib/cache-utils";
 import {
   ProductSpecs,
   detectProductType,
@@ -467,6 +469,7 @@ export default function ProductDetailPage({
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const ctaRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
 
@@ -474,9 +477,15 @@ export default function ProductDetailPage({
     if (!params.id) return;
     setIsLoading(true);
 
+    console.log("🔄 Loading product:", params.id);
+
+    // Force bypass cache by invalidating first
+    clientCache.invalidateProduct(params.id);
+
     productService
       .getProductById(params.id)
       .then(async (data) => {
+        console.log("✅ Product loaded:", data.name);
         setProduct(data);
         setActiveImageIndex(0);
         saveRecentProduct(data);

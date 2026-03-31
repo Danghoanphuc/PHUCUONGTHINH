@@ -162,8 +162,8 @@ class ProductService {
     const raw = await apiClient.get<any>(`/products/${id}`);
     const product = normalizeTags(raw);
 
-    // Cache for 30 seconds
-    clientCache.set(cacheKey, product, 30000);
+    // Cache for only 5 seconds (shorter for faster updates)
+    clientCache.set(cacheKey, product, 5000);
 
     return product;
   }

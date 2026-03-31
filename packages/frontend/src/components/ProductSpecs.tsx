@@ -288,7 +288,7 @@ function GachSpecs({ specs }: { specs: Record<string, any> }) {
       {/* Thông số chính — grid nổi bật */}
       {(size || thickness || piecesPerBox > 0 || m2PerBox > 0) && (
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2">
-          {size && <StatCard label="Kích thước" value={`${size} mm`} accent />}
+          {size && <StatCard label="Kích thước" value={`${size} cm`} accent />}
           {thickness && <StatCard label="Độ dày" value={`${thickness} mm`} />}
           {piecesPerBox > 0 && (
             <StatCard label="Số viên / thùng" value={`${piecesPerBox} viên`} />
