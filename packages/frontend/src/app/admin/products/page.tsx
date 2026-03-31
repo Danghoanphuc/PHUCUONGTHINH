@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { productService, Product } from "@/lib/product-service";
 import { useProductEvents } from "@/hooks/useProductEvents";
@@ -317,7 +317,16 @@ export default function AdminProductsPage() {
   const [isBulkLoading, setIsBulkLoading] = useState(false);
   const limit = 20;
 
+  // Stable reference to track if we're already loading
+  const isLoadingRef = useRef(false);
+
   const loadProducts = useCallback(async () => {
+    // Prevent concurrent loads
+    if (isLoadingRef.current) {
+      return;
+    }
+
+    isLoadingRef.current = true;
     setIsLoading(true);
     setError("");
     try {
@@ -332,17 +341,42 @@ export default function AdminProductsPage() {
       );
     } finally {
       setIsLoading(false);
+      isLoadingRef.current = false;
     }
   }, [page, search]);
 
+  // Initial load and reload on page/search change
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
 
-  // Listen for real-time product updates
-  useProductEvents(() => {
-    loadProducts();
-  });
+  // Debounced reload for SSE events
+  const reloadTimeoutRef = useRef<NodeJS.Timeout>();
+  const handleProductEvent = useCallback(() => {
+    // Debounce: wait 500ms before reloading to batch multiple events
+    if (reloadTimeoutRef.current) {
+      clearTimeout(reloadTimeoutRef.current);
+    }
+
+    reloadTimeoutRef.current = setTimeout(() => {
+      // Only reload if not currently loading
+      if (!isLoadingRef.current) {
+        loadProducts();
+      }
+    }, 500);
+  }, [loadProducts]);
+
+  // Listen for real-time product updates with debouncing
+  useProductEvents(handleProductEvent);
+
+  // Cleanup debounce timeout
+  useEffect(() => {
+    return () => {
+      if (reloadTimeoutRef.current) {
+        clearTimeout(reloadTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setSelected(new Set());
