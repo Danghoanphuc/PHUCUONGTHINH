@@ -164,11 +164,20 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
+    // Add cache-busting timestamp to media URLs to force browser reload
+    const mediaWithTimestamp = product.media?.map((m) => ({
+      ...m,
+      file_url: m.file_url.includes('?')
+        ? m.file_url
+        : `${m.file_url}?v=${m.updated_at?.getTime() || Date.now()}`,
+    }));
+
     // Parse technical_specs back to object
     return {
       ...product,
       technical_specs: JSON.parse(product.technical_specs),
-    };
+      media: mediaWithTimestamp,
+    } as any;
   }
 
   async findBySku(sku: string): Promise<Product> {

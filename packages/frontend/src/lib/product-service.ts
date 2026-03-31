@@ -108,6 +108,7 @@ class ProductService {
     pageOrFilters: number | ProductFilters = 1,
     limit: number = 10,
     search?: string,
+    bustCache: boolean = false,
   ): Promise<ProductFiltersResponse> {
     let params: URLSearchParams;
 
@@ -136,10 +137,15 @@ class ProductService {
         published: "all",
       });
       if (search) params.append("search", search);
+
+      // Admin pages always bust cache
+      bustCache = true;
     }
 
-    // Add cache-busting timestamp for admin pages to ensure fresh data
-    params.set("_t", Date.now().toString());
+    // Add cache-busting timestamp only when needed (admin pages)
+    if (bustCache) {
+      params.set("_t", Date.now().toString());
+    }
 
     const raw = await rawApiClient.getRaw<BackendProductsResponse>(
       `/products?${params.toString()}`,

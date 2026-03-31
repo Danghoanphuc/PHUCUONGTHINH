@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
   Sse,
+  Header,
 } from '@nestjs/common';
 import { map } from 'rxjs/operators';
 import { ProductsService } from './products.service';
@@ -43,11 +44,17 @@ export class ProductsController {
   }
 
   @Get()
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
   findAll(@Query() filters: ProductFiltersDto) {
     return this.productsService.findAll(filters);
   }
 
   @Get('filters')
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
   async findAllWithFilters(@Query() filters: ProductFiltersDto) {
     const result = await this.combinedFilterService.filterProducts({
       categories: filters.categories ? [filters.categories].flat() : undefined,

@@ -244,6 +244,13 @@ export class CombinedFilterService {
     const productsWithParsedSpecs = products.map((product) => ({
       ...product,
       technical_specs: this.parseJsonSafely(product.technical_specs),
+      // Add cache-busting timestamp to media URLs
+      media: product.media?.map((m) => ({
+        ...m,
+        file_url: m.file_url.includes('?')
+          ? m.file_url
+          : `${m.file_url}?v=${Date.now()}`,
+      })),
     }));
 
     const result = {
