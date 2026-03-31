@@ -14,6 +14,12 @@ export function useProductEvents(onEvent: () => void, productId?: string) {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const reconnectAttemptsRef = useRef(0);
   const [isOnline, setIsOnline] = useState(true);
+  const onEventRef = useRef(onEvent);
+
+  // Keep onEventRef up to date without triggering reconnection
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
 
   useEffect(() => {
     // Listen for online/offline events
@@ -78,7 +84,7 @@ export function useProductEvents(onEvent: () => void, productId?: string) {
             }
 
             // Trigger callback
-            onEvent();
+            onEventRef.current();
           } catch (err) {
             console.error("Failed to parse SSE event:", err);
           }
@@ -123,5 +129,5 @@ export function useProductEvents(onEvent: () => void, productId?: string) {
         eventSourceRef.current = null;
       }
     };
-  }, [onEvent, productId]);
+  }, [productId]); // Remove onEvent from dependencies
 }
