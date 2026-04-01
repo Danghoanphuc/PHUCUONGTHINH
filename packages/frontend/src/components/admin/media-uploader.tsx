@@ -9,7 +9,8 @@ import {
   ChangeEvent,
 } from "react";
 import { validateFile, validateSocialUrl } from "@/lib/media-service";
-import { Image as ImageIcon, Video, X, Star } from "lucide-react";
+import { realtimeService } from "@/lib/realtime-service";
+import { Image as ImageIcon, Video, X, Star, Wifi, WifiOff } from "lucide-react";
 
 export type MediaType =
   | "lifestyle"
@@ -268,6 +269,7 @@ export function MediaUploader({
   existingMedia = [],
   onChange,
   productName = "",
+  productId,
 }: MediaUploaderProps) {
   const [items, setItems] = useState<PendingMedia[]>(existingMedia);
   const [toast, setToast] = useState<{
@@ -275,10 +277,17 @@ export function MediaUploader({
     type: "success" | "error" | "info";
   } | null>(null);
   const [newItemIds, setNewItemIds] = useState<Set<string>>(new Set());
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(true);
+  const [uploadingCount, setUploadingCount] = useState(0);
 
   // Sync khi existingMedia thay đổi (edit mode: product load async)
   const prevMediaKey = useRef<string>("");
   const isInitialMount = useRef(true);
+  
+  // Check BroadcastChannel support
+  useEffect(() => {
+    setIsRealtimeConnected('BroadcastChannel' in window);
+  }, []);
 
   useEffect(() => {
     // Create a key from media IDs to detect real changes
@@ -390,6 +399,20 @@ export function MediaUploader({
       // Mark as new for animation
       setNewItemIds(new Set(newIds));
       setTimeout(() => setNewItemIds(new Set()), 500);
+
+      // Broadcast to other tabs/devices
+      if (productId) {
+        newIds.forEach(id => {
+          const item = newItems.find(i => i.clientId === id);
+          if (item?.file) {
+            realtimeService?.broadcastMediaUploadStart(productId, {
+              clientId: id,
+              fileName: item.file.name,
+              mediaType: item.media_type,
+            });
+          }
+        });
+      }
 
       // Show toast
       const validCount = newItems.filter((i) => i.status === "pending").length;
@@ -511,8 +534,38 @@ export function MediaUploader({
     isNew: newItemIds.has(item.clientId),
   });
 
+  // Calculate uploading count
+  const uploadingItems = items.filter(i => i.status === "uploading").length;
+  
+  // Update uploading count for display
+  useEffect(() => {
+    setUploadingCount(uploadingItems);
+  }, [uploadingItems]);
+
   return (
     <div className="space-y-4">
+      {/* Real-time status bar */}
+      <div className="flex items-center justify-between px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
+        <div className="flex items-center gap-2">
+          {isRealtimeConnected ? (
+            <Wifi size={14} className="text-emerald-500" />
+          ) : (
+            <WifiOff size={14} className="text-gray-400" />
+          )}
+          <span className={`text-xs ${isRealtimeConnected ? 'text-emerald-600' : 'text-gray-500'}`}>
+            {isRealtimeConnected ? 'Realtime sync' : 'Offline mode'}
+          </span>
+        </div>
+        {uploadingCount > 0 && (
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs text-blue-600 font-medium">
+              Đang upload {uploadingCount} file...
+            </span>
+          </div>
+        )}
+      </div>
+
       {/* Toast notification */}
       {toast && (
         <Toast

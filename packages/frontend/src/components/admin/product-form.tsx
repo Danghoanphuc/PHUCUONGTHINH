@@ -30,6 +30,7 @@ import {
   MediaRecord,
 } from "@/lib/media-service";
 import { apiClient } from "@/lib/api-client";
+import { realtimeService } from "@/lib/realtime-service";
 import {
   Save,
   Copy,
@@ -37,6 +38,7 @@ import {
   ChevronDown,
   AlertCircle,
   CheckCircle2,
+  Radio,
 } from "lucide-react";
 
 function debounce<T extends (...args: any[]) => any>(fn: T, ms: number) {
@@ -282,22 +284,31 @@ function Toast({
   onClose,
 }: {
   message: string;
-  type: "success" | "error";
+  type: "success" | "error" | "info";
   onClose: () => void;
 }) {
   useEffect(() => {
     const t = setTimeout(onClose, 4000);
     return () => clearTimeout(t);
   }, [onClose]);
+  
+  const colors = {
+    success: "bg-emerald-600",
+    error: "bg-red-600",
+    info: "bg-blue-600",
+  };
+  
+  const icons = {
+    success: <CheckCircle2 size={16} />,
+    error: <AlertCircle size={16} />,
+    info: <Radio size={16} className="animate-pulse" />,
+  };
+  
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-white text-sm font-medium max-w-sm ${type === "success" ? "bg-emerald-600" : "bg-red-600"}`}
+      className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-white text-sm font-medium max-w-sm ${colors[type]}`}
     >
-      {type === "success" ? (
-        <CheckCircle2 size={16} />
-      ) : (
-        <AlertCircle size={16} />
-      )}
+      {icons[type]}
       <span className="flex-1">{message}</span>
       <button
         type="button"
@@ -365,13 +376,58 @@ export function ProductForm({
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
-    type: "success" | "error";
+    type: "success" | "error" | "info";
   } | null>(null);
   const [internalData, setInternalData] = useState<InternalInfoData>({});
   const [seoOpen, setSeoOpen] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<{ isSyncing: boolean; lastSync: Date | null }>({ isSyncing: false, lastSync: null });
   const nameRef = useRef<HTMLInputElement>(null);
   const skuRef = useRef<HTMLInputElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
+
+  // Real-time sync: Subscribe to events from other tabs
+  useEffect(() => {
+    if (!product?.id || !realtimeService) return;
+    
+    console.log(`📡 [ProductForm] Subscribing to real-time events for product ${product.id}`);
+    
+    // Listen for media upload events from other tabs
+    const unsubscribeUploadStart = realtimeService.subscribe('media_upload_start', (data) => {
+      console.log('📡 [Real-time] Media upload started in another tab:', data);
+      setToast({ message: `📤 ${data.fileName} đang được upload ở tab khác`, type: "info" });
+    });
+    
+    const unsubscribeUploadComplete = realtimeService.subscribe('media_upload_complete', (data) => {
+      console.log('📡 [Real-time] Media upload completed:', data);
+      // Refresh media list if needed
+      setSyncStatus({ isSyncing: true, lastSync: new Date() });
+      setTimeout(() => setSyncStatus(prev => ({ ...prev, isSyncing: false })), 1000);
+    });
+    
+    const unsubscribeProductSaved = realtimeService.subscribe('product_saved', (data) => {
+      console.log('📡 [Real-time] Product saved in another tab:', data);
+      setToast({ message: `💾 Sản phẩm vừa được lưu ở tab khác. Đồng bộ...`, type: "info" });
+      // Trigger refresh
+      setSyncStatus({ isSyncing: true, lastSync: new Date() });
+      setTimeout(() => setSyncStatus(prev => ({ ...prev, isSyncing: false })), 1500);
+    });
+    
+    const unsubscribeMediaDelete = realtimeService.subscribe('media_delete', (data) => {
+      console.log('📡 [Real-time] Media deleted in another tab:', data);
+      // Update local state if the deleted media exists
+      setFormData(prev => ({
+        ...prev,
+        pendingMedia: prev.pendingMedia.filter(m => m.clientId !== data.mediaId)
+      }));
+    });
+    
+    return () => {
+      unsubscribeUploadStart?.();
+      unsubscribeUploadComplete?.();
+      unsubscribeProductSaved?.();
+      unsubscribeMediaDelete?.();
+    };
+  }, [product?.id]);
 
   useEffect(() => {
     if (!product?.id) return;
@@ -652,6 +708,15 @@ export function ProductForm({
         }
       }
 
+      // Broadcast product saved to other tabs
+      if (productId && realtimeService) {
+        realtimeService.broadcastProductSaved(productId, {
+          id: productId,
+          name: formData.name,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
       // Show success or partial success message
       if (errors.length > 0) {
         setToast({ 
@@ -684,10 +749,18 @@ export function ProductForm({
         {/* ── Top bar ── */}
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-5 py-3 mb-6 flex items-center gap-3 shadow-sm -mx-4 md:-mx-6 px-4 md:px-6">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-gray-900 truncate">
-              {formData.name ||
-                (product ? "Chỉnh sửa sản phẩm" : "Sản phẩm mới")}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-bold text-gray-900 truncate">
+                {formData.name ||
+                  (product ? "Chỉnh sửa sản phẩm" : "Sản phẩm mới")}
+              </p>
+              {syncStatus.isSyncing && (
+                <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                  <Radio size={12} className="animate-pulse" />
+                  Đang đồng bộ...
+                </span>
+              )}
+            </div>
             {formData.sku && (
               <p className="text-xs text-gray-400 font-mono mt-0.5">
                 {formData.sku}
