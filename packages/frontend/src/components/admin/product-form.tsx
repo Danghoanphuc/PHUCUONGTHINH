@@ -31,6 +31,7 @@ import {
 } from "@/lib/media-service";
 import { apiClient } from "@/lib/api-client";
 import { realtimeService } from "@/lib/realtime-service";
+import { invalidateProductMediaCache } from "@/lib/cache-utils";
 import {
   Save,
   Copy,
@@ -708,6 +709,9 @@ export function ProductForm({
         }
       }
 
+      // Invalidate cache immediately for real-time effect
+      invalidateProductMediaCache(productId);
+      
       // Broadcast product saved to other tabs
       if (productId && realtimeService) {
         realtimeService.broadcastProductSaved(productId, {
@@ -727,10 +731,10 @@ export function ProductForm({
         setToast({ message: "✅ Đã lưu sản phẩm thành công", type: "success" });
       }
       
-      // Delay redirect to show toast
+      // Redirect with cache buster to force fresh load
       setTimeout(() => {
-        window.location.href = `/products/${productId}?_updated=1`;
-      }, 1200);
+        window.location.href = `/products/${productId}?_cb=${Date.now()}`;
+      }, 800);
       
     } catch (err: any) {
       const msg = formatApiError(err, "Lưu sản phẩm thất bại");

@@ -520,14 +520,16 @@ export default function ProductDetailPage({
   );
 
   useEffect(() => {
-    // Bust cache only when redirected from edit (?_updated=1)
-    const fromEdit =
+    // Bust cache when redirected from edit (?_cb= timestamp)
+    const hasCacheBuster =
       typeof window !== "undefined" &&
-      window.location.search.includes("_updated=1");
-    loadProduct(fromEdit);
-    if (fromEdit && typeof window !== "undefined") {
+      window.location.search.includes("_cb=");
+    loadProduct(hasCacheBuster);
+    
+    // Clean up cache buster from URL
+    if (hasCacheBuster && typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      url.searchParams.delete("_updated");
+      url.searchParams.delete("_cb");
       window.history.replaceState({}, "", url.toString());
     }
   }, [loadProduct]);
