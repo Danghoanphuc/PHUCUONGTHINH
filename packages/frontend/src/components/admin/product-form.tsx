@@ -88,6 +88,75 @@ function toSlug(s: string) {
 
 const BADGES = ["Mới về", "Best Seller", "Xả kho", "Hàng hiếm", "Độc quyền"];
 
+// API Error types
+interface ApiErrorResponse {
+  error?: {
+    message?: string;
+    code?: string;
+  };
+  message?: string | string[];
+}
+
+// Helper: Retry API call with exponential backoff
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: { maxRetries?: number; delayMs?: number; context?: string } = {},
+): Promise<T> {
+  const { maxRetries = 2, delayMs = 1000, context } = options;
+  let lastError: Error | undefined;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastError = err;
+      const isRetryable = err?.response?.status >= 500 || err?.code === 'ECONNABORTED' || err?.code === 'ETIMEDOUT';
+      
+      if (!isRetryable || attempt >= maxRetries) {
+        throw err;
+      }
+      
+      console.log(`🔄 [${context || 'API'}] Retry ${attempt + 1}/${maxRetries} after ${delayMs}ms...`);
+      await new Promise(r => setTimeout(r, delayMs * Math.pow(2, attempt)));
+    }
+  }
+  
+  throw lastError;
+}
+
+// Helper: Format API error message
+function formatApiError(err: any, defaultMsg: string): string {
+  const data = err?.response?.data as ApiErrorResponse;
+  const msg = data?.error?.message || 
+              (Array.isArray(data?.message) ? data.message.join(', ') : data?.message) ||
+              err?.message || 
+              defaultMsg;
+  return msg;
+}
+
+// Helper: Safe API call with error logging
+async function safeApiCall<T>(
+  fn: () => Promise<T>,
+  context: string,
+  options: { logError?: boolean; throwOnError?: boolean } = {}
+): Promise<{ success: boolean; data?: T; error?: string }> {
+  const { logError = true, throwOnError = false } = options;
+  
+  try {
+    const data = await fn();
+    return { success: true, data };
+  } catch (err: any) {
+    const errorMsg = formatApiError(err, `${context} thất bại`);
+    if (logError) {
+      console.error(`❌ [${context}]`, err);
+    }
+    if (throwOnError) {
+      throw new Error(errorMsg);
+    }
+    return { success: false, error: errorMsg };
+  }
+}
+
 export function initFormData(
   product?: Product & { media?: MediaRecord[] },
 ): FormState {
@@ -306,28 +375,32 @@ export function ProductForm({
 
   useEffect(() => {
     if (!product?.id) return;
-    apiClient
-      .get<any>(`/products/${product.id}/internal`)
-      .then((d) => {
-        if (d)
-          setInternalData({
-            price_retail: d.price_retail ?? undefined,
-            price_wholesale: d.price_wholesale ?? undefined,
-            wholesale_discount_tiers: d.wholesale_discount_tiers ?? undefined,
-            price_dealer: d.price_dealer ?? undefined,
-            price_promo: d.price_promo ?? undefined,
-            promo_start_date: d.promo_start_date ?? undefined,
-            promo_end_date: d.promo_end_date ?? undefined,
-            promo_note: d.promo_note ?? undefined,
-            warehouse_location: d.warehouse_location ?? undefined,
-            stock_status: d.stock_status ?? undefined,
-            stock_quantity: d.stock_quantity ?? undefined,
-            supplier_name: d.supplier_name ?? undefined,
-            supplier_phone: d.supplier_phone ?? undefined,
-            internal_notes: d.internal_notes ?? undefined,
-          });
-      })
-      .catch(() => {});
+    
+    safeApiCall(
+      () => apiClient.get<any>(`/products/${product.id}/internal`),
+      'Lấy thông tin nội bộ',
+      { logError: false }
+    ).then((result) => {
+      if (result.success && result.data) {
+        const d = result.data;
+        setInternalData({
+          price_retail: d.price_retail ?? undefined,
+          price_wholesale: d.price_wholesale ?? undefined,
+          wholesale_discount_tiers: d.wholesale_discount_tiers ?? undefined,
+          price_dealer: d.price_dealer ?? undefined,
+          price_promo: d.price_promo ?? undefined,
+          promo_start_date: d.promo_start_date ?? undefined,
+          promo_end_date: d.promo_end_date ?? undefined,
+          promo_note: d.promo_note ?? undefined,
+          warehouse_location: d.warehouse_location ?? undefined,
+          stock_status: d.stock_status ?? undefined,
+          stock_quantity: d.stock_quantity ?? undefined,
+          supplier_name: d.supplier_name ?? undefined,
+          supplier_phone: d.supplier_phone ?? undefined,
+          internal_notes: d.internal_notes ?? undefined,
+        });
+      }
+    });
   }, [product?.id]);
 
   const debouncedSlug = useMemo(
@@ -396,8 +469,10 @@ export function ProductForm({
     if (!validate()) return;
 
     setIsSaving(true);
+    const errors: string[] = [];
+    
     try {
-      // 1. Save product
+      // 1. Save product (CREATE or UPDATE)
       const payload: CreateProductRequest | UpdateProductRequest = {
         name: formData.name.trim(),
         sku: formData.sku.trim(),
@@ -415,12 +490,15 @@ export function ProductForm({
         space_ids: formData.space_ids,
       };
 
-      const result = await onSubmit(payload);
+      const result = await withRetry(
+        () => onSubmit(payload),
+        { maxRetries: 2, context: 'Lưu sản phẩm' }
+      );
       const productId = product?.id ?? (result as any)?.id;
 
-      if (!productId) throw new Error("Không lấy được product ID");
+      if (!productId) throw new Error("Không lấy được product ID sau khi lưu");
 
-      // 2. Delete removed media (edit mode only)
+      // 2. DELETE removed media (edit mode only)
       if (product?.id) {
         const currentIds = new Set(
           formData.pendingMedia
@@ -430,58 +508,101 @@ export function ProductForm({
         const toDelete = originalMediaRef.current.filter(
           (m) => m.status === "done" && !currentIds.has(m.clientId),
         );
-        await Promise.all(
-          toDelete.map((m) => deleteMedia(m.clientId).catch(() => {})),
-        );
+        
+        if (toDelete.length > 0) {
+          console.log(`🗑️ [API] Deleting ${toDelete.length} media items...`);
+          const deleteResults = await Promise.all(
+            toDelete.map(async (m) => {
+              const result = await safeApiCall(
+                () => deleteMedia(m.clientId),
+                `Xóa media ${m.clientId}`,
+                { throwOnError: false }
+              );
+              return { id: m.clientId, ...result };
+            })
+          );
+          
+          const failedDeletes = deleteResults.filter(r => !r.success);
+          if (failedDeletes.length > 0) {
+            console.warn(`⚠️ [API] Failed to delete ${failedDeletes.length} media items`);
+            errors.push(`Không thể xóa ${failedDeletes.length} file cũ`);
+          }
+        }
       }
 
-      // 3. Upload new files (same logic for both create and edit)
+      // 3. UPLOAD new files with retry
       const pending = formData.pendingMedia.filter(
         (m) => m.status === "pending" && m.file,
       );
 
-      const updateStatus = (clientId: string, patch: Partial<PendingMedia>) =>
-        setFormData((p) => ({
-          ...p,
-          pendingMedia: p.pendingMedia.map((m) =>
-            m.clientId === clientId ? { ...m, ...patch } : m,
-          ),
-        }));
+      if (pending.length > 0) {
+        console.log(`⬆️ [API] Uploading ${pending.length} files...`);
+        const updateStatus = (clientId: string, patch: Partial<PendingMedia>) =>
+          setFormData((p) => ({
+            ...p,
+            pendingMedia: p.pendingMedia.map((m) =>
+              m.clientId === clientId ? { ...m, ...patch } : m,
+            ),
+          }));
 
-      await Promise.all(
-        pending.map(async (item) => {
-          if (!item.file) return;
-          updateStatus(item.clientId, { status: "uploading", progress: 0 });
-          try {
-            const fileUrl = await uploadMedia(
-              productId,
-              item.file,
-              item.media_type as any,
-              (pct) => updateStatus(item.clientId, { progress: pct }),
-            );
-            console.log("✅ Upload success, fileUrl:", fileUrl);
-            const mediaRecord = await createMediaRecord({
-              product_id: productId,
-              file_url: fileUrl,
-              file_type: item.file.type,
-              media_type: item.media_type,
-              is_cover: item.is_cover,
-              sort_order: item.sort_order,
-              alt_text: item.alt_text,
-            });
-            console.log("✅ createMediaRecord success:", mediaRecord);
-            updateStatus(item.clientId, { status: "done", progress: 100 });
-          } catch (err: any) {
-            console.error("❌ Upload/createMediaRecord error:", err);
-            const msg =
-              err?.response?.data?.message || err?.message || "Upload thất bại";
-            updateStatus(item.clientId, { status: "error", error: msg });
-            throw new Error(`Upload "${item.file.name}" thất bại: ${msg}`);
-          }
-        }),
-      );
+        const uploadResults = await Promise.all(
+          pending.map(async (item) => {
+            if (!item.file) return { clientId: item.clientId, success: true };
+            
+            updateStatus(item.clientId, { status: "uploading", progress: 0 });
+            
+            try {
+              // Upload with retry
+              const fileUrl = await withRetry(
+                () => uploadMedia(
+                  productId,
+                  item.file!,
+                  item.media_type as any,
+                  (pct) => updateStatus(item.clientId, { progress: pct }),
+                ),
+                { maxRetries: 2, delayMs: 2000, context: `Upload ${item.file!.name}` }
+              );
+              
+              console.log(`✅ [API] Upload success: ${item.file!.name}`);
+              
+              // Create media record with retry
+              const mediaRecord = await withRetry(
+                () => createMediaRecord({
+                  product_id: productId,
+                  file_url: fileUrl,
+                  file_type: item.file!.type,
+                  media_type: item.media_type,
+                  is_cover: item.is_cover,
+                  sort_order: item.sort_order,
+                  alt_text: item.alt_text,
+                }),
+                { maxRetries: 2, context: `Create media record for ${item.file!.name}` }
+              );
+              
+              console.log(`✅ [API] Media record created:`, mediaRecord.id);
+              updateStatus(item.clientId, { status: "done", progress: 100 });
+              return { clientId: item.clientId, success: true };
+            } catch (err: any) {
+              console.error(`❌ [API] Upload failed:`, err);
+              const msg = formatApiError(err, `Upload "${item.file!.name}" thất bại`);
+              updateStatus(item.clientId, { status: "error", error: msg });
+              return { clientId: item.clientId, success: false, error: msg };
+            }
+          }),
+        );
 
-      // 4. Update sort order if changed (edit mode)
+        const failedUploads = uploadResults.filter(r => !r.success);
+        if (failedUploads.length > 0) {
+          errors.push(`${failedUploads.length} file upload thất bại`);
+        }
+        
+        // Continue even if some uploads failed
+        if (failedUploads.length === pending.length) {
+          throw new Error("Tất cả file upload thất bại");
+        }
+      }
+
+      // 4. UPDATE sort order if changed (edit mode)
       if (product?.id) {
         const existingIds = new Set(
           originalMediaRef.current.map((m) => m.clientId),
@@ -495,40 +616,60 @@ export function ProductForm({
           );
           return orig && orig.sort_order !== item.sort_order;
         });
+        
         if (doneItems.length > 0 && orderChanged) {
-          await updateSortOrder(
-            productId,
-            doneItems.map((m) => ({
-              id: m.clientId,
-              sort_order: m.sort_order,
-            })),
-          ).catch(() => {});
+          const sortResult = await safeApiCall(
+            () => updateSortOrder(
+              productId,
+              doneItems.map((m) => ({
+                id: m.clientId,
+                sort_order: m.sort_order,
+              })),
+            ),
+            'Cập nhật thứ tự media',
+            { throwOnError: false }
+          );
+          
+          if (!sortResult.success) {
+            console.warn(`⚠️ [API] Sort order update failed:`, sortResult.error);
+          }
         }
       }
 
-      // 5. Save internal info
+      // 5. SAVE internal info
       const hasInternal = Object.values(internalData).some(
         (v) => v != null && v !== "",
       );
       if (hasInternal) {
-        await apiClient
-          .patch(`/products/${productId}/internal`, internalData)
-          .catch(() => {});
+        const internalResult = await safeApiCall(
+          () => apiClient.patch(`/products/${productId}/internal`, internalData),
+          'Lưu thông tin nội bộ',
+          { throwOnError: false }
+        );
+        
+        if (!internalResult.success) {
+          console.warn(`⚠️ [API] Internal info save failed:`, internalResult.error);
+        }
       }
 
-      setToast({ message: "✅ Đã lưu sản phẩm", type: "success" });
+      // Show success or partial success message
+      if (errors.length > 0) {
+        setToast({ 
+          message: `✅ Sản phẩm đã lưu, nhưng: ${errors.join(', ')}`, 
+          type: "success" 
+        });
+      } else {
+        setToast({ message: "✅ Đã lưu sản phẩm thành công", type: "success" });
+      }
+      
+      // Delay redirect to show toast
       setTimeout(() => {
         window.location.href = `/products/${productId}?_updated=1`;
-      }, 800);
+      }, 1200);
+      
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.error?.message ||
-        err?.response?.data?.message ||
-        (Array.isArray(err?.response?.data?.message)
-          ? err.response.data.message.join(", ")
-          : null) ||
-        err?.message ||
-        "Lưu sản phẩm thất bại";
+      const msg = formatApiError(err, "Lưu sản phẩm thất bại");
+      console.error(`❌ [API] Submit error:`, err);
       setToast({ message: msg, type: "error" });
     } finally {
       setIsSaving(false);
