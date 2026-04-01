@@ -34,22 +34,38 @@ export class CloudinaryService {
 
   // StorageService interface implementation
   async uploadFile(file: Buffer, folder: string = 'products'): Promise<string> {
-    if (!this.enabled) throw new Error('Cloudinary is not configured');
+    if (!this.enabled) {
+      this.logger.error('❌ Cloudinary upload failed: not configured');
+      this.logger.error('   Required env vars: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET');
+      throw new Error('Cloudinary is not configured');
+    }
 
-    const result: UploadApiResponse = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder, resource_type: 'auto', overwrite: true },
-        (error, res) => {
-          if (error) reject(error);
-          else if (res) resolve(res);
-          else reject(new Error('Upload failed: no result'));
-        },
-      );
-      stream.end(file);
-    });
+    this.logger.log(`⬆️ Uploading to Cloudinary: folder=${folder}, size=${file.length} bytes`);
+    
+    try {
+      const result: UploadApiResponse = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder, resource_type: 'auto', overwrite: true },
+          (error, res) => {
+            if (error) {
+              this.logger.error('❌ Cloudinary upload error:', error);
+              reject(error);
+            } else if (res) {
+              resolve(res);
+            } else {
+              reject(new Error('Upload failed: no result'));
+            }
+          },
+        );
+        stream.end(file);
+      });
 
-    this.logger.log(`✅ Uploaded to Cloudinary: ${result.secure_url}`);
-    return result.secure_url;
+      this.logger.log(`✅ Uploaded to Cloudinary: ${result.secure_url}`);
+      return result.secure_url;
+    } catch (error) {
+      this.logger.error('❌ Cloudinary upload failed:', error);
+      throw error;
+    }
   }
 
   async deleteFile(publicId: string): Promise<void> {
