@@ -280,6 +280,16 @@ const RECENT_MAX = 8;
 
 type StockStatus = "in_stock" | "pre_order" | "coming_soon" | "out_of_stock";
 
+// Helper: Optimize Cloudinary URL for faster loading
+function optimizeCloudinaryUrl(url: string, width?: number): string {
+  if (!url?.includes('cloudinary.com')) return url;
+  if (url.includes('/upload/')) {
+    const transform = width ? `w_${width},q_auto,f_auto` : 'q_auto,f_auto';
+    return url.replace('/upload/', `/upload/${transform}/`);
+  }
+  return url;
+}
+
 function saveRecentProduct(product: Product) {
   if (typeof window === "undefined") return;
   try {
@@ -618,6 +628,7 @@ export default function ProductDetailPage({
       (m) => m.media_type === "pdf" || m.file_url?.endsWith(".pdf"),
     ) ?? [];
   const activeImage = images[activeImageIndex]?.file_url || null;
+  const optimizedActiveImage = optimizeCloudinaryUrl(activeImage || '', 800);
 
   const handlePrevImage = () =>
     setActiveImageIndex((p) => (p > 0 ? p - 1 : images.length - 1));
@@ -700,11 +711,12 @@ export default function ProductDetailPage({
                   {activeImage ? (
                     <>
                       <Image
-                        src={activeImage}
+                        src={optimizedActiveImage}
                         alt={product.name}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                         priority
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 backdrop-blur-[2px]">
                         <div className="bg-white/90 p-3 rounded-full shadow-lg text-gray-800">
@@ -779,10 +791,12 @@ export default function ProductDetailPage({
                         className={`relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${activeImageIndex === idx ? "border-emerald-500 shadow-sm scale-105" : "border-transparent opacity-70 hover:opacity-100 hover:border-gray-200"}`}
                       >
                         <Image
-                          src={m.file_url}
+                          src={optimizeCloudinaryUrl(m.file_url, 200)}
                           alt=""
                           fill
                           className="object-cover"
+                          sizes="80px"
+                          loading="lazy"
                         />
                       </button>
                     ))}
