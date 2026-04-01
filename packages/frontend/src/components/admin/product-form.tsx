@@ -254,9 +254,7 @@ export function ProductForm({
   const [formData, setFormData] = useState<FormState>(() =>
     initFormData(product),
   );
-  const originalMediaRef = useRef<PendingMedia[]>(
-    initFormData(product).pendingMedia,
-  );
+  const originalMediaRef = useRef<PendingMedia[]>([]);
   const initializedId = useRef<string | undefined>(undefined);
 
   // Re-init when product loads async
@@ -266,6 +264,8 @@ export function ProductForm({
       const d = initFormData(product);
       setFormData(d);
       originalMediaRef.current = d.pendingMedia;
+      setErrors({}); // Reset errors
+      setSeoOpen(false); // Reset SEO panel
       console.log(
         "🔄 [ProductForm] Product loaded, originalMediaRef:",
         originalMediaRef.current.map((m) => ({
@@ -281,6 +281,17 @@ export function ProductForm({
       (product?.technical_specs?.product_type as ProductType) ??
       detectProductType(product?.category_id ?? ""),
   );
+  
+  // Update productType when product changes
+  useEffect(() => {
+    if (product?.id) {
+      setProductType(
+        (product?.technical_specs?.product_type as ProductType) ??
+        detectProductType(product?.category_id ?? ""),
+      );
+    }
+  }, [product?.id, product?.technical_specs?.product_type, product?.category_id]);
+  
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{
@@ -448,7 +459,8 @@ export function ProductForm({
               item.media_type as any,
               (pct) => updateStatus(item.clientId, { progress: pct }),
             );
-            await createMediaRecord({
+            console.log("✅ Upload success, fileUrl:", fileUrl);
+            const mediaRecord = await createMediaRecord({
               product_id: productId,
               file_url: fileUrl,
               file_type: item.file.type,
@@ -457,8 +469,10 @@ export function ProductForm({
               sort_order: item.sort_order,
               alt_text: item.alt_text,
             });
+            console.log("✅ createMediaRecord success:", mediaRecord);
             updateStatus(item.clientId, { status: "done", progress: 100 });
           } catch (err: any) {
+            console.error("❌ Upload/createMediaRecord error:", err);
             const msg =
               err?.response?.data?.message || err?.message || "Upload thất bại";
             updateStatus(item.clientId, { status: "error", error: msg });

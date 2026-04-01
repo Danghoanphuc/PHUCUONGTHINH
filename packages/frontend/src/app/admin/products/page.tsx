@@ -415,6 +415,8 @@ export default function AdminProductsPage() {
       await productService.deleteProduct(id);
       setProducts((p) => p.filter((x) => x.id !== id));
       setTotal((t) => t - 1);
+      // Reload to ensure fresh data from server
+      await loadProducts();
     } catch (err: any) {
       setError(err.response?.data?.message || "Không thể xóa sản phẩm");
     }
@@ -436,6 +438,8 @@ export default function AdminProductsPage() {
         ? await productService.unpublishProduct(id)
         : await productService.publishProduct(id);
       setProducts((p) => p.map((x) => (x.id === id ? updated : x)));
+      // Reload to ensure fresh data from server
+      await loadProducts();
     } catch (err: any) {
       setError(err.response?.data?.message || "Không thể cập nhật sản phẩm");
     }
@@ -474,6 +478,8 @@ export default function AdminProductsPage() {
     setProducts((p) => p.map((x) => updated.find((u) => u.id === x.id) ?? x));
     setSelected(new Set());
     setIsBulkLoading(false);
+    // Reload to ensure fresh data from server
+    await loadProducts();
   };
 
   const totalPages = Math.ceil(total / limit);

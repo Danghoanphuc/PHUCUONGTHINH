@@ -138,8 +138,8 @@ class ProductService {
       });
       if (search) params.append("search", search);
 
-      // Admin pages always bust cache
-      bustCache = true;
+      // Admin pages always bust cache - add timestamp to bypass backend cache
+      params.set("_t", Date.now().toString());
     }
 
     const raw = await rawApiClient.getRaw<BackendProductsResponse>(
@@ -186,11 +186,17 @@ class ProductService {
   }
 
   async publishProduct(id: string): Promise<Product> {
-    return apiClient.put<Product>(`/products/${id}`, { is_published: true });
+    const result = await apiClient.patch<Product>(`/products/${id}/publish`);
+    // Invalidate cache
+    clientCache.invalidateProduct(id);
+    return result;
   }
 
   async unpublishProduct(id: string): Promise<Product> {
-    return apiClient.put<Product>(`/products/${id}`, { is_published: false });
+    const result = await apiClient.patch<Product>(`/products/${id}/unpublish`);
+    // Invalidate cache
+    clientCache.invalidateProduct(id);
+    return result;
   }
 
   async cloneProduct(id: string): Promise<Product> {

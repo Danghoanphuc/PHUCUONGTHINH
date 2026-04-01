@@ -14,13 +14,11 @@ import {
   X,
   Download,
   ZoomIn,
-  MessageCircle,
   AlertCircle,
   Clock,
   ChevronRight,
   ChevronLeft,
   Pencil,
-  RefreshCw,
 } from "lucide-react";
 import { useQuoteCart } from "@/lib/wishlist-context";
 import { productService } from "@/lib/product-service";
@@ -271,7 +269,6 @@ function InternalProductBlock({ productId }: { productId: string }) {
   );
 }
 
-const ZALO_URL = "https://zalo.me/0901234567";
 const TRUST_BADGES = [
   { icon: CheckCircle2, label: "Hàng chính hãng" },
   { icon: Truck, label: "Giao toàn quốc" },
@@ -637,24 +634,9 @@ export default function ProductDetailPage({
         )}
       </AnimatePresence>
 
-      <a
-        href={`${ZALO_URL}?text=${encodeURIComponent(`Xin chào, tôi muốn hỏi về SP: ${product.name} (SKU: ${product.sku})`)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-16 sm:bottom-6 right-3 sm:right-4 md:right-6 z-40 flex items-center gap-1.5 sm:gap-2 bg-[#0068FF] text-white font-bold px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 md:py-3.5 rounded-full shadow-[0_8px_16px_rgba(0,104,255,0.3)] hover:bg-blue-700 transition-transform hover:-translate-y-1 lg:bottom-8 lg:right-8"
-      >
-        <MessageCircle
-          size={18}
-          className="sm:w-5 sm:h-5 md:w-[22px] md:h-[22px]"
-        />
-        <span className="text-[11px] sm:text-xs md:text-sm hidden sm:inline">
-          Tư vấn Zalo
-        </span>
-      </a>
-
-      <main className="min-h-screen bg-[#F8F9FA] py-4 sm:py-6 md:py-8 px-2 sm:px-3 md:px-4 pt-20 sm:pt-24 pb-28 sm:pb-24 lg:pb-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 md:gap-10 lg:gap-14 bg-white p-2.5 sm:p-3 md:p-4 lg:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-sm border border-gray-100">
+      <main className="min-h-screen bg-[#F8F9FA] py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 pb-20 sm:pb-24 overflow-x-hidden max-w-full">
+        <div className="max-w-7xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 md:gap-10 lg:gap-14 bg-white p-3 sm:p-4 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 min-w-0">
             {/* Breadcrumb - Di chuyển vào trong khối trắng */}
             <nav className="lg:col-span-12 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wide sm:tracking-widest overflow-hidden">
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
@@ -678,7 +660,7 @@ export default function ProductDetailPage({
                   size={12}
                   className="hidden sm:inline sm:w-[14px] sm:h-[14px] shrink-0"
                 />
-                <span className="text-emerald-600 truncate max-w-[120px] sm:max-w-[150px] md:max-w-xs">
+                <span className="text-emerald-600 truncate max-w-[150px] sm:max-w-[200px] md:max-w-xs text-xs sm:text-sm">
                   {product.sku}
                 </span>
               </div>
@@ -732,7 +714,7 @@ export default function ProductDetailPage({
                           (badge) => (
                             <span
                               key={badge}
-                              className="self-start px-2 sm:px-2.5 py-0.5 sm:py-1 bg-amber-500 text-white text-[10px] sm:text-[11px] font-bold rounded-full shadow-sm"
+                              className="self-start px-2 sm:px-2.5 py-0.5 sm:py-1 bg-amber-500 text-white text-xs sm:text-sm font-bold rounded-full shadow-sm"
                             >
                               {badge}
                             </span>
@@ -932,21 +914,21 @@ export default function ProductDetailPage({
               </AnimatePresence>
 
               {/* Block 5: Trust Badges (Dịch vụ & Cam kết) */}
-              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-100 rounded-lg sm:rounded-xl p-2.5 sm:p-3 md:p-3.5">
-                <h3 className="text-[10px] sm:text-xs font-bold text-[#0a192f] mb-2 sm:mb-3 uppercase tracking-wider">
+              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-100 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5">
+                <h3 className="text-xs sm:text-sm font-bold text-[#0a192f] mb-2 sm:mb-3 uppercase tracking-wider">
                   Dịch vụ & Cam kết
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   {TRUST_BADGES.map(({ icon: Icon, label }, idx) => (
                     <div
                       key={idx}
-                      className="flex flex-col items-center gap-1 sm:gap-1.5 text-center p-1.5 sm:p-0"
+                      className="flex flex-col items-center gap-1.5 sm:gap-2 text-center p-2 sm:p-0"
                     >
                       <Icon
-                        size={16}
-                        className="text-emerald-600 sm:w-[18px] sm:h-[18px] md:w-5 md:h-5"
+                        size={20}
+                        className="text-emerald-600 sm:w-6 sm:h-6"
                       />
-                      <span className="text-[9px] sm:text-[10px] md:text-xs font-semibold text-gray-700 leading-tight">
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">
                         {label}
                       </span>
                     </div>
@@ -1005,15 +987,15 @@ export default function ProductDetailPage({
         </div>
       </main>
 
-      {/* Sticky Mobile Bar */}
+      {/* Sticky Mobile Bar - Improved */}
       {showSticky && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 px-2 sm:px-3 py-2 sm:py-2.5 flex gap-1.5 sm:gap-2 shadow-[0_-10px_20px_rgba(0,0,0,0.08)] lg:hidden safe-area-inset-bottom">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 sm:px-4 py-3 sm:py-3.5 flex gap-2 sm:gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:hidden" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
           <AddToQuoteButton product={product} compact />
           <Link
             href={`/contact?type=appointment&product=${product.id}`}
-            className="h-10 sm:h-11 px-2.5 sm:px-3 flex items-center justify-center font-bold rounded-lg border-2 border-gray-200 text-[#0a192f] bg-gray-50 hover:bg-gray-100 transition-all shrink-0"
+            className="h-12 sm:h-12 px-3 sm:px-4 flex items-center justify-center font-bold rounded-lg border-2 border-gray-200 text-[#0a192f] bg-gray-50 hover:bg-gray-100 transition-all shrink-0"
           >
-            <CalendarDays size={16} className="sm:w-4 sm:h-4" />
+            <CalendarDays size={18} />
           </Link>
         </div>
       )}

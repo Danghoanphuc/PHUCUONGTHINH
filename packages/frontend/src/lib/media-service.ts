@@ -126,7 +126,7 @@ export async function uploadMedia(
     },
   );
 
-  const url = response.data?.url;
+  const url = response.data?.data?.url || response.data?.url;
   if (!url) throw new Error("Upload thất bại: không nhận được URL từ server");
   return url;
 }

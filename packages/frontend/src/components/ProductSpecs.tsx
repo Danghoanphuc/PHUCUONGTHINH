@@ -156,7 +156,7 @@ function StatCard({
         {label}
       </span>
       <span
-        className={`text-sm sm:text-base font-black leading-tight ${accent ? "text-emerald-800" : "text-gray-900"}`}
+        className={`text-sm sm:text-base font-black leading-tight break-words ${accent ? "text-emerald-800" : "text-gray-900"}`}
       >
         {value}
       </span>
@@ -287,17 +287,17 @@ function GachSpecs({ specs }: { specs: Record<string, any> }) {
     <div className="space-y-2 sm:space-y-2.5 md:space-y-3">
       {/* Thông số chính — grid nổi bật */}
       {(size || thickness || piecesPerBox > 0 || m2PerBox > 0) && (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2 min-w-0">
           {size && <StatCard label="Kích thước" value={`${size} cm`} accent />}
           {thickness && <StatCard label="Độ dày" value={`${thickness} mm`} />}
           {piecesPerBox > 0 && (
-            <StatCard label="Số viên / thùng" value={`${piecesPerBox} viên`} />
+            <StatCard label="Số viên/thùng" value={`${piecesPerBox} viên`} />
           )}
           {m2PerBox > 0 && (
-            <StatCard label="Diện tích / thùng" value={`${m2PerBox} m²`} />
+            <StatCard label="Diện tích/thùng" value={`${m2PerBox} m²`} />
           )}
           {kgPerBox && (
-            <StatCard label="Trọng lượng / thùng" value={`${kgPerBox} kg`} />
+            <StatCard label="Trọng lượng/thùng" value={`${kgPerBox} kg`} />
           )}
           {faces && <StatCard label="Số mặt vân" value={`${faces} faces`} />}
         </div>
@@ -404,7 +404,7 @@ function TBVSSpecs({ specs }: { specs: Record<string, any> }) {
     <div className="space-y-2 sm:space-y-2.5 md:space-y-3">
       {/* Thông số chính */}
       {(drainCenter || size || installType) && (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2 min-w-0">
           {drainCenter && (
             <StatCard label="Tâm xả" value={fmt(drainCenter)!} accent />
           )}
@@ -413,7 +413,7 @@ function TBVSSpecs({ specs }: { specs: Record<string, any> }) {
             <StatCard label="Kiểu lắp" value={fmt(installType)!} />
           )}
           {roughIn && (
-            <StatCard label="Khoảng cách lắp" value={fmt(roughIn)!} />
+            <StatCard label="K/cách lắp" value={fmt(roughIn)!} />
           )}
         </div>
       )}
@@ -541,17 +541,17 @@ function BepSpecs({ specs }: { specs: Record<string, any> }) {
   return (
     <div className="space-y-2 sm:space-y-2.5 md:space-y-3">
       {/* Thông số chính */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2 min-w-0">
         {sizeOverall && (
           <StatCard
-            label="Kích thước phủ bì"
+            label="Kích thước phủ"
             value={fmt(sizeOverall)!}
             accent
           />
         )}
         {sizeCutout && (
           <StatCard
-            label="Kích thước khoét đá"
+            label="Kích thước khoét"
             value={fmt(sizeCutout)!}
             accent
           />
@@ -560,7 +560,7 @@ function BepSpecs({ specs }: { specs: Record<string, any> }) {
           <StatCard label="Số vùng nấu" value={`${burnerCount} vùng`} />
         )}
         {powerTotal && (
-          <StatCard label="Tổng công suất" value={`${powerTotal} W`} />
+          <StatCard label="Công suất" value={`${powerTotal} W`} />
         )}
       </div>
       {sizeCutout && (
