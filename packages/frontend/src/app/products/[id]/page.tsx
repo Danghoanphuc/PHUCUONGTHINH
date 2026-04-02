@@ -520,13 +520,17 @@ export default function ProductDetailPage({
   );
 
   useEffect(() => {
-    // Bust cache when redirected from edit (?_cb= timestamp)
+    // Always bust cache on mount to ensure fresh data
+    // This handles F5 refresh and navigation from other pages
     const hasCacheBuster =
       typeof window !== "undefined" &&
       window.location.search.includes("_cb=");
-    loadProduct(hasCacheBuster);
     
-    // Clean up cache buster from URL
+    // If coming from edit, use the cache buster from URL
+    // Otherwise, still bust cache to ensure fresh data
+    loadProduct(true); // Always bust cache for fresh data
+    
+    // Clean up cache buster from URL if present
     if (hasCacheBuster && typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.delete("_cb");

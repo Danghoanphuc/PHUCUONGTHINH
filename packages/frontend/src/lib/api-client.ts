@@ -22,6 +22,9 @@ async function request<T>(
   const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    // Prevent caching for real-time updates
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
   };
   if (token) headers["Authorization"] = "Bearer " + token;
 

@@ -154,7 +154,11 @@ class ProductService {
   }
 
   async getProductById(id: string, bustCache = false): Promise<Product> {
-    const raw = await apiClient.get<any>(`/products/${id}`);
+    // Add cache buster to URL if requested
+    const url = bustCache 
+      ? `/products/${id}?_t=${Date.now()}` 
+      : `/products/${id}`;
+    const raw = await apiClient.get<any>(url);
     const product = normalizeTags(raw);
     return product;
   }
