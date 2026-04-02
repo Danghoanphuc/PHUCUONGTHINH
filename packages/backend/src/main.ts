@@ -26,7 +26,7 @@ async function bootstrap() {
   app.enableCors({
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control', 'Pragma', 'X-Requested-With'],
     exposedHeaders: ['Content-Type', 'Cache-Control'],
     credentials: true,
     preflightContinue: false,
@@ -43,7 +43,7 @@ async function bootstrap() {
       );
       res.setHeader(
         'Access-Control-Allow-Headers',
-        'Content-Type,Authorization,Accept',
+        'Content-Type,Authorization,Accept,Cache-Control,Pragma,X-Requested-With',
       );
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Access-Control-Max-Age', '86400'); // cache preflight 24h
