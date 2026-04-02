@@ -24,8 +24,19 @@ interface Product {
   space_tags?: ProductTag[];
 }
 
-// Environment variables for API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+// Server-side API URL (must use BACKEND_URL, not NEXT_PUBLIC_API_URL)
+const API_URL =
+  process.env.BACKEND_URL ||
+  (process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1`
+    : null) ||
+  "http://localhost:3001/api/v1";
+
+// Site URL for metadata
+const SITE_URL =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.VERCEL_URL ||
+  "https://phucuongthinh.net";
 
 // Helper to normalize tags from backend
 function normalizeTags(product: any): Product {
@@ -44,14 +55,14 @@ function normalizeTags(product: any): Product {
 async function getProduct(id: string): Promise<Product | null> {
   try {
     const response = await fetch(`${API_URL}/products/${id}`, {
-      cache: "no-store", // Always get fresh data for metadata
+      cache: "no-store",
     });
-    
+
     if (!response.ok) {
       if (response.status === 404) return null;
       throw new Error(`Failed to fetch product: ${response.status}`);
     }
-    
+
     const raw = await response.json();
     return normalizeTags(raw);
   } catch (error) {
@@ -63,7 +74,7 @@ async function getProduct(id: string): Promise<Product | null> {
 // Get first image URL from product media
 function getFirstProductImage(product: Product): string | null {
   if (!product.media?.length) return null;
-  
+
   const images = product.media.filter(
     (m) =>
       (m.media_type === "lifestyle" ||
@@ -73,7 +84,7 @@ function getFirstProductImage(product: Product): string | null {
             m.file_url?.match(/\.(jpg|jpeg|png|webp|svg)$/i)))) &&
       m.file_url?.startsWith("http"),
   );
-  
+
   return images[0]?.file_url || null;
 }
 
@@ -84,46 +95,47 @@ export async function generateMetadata({
   params: { id: string };
 }): Promise<Metadata> {
   const product = await getProduct(params.id);
-  
+
   if (!product) {
     return {
       title: "Không tìm thấy sản phẩm | Phú Cường Thịnh",
       description: "Sản phẩm bạn tìm kiếm không tồn tại hoặc đã bị xóa.",
     };
   }
-  
+
   const productImage = getFirstProductImage(product);
   const title = `${product.name} | Phú Cường Thịnh`;
-  const description = product.description || 
+  const description =
+    product.description ||
     `Sản phẩm ${product.name} (SKU: ${product.sku}) - Đơn vị tiên phong trong ngành VLXD hoàn thiện về gạch khổ lớn và thiết bị vệ sinh/bếp kháng khuẩn.`;
-  
+
+  // Ensure images have absolute URLs
+  const ogImage = productImage
+    ? productImage
+    : `${SITE_URL}/dacuon.png`;
+
   return {
+    metadataBase: new URL(SITE_URL),
     title,
     description,
     openGraph: {
       title,
       description,
-      images: productImage
-        ? [
-            {
-              url: productImage,
-              alt: product.name,
-              width: 1200,
-              height: 630,
-            },
-          ]
-        : [
-            {
-              url: "/dacuon.png",
-              alt: "Phú Cường Thịnh",
-            },
-          ],
+      url: `/products/${params.id}`,
+      images: [
+        {
+          url: ogImage,
+          alt: product.name,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: productImage ? [productImage] : ["/dacuon.png"],
+      images: [ogImage],
     },
   };
 }
