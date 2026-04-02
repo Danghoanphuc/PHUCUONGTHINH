@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   ShoppingBag,
@@ -30,13 +30,13 @@ const MORE_ITEMS = [
   { href: "/products", label: "Xem như khách", icon: Eye, target: "_blank" },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function MobileBottomNav({
   onMenuOpen: _onMenuOpen,
 }: {
   onMenuOpen?: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [plusOpen, setPlusOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -81,7 +81,10 @@ export function MobileBottomNav({
             <UserPlus size={17} /> Thêm khách
           </button>
           <button
-            onClick={closeAll}
+            onClick={() => {
+              closeAll();
+              router.push("/admin/scan");
+            }}
             className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-amber-900/70 hover:bg-amber-900/5 hover:text-amber-900 transition-all"
           >
             <ScanLine size={17} /> Quét mã QR / Barcode
