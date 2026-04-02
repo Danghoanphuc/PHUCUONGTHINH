@@ -428,7 +428,13 @@ export default function AdminProductsPage() {
       // Reload with cache bust to ensure fresh data
       await loadProducts(true);
     } catch (err: any) {
-      // Restore on error
+      // If 404, product already deleted - treat as success
+      if (err.response?.status === 404) {
+        // Product already gone, just reload
+        await loadProducts(true);
+        return;
+      }
+      // Restore on other errors
       if (deletedProduct) {
         setProducts((p) => [...p, deletedProduct]);
         setTotal((t) => t + 1);
