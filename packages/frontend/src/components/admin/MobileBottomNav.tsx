@@ -81,7 +81,10 @@ export function MobileBottomNav({
             <UserPlus size={17} /> Thêm khách
           </button>
           <button
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
               closeAll();
               router.push("/admin/scan");
             }}
