@@ -46,7 +46,7 @@ function InternalProductBlock({ productId }: { productId: string }) {
 
   useEffect(() => {
     apiClient
-      .get<any>(`/products/${productId}/internal`)
+      .get<any>(`/products/${productId}/internal?_t=${Date.now()}`) // Cache buster
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
