@@ -9,8 +9,6 @@ import {
   UseInterceptors,
   UploadedFile,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
   BadRequestException,
   Request,
   Response,
@@ -36,20 +34,18 @@ export class DocumentsController {
   @Post('upload')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } }))
-  @UsePipes(
-    new ValidationPipe({
-      whitelist: false,
-      forbidNonWhitelisted: false,
-      transform: false,
-      validateCustomDecorators: false,
-    }),
-  )
   async uploadDocument(
     @UploadedFile() file: Express.Multer.File,
     @Body('category_id') categoryId: string,
     @Body('tags') tagsRaw: string,
     @Request() req,
   ) {
+    console.log('[DEBUG] uploadDocument called');
+    console.log('[DEBUG] req.headers:', JSON.stringify(req.headers, null, 2));
+    console.log('[DEBUG] req.file:', req.file);
+    console.log('[DEBUG] req.files:', req.files);
+    console.log('[DEBUG] req.body:', req.body);
+    console.log('[DEBUG] file param:', file);
     if (!file) {
       throw new BadRequestException('File is required');
     }
