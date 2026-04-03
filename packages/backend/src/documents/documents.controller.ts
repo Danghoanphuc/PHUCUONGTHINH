@@ -9,8 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
+  BadRequestException,
   Request,
   Response,
   HttpCode,
@@ -34,19 +33,19 @@ export class DocumentsController {
    */
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  @UsePipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: false,
-      transform: true,
-    }),
-  )
   async uploadDocument(
     @UploadedFile() file: Express.Multer.File,
     @Body('category_id') categoryId: string,
     @Body('tags') tagsRaw: string,
     @Request() req,
   ) {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+    if (!categoryId) {
+      throw new BadRequestException('Category ID is required');
+    }
+
     let tags: Array<{ entity_type: string; entity_id: string }> | undefined;
     if (tagsRaw) {
       try {
