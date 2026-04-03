@@ -34,14 +34,23 @@ export class DocumentsController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadDocument(
     @UploadedFile() file: Express.Multer.File,
-    @Body() dto: UploadDocumentDto,
+    @Body('category_id') categoryId: string,
+    @Body('tags') tagsRaw: string,
     @Request() req,
   ) {
+    let tags: Array<{ entity_type: string; entity_id: string }> | undefined;
+    if (tagsRaw) {
+      try {
+        tags = JSON.parse(tagsRaw);
+      } catch {
+        tags = undefined;
+      }
+    }
     return this.documentsService.uploadDocument(
       file,
-      dto.category_id,
+      categoryId,
       req.user.id,
-      dto.tags,
+      tags,
     );
   }
 
