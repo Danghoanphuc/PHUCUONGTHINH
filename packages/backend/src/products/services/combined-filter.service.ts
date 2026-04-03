@@ -63,14 +63,6 @@ export class CombinedFilterService {
   ) {}
 
   async filterProducts(filters: CombinedFilters): Promise<FilterResponse> {
-    // Debug logging disabled in production
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(
-        '🔍 CombinedFilterService.filterProducts called with:',
-        JSON.stringify(filters),
-      );
-    }
-
     const {
       categories,
       search,
@@ -161,19 +153,10 @@ export class CombinedFilterService {
 
     // Try cache first
     const cacheKey = `products:${JSON.stringify(finalWhere)}:${page}:${limit}`;
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`📦 Checking cache for key: ${cacheKey}`);
-    }
 
     const cached = await this.cacheService.get(cacheKey);
     if (cached) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('✅ CACHE HIT!');
-      }
       return cached as FilterResponse;
-    }
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('❌ CACHE MISS - fetching from database');
     }
 
     // Execute queries with optimized select
@@ -265,9 +248,6 @@ export class CombinedFilterService {
     };
 
     // Cache for 5 minutes
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`💾 Caching result for key: ${cacheKey}`);
-    }
     await this.cacheService.set(cacheKey, result, { ttl: 300 });
 
     return result;

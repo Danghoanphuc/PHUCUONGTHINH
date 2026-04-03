@@ -4,44 +4,43 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 
-const SCANNER_ID = "qr-scanner-container";
+const VIDEO_ID = "qr-video-element";
 
-// cuid pattern: starts with 'c' followed by ~24 alphanumeric chars
 function isCuid(value: string): boolean {
   return /^c[a-z0-9]{20,30}$/.test(value);
 }
 
+type ScanState = "idle" | "requesting" | "scanning" | "error";
+
 export default function QRScanner() {
   const router = useRouter();
   const scannerRef = useRef<any>(null);
+  const isLoadingRef = useRef(false);
+  const [state, setState] = useState<ScanState>("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  function showToast(message: string) {
-    setToast(message);
-    setTimeout(() => setToast(null), 2000);
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
   }
 
-  async function handleScanSuccess(decodedText: string) {
-    if (isLoading) return;
-    setIsLoading(true);
+  async function handleScan(decodedText: string) {
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
 
     try {
       const trimmed = decodedText.trim();
-
       if (isCuid(trimmed)) {
-        // Navigate directly by product ID
-        router.push(`/internal/products/${trimmed}`);
+        router.push(`/products/${trimmed}`);
         return;
       }
-
-      // Treat as SKU — look up via API
       try {
         const product = await apiClient.get<{ id: string }>(
           `/products/sku/${encodeURIComponent(trimmed)}`,
         );
         if (product?.id) {
-          router.push(`/internal/products/${product.id}`);
+          router.push(`/products/${product.id}`);
         } else {
           showToast("Không tìm thấy sản phẩm");
         }
@@ -49,42 +48,46 @@ export default function QRScanner() {
         showToast("Không tìm thấy sản phẩm");
       }
     } finally {
-      setIsLoading(false);
+      isLoadingRef.current = false;
     }
-  }
-
-  function handleScanFailure(_error: string) {
-    // Scan failures are normal (camera frames without QR), ignore silently
   }
 
   useEffect(() => {
-    let scanner: any = null;
+    let cancelled = false;
 
-    async function initScanner() {
+    async function startCamera() {
+      setState("requesting");
       try {
-        const { Html5QrcodeScanner } = await import("html5-qrcode");
-        scanner = new Html5QrcodeScanner(
-          SCANNER_ID,
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            rememberLastUsedCamera: true,
-          },
-          false,
-        );
+        const { Html5Qrcode } = await import("html5-qrcode");
+        if (cancelled) return;
+
+        const scanner = new Html5Qrcode(VIDEO_ID);
         scannerRef.current = scanner;
-        scanner.render(handleScanSuccess, handleScanFailure);
-      } catch (err) {
-        console.error("Failed to initialize QR scanner:", err);
-        showToast("Không thể khởi động camera");
+
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (text) => handleScan(text),
+          () => {},
+        );
+
+        if (!cancelled) setState("scanning");
+      } catch (err: any) {
+        if (cancelled) return;
+        const msg = err?.message?.includes("Permission")
+          ? "Vui lòng cấp quyền camera để quét mã QR"
+          : "Không thể khởi động camera";
+        setErrorMsg(msg);
+        setState("error");
       }
     }
 
-    initScanner();
+    startCamera();
 
     return () => {
+      cancelled = true;
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(() => {});
+        scannerRef.current.stop().catch(() => {});
         scannerRef.current = null;
       }
     };
@@ -92,27 +95,50 @@ export default function QRScanner() {
   }, []);
 
   return (
-    <div className="relative w-full" style={{ minHeight: "400px" }}>
-      {/* Scanner container with explicit styling for html5-qrcode */}
-      <div 
-        id={SCANNER_ID} 
-        className="w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-cover [&_video]:rounded-lg"
-        style={{ 
-          minHeight: "400px",
-          background: "#000",
-          borderRadius: "12px",
-          overflow: "hidden"
-        }}
-      />
+    <div
+      className="relative w-full rounded-xl overflow-hidden bg-black"
+      style={{ minHeight: 360 }}
+    >
+      {/* Camera viewport */}
+      <div id={VIDEO_ID} className="w-full h-full" style={{ minHeight: 360 }} />
 
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded-lg">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      {/* Overlay: requesting permission */}
+      {state === "requesting" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black">
+          <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+          <p className="text-white text-sm">Đang khởi động camera...</p>
         </div>
       )}
 
+      {/* Overlay: error */}
+      {state === "error" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black px-6 text-center">
+          <p className="text-red-400 text-sm">{errorMsg}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-4 py-2 bg-white text-black text-sm rounded-lg font-medium"
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
+
+      {/* Scanning frame overlay */}
+      {state === "scanning" && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-56 h-56 border-2 border-white/70 rounded-xl relative">
+            {/* Corner accents */}
+            <span className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-white rounded-tl-lg" />
+            <span className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-white rounded-tr-lg" />
+            <span className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-white rounded-bl-lg" />
+            <span className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-white rounded-br-lg" />
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-lg">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-lg whitespace-nowrap">
           {toast}
         </div>
       )}

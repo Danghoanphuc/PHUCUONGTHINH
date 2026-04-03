@@ -33,21 +33,15 @@ export class DocumentsController {
    */
   @Post('upload')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } }))
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } }),
+  )
   async uploadDocument(
     @UploadedFile() file: Express.Multer.File,
     @Body('category_id') categoryId: string,
     @Body('tags') tagsRaw: string,
     @Request() req,
   ) {
-    // DEBUG: Log exactly what multer received
-    console.log('[DEBUG] ========== FILE UPLOAD DEBUG ==========');
-    console.log('[DEBUG] file.originalname:', file?.originalname);
-    console.log('[DEBUG] file.originalname hex:', Buffer.from(file?.originalname || '').toString('hex'));
-    console.log('[DEBUG] file.mimetype:', file?.mimetype);
-    console.log('[DEBUG] file.encoding:', file?.encoding);
-    console.log('[DEBUG] ========================================');
-    
     if (!file) {
       throw new BadRequestException('File is required');
     }

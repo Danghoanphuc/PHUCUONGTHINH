@@ -20,19 +20,18 @@ export class DocumentsService {
   ) {
     // Extract clean filename with proper extension from mimetype
     let originalName = file.originalname;
-    
-    // DEBUG: Log processing steps
-    console.log('[DEBUG-SERVICE] Raw originalname:', originalName);
-    console.log('[DEBUG-SERVICE] Mimetype:', file.mimetype);
-    
+
     try {
       // Get proper extension from mimetype (this is 100% reliable)
       const mimeToExt: Record<string, string> = {
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+          '.docx',
         'application/msword': '.doc',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+          '.xlsx',
         'application/vnd.ms-excel': '.xls',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+          '.pptx',
         'application/vnd.ms-powerpoint': '.ppt',
         'application/pdf': '.pdf',
         'image/jpeg': '.jpg',
@@ -42,35 +41,27 @@ export class DocumentsService {
         'text/plain': '.txt',
       };
       const correctExt = mimeToExt[file.mimetype] || '';
-      console.log('[DEBUG-SERVICE] Correct ext from mimetype:', correctExt);
-      
+
       // Remove any existing extension from filename (handle multiple dots)
       const lastDotIndex = originalName.lastIndexOf('.');
-      const nameWithoutExt = lastDotIndex > 0 ? originalName.slice(0, lastDotIndex) : originalName;
-      console.log('[DEBUG-SERVICE] Name without ext:', nameWithoutExt);
-      
+      const nameWithoutExt =
+        lastDotIndex > 0 ? originalName.slice(0, lastDotIndex) : originalName;
+
       // Try to decode Vietnamese characters in the name only
       let decodedName: string;
       try {
-        // Try different encodings
-        const latin1Decoded = Buffer.from(nameWithoutExt, 'latin1').toString('utf8');
-        console.log('[DEBUG-SERVICE] Latin1 decoded:', latin1Decoded);
-        
+        const latin1Decoded = Buffer.from(nameWithoutExt, 'latin1').toString(
+          'utf8',
+        );
         decodedName = latin1Decoded;
-        
-        // If decoding produces weird characters, use original
         if (/[\x00-\x08\x0b-\x0c\x0e-\x1f]/.test(decodedName)) {
-          console.log('[DEBUG-SERVICE] Decoded has control chars, using original');
           decodedName = nameWithoutExt;
         }
       } catch (e) {
-        console.log('[DEBUG-SERVICE] Decode failed, using original:', e);
         decodedName = nameWithoutExt;
       }
-      
-      // Use correct extension from mimetype, not from original filename
+
       originalName = decodedName + correctExt;
-      console.log('[DEBUG-SERVICE] Final originalName:', originalName);
     } catch (e) {
       // Fallback: keep original but ensure it has extension from mimetype
       console.error('[DocumentsService] Filename encoding fix failed:', e);
