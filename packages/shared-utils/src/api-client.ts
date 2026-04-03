@@ -31,15 +31,25 @@ export class ApiClient {
 
     this.client = axios.create({
       baseURL: options.baseURL,
-      headers: { "Content-Type": "application/json" },
+      // Do NOT set Content-Type here - let browser/axios set it automatically
+      // This allows FormData to use multipart/form-data with correct boundary
     });
 
-    // Request interceptor: attach JWT token
+    // Request interceptor: attach JWT token and handle Content-Type
     this.client.interceptors.request.use((config) => {
       const token = options.getToken?.();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      
+      // If data is FormData, remove Content-Type to let browser set it with boundary
+      if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+      } else if (!config.headers['Content-Type']) {
+        // Default to JSON only for non-FormData requests
+        config.headers['Content-Type'] = 'application/json';
+      }
+      
       return config;
     });
 
