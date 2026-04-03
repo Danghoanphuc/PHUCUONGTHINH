@@ -379,7 +379,10 @@ export default function DocumentsPage() {
         <DocumentUploadModal
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
-          onSuccess={loadData}
+          onSuccess={() => {
+            setSelectedCategory(""); // Reset filter để hiển thị document mới
+            loadData();
+          }}
           categories={categories}
         />
 
