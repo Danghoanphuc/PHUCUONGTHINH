@@ -832,7 +832,14 @@ export default function ProductDetailClient({
                   </h1>
                   {product.sku && (
                     <div className="shrink-0 hidden md:block bg-gray-50 p-1.5 rounded-lg border border-gray-100">
-                      <QRSection sku={product.sku} productUrl={product.sku} />
+                      <QRSection
+                        sku={product.sku}
+                        productUrl={
+                          typeof window !== "undefined"
+                            ? `${window.location.origin}/products/${product.id}`
+                            : `/products/${product.id}`
+                        }
+                      />
                     </div>
                   )}
                 </div>
