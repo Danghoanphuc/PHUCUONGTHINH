@@ -19,8 +19,16 @@ async function bootstrap() {
   const securityHeadersService = app.get(SecurityHeadersService);
 
   // Increase body size limit for file uploads
-  app.use(require('express').json({ limit: '50mb' }));
-  app.use(require('express').urlencoded({ limit: '50mb', extended: true }));
+  // IMPORTANT: Skip multipart/form-data so multer can handle file uploads
+  app.use(require('express').json({ 
+    limit: '50mb',
+    type: ['application/json', 'application/*+json']
+  }));
+  app.use(require('express').urlencoded({ 
+    limit: '50mb', 
+    extended: true,
+    type: 'application/x-www-form-urlencoded'
+  }));
 
   // CORS phải đặt trước static assets để header được apply cho cả /uploads/
   app.enableCors({
