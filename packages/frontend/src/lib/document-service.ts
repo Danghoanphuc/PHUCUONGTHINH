@@ -48,11 +48,7 @@ export const documentService = {
     const response = await adminApiClient.post<Document>(
       "/documents/upload",
       formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
+      // Do NOT set Content-Type manually — let browser set it with boundary
     );
     return response;
   },

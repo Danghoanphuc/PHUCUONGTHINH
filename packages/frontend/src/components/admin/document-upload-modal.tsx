@@ -88,11 +88,16 @@ export default function DocumentUploadModal({
           ? [{ entity_type: entityType, entity_id: entityId }]
           : undefined;
 
-      await documentService.uploadDocument(file, categoryId, tags);
+      const result = await documentService.uploadDocument(
+        file,
+        categoryId,
+        tags,
+      );
+      console.log("[Upload] success:", result);
       onSuccess();
       handleClose();
     } catch (err: any) {
-      console.error("Upload failed:", err);
+      console.error("[Upload] failed:", err);
       setError(err.message || "Upload thất bại. Vui lòng thử lại sau.");
     } finally {
       setIsUploading(false);
