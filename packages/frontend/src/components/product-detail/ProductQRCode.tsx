@@ -21,8 +21,7 @@ export function ProductQRCode({
     // Sử dụng API QR code generator
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(productUrl)}&color=0a192f&bgcolor=ffffff&margin=10`;
     setQrImageUrl(qrUrl);
-    console.log("🎯 QR Code generated for:", sku, "URL:", productUrl);
-  }, [productUrl, sku]);
+  }, [productUrl]);
 
   const handleDownload = async () => {
     if (isGenerating || !qrImageUrl) return;
@@ -94,10 +93,9 @@ export function ProductQRCode({
     <div
       className="absolute top-3 sm:top-4 right-3 sm:right-4 z-30 group/qr pointer-events-auto"
       onClick={(e) => e.stopPropagation()}
-      style={{ border: "2px solid red" }} // DEBUG: Remove this after confirming visibility
     >
       {/* QR Code hiển thị */}
-      <div className="relative bg-white/90 backdrop-blur-[24px] saturate-150 border-2 border-emerald-500 rounded-2xl p-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)]">
+      <div className="relative bg-white/90 backdrop-blur-[24px] saturate-150 border-2 border-white/60 rounded-2xl p-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)]">
         <img
           src={qrImageUrl}
           alt={`QR Code for ${sku}`}
