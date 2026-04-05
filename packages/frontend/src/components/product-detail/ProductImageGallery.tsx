@@ -39,6 +39,15 @@ export function ProductImageGallery({
   const [isZoomActive, setIsZoomActive] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
 
+  // DEBUG: Log props
+  useEffect(() => {
+    console.log("📸 ProductImageGallery props:", {
+      productSku,
+      productUrl,
+      hasImages: images.length,
+    });
+  }, [productSku, productUrl, images.length]);
+
   const activeImage = images[activeIndex]?.file_url || null;
   const optimizedActiveImage = optimizeCloudinaryUrl(activeImage || "", 1200);
   const zoomPreviewImage = optimizeCloudinaryUrl(activeImage || "", 1800);
@@ -114,12 +123,16 @@ export function ProductImageGallery({
           </div>
 
           {/* QR Code - Góc phải trên (BÊN TRONG ảnh) */}
-          {productSku && productUrl && (
+          {productSku && productUrl ? (
             <ProductQRCode
               sku={productSku}
               productUrl={productUrl}
               productName={productName}
             />
+          ) : (
+            <div className="absolute top-3 right-3 bg-red-500 text-white p-2 text-xs rounded">
+              DEBUG: SKU={productSku || "null"} URL={productUrl ? "✓" : "null"}
+            </div>
           )}
 
           {/* Nút Share - Kính phủ sương */}
