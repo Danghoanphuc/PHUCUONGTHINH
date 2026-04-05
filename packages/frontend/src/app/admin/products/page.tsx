@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { productService, Product } from "@/lib/product-service";
 import {
   ImageIcon,
@@ -15,6 +17,7 @@ import {
   CheckCircle2,
   Circle,
   X,
+  MoreHorizontal,
 } from "lucide-react";
 
 // ── Thumbnail helper ──────────────────────────────────────────────────────────
@@ -31,31 +34,25 @@ function ProductAvatar({ url }: { url: string | null }) {
         src={url}
         alt=""
         loading="lazy"
-        className="w-11 h-11 rounded-[10px] object-cover bg-[#F2F2F7] shrink-0 border border-black/5"
+        className="w-12 h-12 rounded-[12px] object-cover bg-[#F2F2F7] shrink-0 border border-black/5"
       />
     );
   }
   return (
-    <div className="w-11 h-11 rounded-[10px] bg-[#F2F2F7] flex items-center justify-center shrink-0 border border-black/5">
-      <ImageIcon size={18} className="text-[#8E8E93]" strokeWidth={1.5} />
+    <div className="w-12 h-12 rounded-[12px] bg-[#F2F2F7] flex items-center justify-center shrink-0 border border-black/5">
+      <ImageIcon size={20} className="text-[#8E8E93]" strokeWidth={1.5} />
     </div>
   );
 }
 
-// ── Bulk action bar (Kiểu Dynamic Island / Floating Menu) ────────────────────
+// ── Bulk action bar ───────────────────────────────────────────────────────────
 function BulkActionBar({
   count,
   onPublish,
   onUnpublish,
   onDelete,
   onClear,
-}: {
-  count: number;
-  onPublish: () => void;
-  onUnpublish: () => void;
-  onDelete: () => void;
-  onClear: () => void;
-}) {
+}: any) {
   return (
     <div className="flex flex-wrap items-center gap-2 px-5 py-3 bg-white/80 backdrop-blur-xl border border-black/5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] rounded-[20px] mb-6 animate-in slide-in-from-top-4 fade-in duration-200">
       <span className="text-[15px] font-semibold text-black flex-1 min-w-0">
@@ -93,7 +90,7 @@ function BulkActionBar({
   );
 }
 
-// ── Desktop table (Kiểu macOS Finder / Mail) ──────────────────────────────────
+// ── Desktop table (Kiểu macOS Finder) ─────────────────────────────────────────
 function DesktopTable({
   products,
   selected,
@@ -102,15 +99,7 @@ function DesktopTable({
   onPublish,
   onClone,
   onDelete,
-}: {
-  products: Product[];
-  selected: Set<string>;
-  onToggleSelect: (id: string) => void;
-  onToggleAll: () => void;
-  onPublish: (id: string, current: boolean) => void;
-  onClone: (id: string) => void;
-  onDelete: (id: string) => void;
-}) {
+}: any) {
   const allSelected = products.length > 0 && selected.size === products.length;
   const someSelected = selected.size > 0 && selected.size < products.length;
 
@@ -161,14 +150,12 @@ function DesktopTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-[#E5E5EA]">
-          {products.map((product) => {
+          {products.map((product: any) => {
             const isSelected = selected.has(product.id);
             return (
               <tr
                 key={product.id}
-                className={`transition-colors cursor-pointer group ${
-                  isSelected ? "bg-[#007AFF]/[0.03]" : "hover:bg-[#F2F2F7]/60"
-                }`}
+                className={`transition-colors cursor-pointer group ${isSelected ? "bg-[#007AFF]/[0.03]" : "hover:bg-[#F2F2F7]/60"}`}
                 onClick={() => onToggleSelect(product.id)}
               >
                 <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
@@ -205,11 +192,7 @@ function DesktopTable({
                 <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => onPublish(product.id, product.is_published)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold transition-transform active:scale-95 ${
-                      product.is_published
-                        ? "bg-[#34C759]/10 text-[#34C759] hover:bg-[#34C759]/20"
-                        : "bg-[#8E8E93]/10 text-[#8E8E93] hover:bg-[#8E8E93]/20"
-                    }`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold transition-transform active:scale-95 ${product.is_published ? "bg-[#34C759]/10 text-[#34C759] hover:bg-[#34C759]/20" : "bg-[#8E8E93]/10 text-[#8E8E93] hover:bg-[#8E8E93]/20"}`}
                   >
                     {product.is_published ? (
                       <>
@@ -227,21 +210,18 @@ function DesktopTable({
                     <Link
                       href={`/admin/products/${product.id}`}
                       className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#007AFF] hover:bg-[#007AFF]/10 transition-colors"
-                      title="Sửa"
                     >
                       <Pencil size={18} strokeWidth={1.5} />
                     </Link>
                     <button
                       onClick={() => onClone(product.id)}
                       className="p-2 rounded-[10px] text-[#8E8E93] hover:text-black hover:bg-[#E5E5EA] transition-colors"
-                      title="Nhân bản"
                     >
                       <Copy size={18} strokeWidth={1.5} />
                     </button>
                     <button
                       onClick={() => onDelete(product.id)}
                       className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10 transition-colors"
-                      title="Xóa"
                     >
                       <Trash2 size={18} strokeWidth={1.5} />
                     </button>
@@ -256,7 +236,7 @@ function DesktopTable({
   );
 }
 
-// ── Mobile Card List (Kiểu iOS Inset Grouped) ─────────────────────────────────
+// ── Mobile Card List (Tối giản + Long Press Context Menu) ──────────────────────
 function MobileCardList({
   products,
   selected,
@@ -264,105 +244,193 @@ function MobileCardList({
   onPublish,
   onClone,
   onDelete,
-}: {
-  products: Product[];
-  selected: Set<string>;
-  onToggleSelect: (id: string) => void;
-  onPublish: (id: string, current: boolean) => void;
-  onClone: (id: string) => void;
-  onDelete: (id: string) => void;
-}) {
-  return (
-    <div className="bg-white rounded-[24px] shadow-[0_1px_5px_rgba(0,0,0,0.02)] border border-[#E5E5EA] overflow-hidden">
-      {products.map((product, index) => {
-        const isSelected = selected.has(product.id);
-        return (
-          <div
-            key={product.id}
-            className={`p-4 flex flex-col gap-3 transition-colors ${
-              isSelected ? "bg-[#007AFF]/[0.03]" : ""
-            } ${index !== products.length - 1 ? "border-b border-[#E5E5EA]" : ""}`}
-          >
-            <div className="flex items-start gap-3">
-              {/* Checkbox */}
-              <button
-                onClick={() => onToggleSelect(product.id)}
-                className="mt-1 shrink-0 text-[#C7C7CC] hover:text-[#007AFF] transition-colors"
-              >
-                {isSelected ? (
-                  <CheckCircle2
-                    size={22}
-                    className="text-[#007AFF]"
-                    fill="#007AFF"
-                    color="white"
-                  />
-                ) : (
-                  <Circle size={22} strokeWidth={1.5} />
-                )}
-              </button>
+  isSelectionMode,
+  setIsSelectionMode,
+}: any) {
+  const router = useRouter();
+  const [contextMenuProduct, setContextMenuProduct] = useState<Product | null>(
+    null,
+  );
+  const touchTimer = useRef<NodeJS.Timeout | null>(null);
 
-              {/* Thumbnail */}
+  // Logic nhấn giữ (Long Press)
+  const handleTouchStart = (product: Product) => {
+    if (isSelectionMode) return;
+    touchTimer.current = setTimeout(() => {
+      if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback (Rung nhẹ)
+      setContextMenuProduct(product);
+    }, 400); // Đợi 400ms
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimer.current) clearTimeout(touchTimer.current);
+  };
+
+  return (
+    <>
+      <div className="bg-white rounded-[24px] shadow-[0_1px_5px_rgba(0,0,0,0.02)] border border-[#E5E5EA] overflow-hidden">
+        {products.map((product: Product, index: number) => {
+          const isSelected = selected.has(product.id);
+          return (
+            <div
+              key={product.id}
+              onTouchStart={() => handleTouchStart(product)}
+              onTouchEnd={handleTouchEnd}
+              onTouchMove={handleTouchEnd} // Hủy nếu người dùng đang cuộn trang
+              onClick={(e) => {
+                if (isSelectionMode) {
+                  e.preventDefault();
+                  onToggleSelect(product.id);
+                } else {
+                  router.push(`/admin/products/${product.id}`);
+                }
+              }}
+              className={`p-4 flex items-center gap-3 transition-colors cursor-pointer ${
+                isSelected ? "bg-[#007AFF]/[0.05]" : "active:bg-[#F2F2F7]"
+              } ${index !== products.length - 1 ? "border-b border-[#E5E5EA]" : ""}`}
+            >
+              {/* Checkbox (Chỉ hiện khi ở chế độ chọn nhiều) */}
+              <AnimatePresence>
+                {isSelectionMode && (
+                  <motion.div
+                    initial={{ width: 0, opacity: 0, scale: 0.5 }}
+                    animate={{ width: "auto", opacity: 1, scale: 1 }}
+                    exit={{ width: 0, opacity: 0, scale: 0.5 }}
+                    className="shrink-0 mr-1"
+                  >
+                    {isSelected ? (
+                      <CheckCircle2
+                        size={24}
+                        className="text-[#007AFF]"
+                        fill="#007AFF"
+                        color="white"
+                      />
+                    ) : (
+                      <Circle size={24} className="text-[#C7C7CC]" />
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Thumbnail siêu sạch */}
               <ProductAvatar url={getCoverUrl(product)} />
 
-              {/* Info */}
+              {/* Thông tin */}
               <div className="flex-1 min-w-0">
-                <Link
-                  href={`/p/${product.sku}`}
-                  className="text-[16px] font-semibold text-black leading-snug line-clamp-2 hover:text-[#007AFF]"
-                >
+                <p className="text-[17px] font-semibold text-black leading-snug line-clamp-1">
                   {product.name}
-                </Link>
-                <p className="text-[13px] text-[#8E8E93] font-mono mt-0.5">
+                </p>
+                <p className="text-[14px] text-[#8E8E93] font-mono mt-0.5">
                   {product.sku}
                 </p>
               </div>
 
-              {/* Status badge */}
+              {/* Icon Trạng thái */}
               <button
-                onClick={() => onPublish(product.id, product.is_published)}
-                className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:scale-95 transition-transform ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPublish(product.id, product.is_published);
+                }}
+                className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform ${
                   product.is_published
                     ? "bg-[#34C759]/10 text-[#34C759]"
                     : "bg-[#8E8E93]/10 text-[#8E8E93]"
                 }`}
               >
                 {product.is_published ? (
-                  <>
-                    <Eye size={12} strokeWidth={2} /> Đăng
-                  </>
+                  <Eye size={18} strokeWidth={2} />
                 ) : (
-                  <>
-                    <EyeOff size={12} strokeWidth={2} /> Nháp
-                  </>
+                  <EyeOff size={18} strokeWidth={2} />
                 )}
               </button>
             </div>
+          );
+        })}
+      </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 mt-2 pt-3 border-t border-[#F2F2F7]">
-              <Link
-                href={`/admin/products/${product.id}`}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-[12px] text-[14px] font-semibold text-[#007AFF] bg-[#007AFF]/10 active:bg-[#007AFF]/20 transition-colors"
-              >
-                <Pencil size={16} /> Sửa
-              </Link>
-              <button
-                onClick={() => onClone(product.id)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-[12px] text-[14px] font-semibold text-black bg-[#E5E5EA] active:bg-[#C7C7CC] transition-colors"
-              >
-                <Copy size={16} /> Bản sao
-              </button>
-              <button
-                onClick={() => onDelete(product.id)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-[12px] text-[14px] font-semibold text-[#FF3B30] bg-[#FF3B30]/10 active:bg-[#FF3B30]/20 transition-colors"
-              >
-                <Trash2 size={16} /> Xóa
-              </button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+      {/* ── Menu Ngữ Cảnh (Bottom Sheet) ── */}
+      <AnimatePresence>
+        {contextMenuProduct && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm"
+              onClick={() => setContextMenuProduct(null)}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed bottom-0 inset-x-0 z-[70] bg-[#F2F2F7] rounded-t-[32px] p-5 pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.15)]"
+            >
+              {/* Preview nhỏ trên đỉnh Menu */}
+              <div className="bg-white rounded-[20px] p-4 mb-4 flex items-center gap-4 shadow-sm">
+                <ProductAvatar url={getCoverUrl(contextMenuProduct)} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[16px] font-bold text-black line-clamp-1">
+                    {contextMenuProduct.name}
+                  </p>
+                  <p className="text-[13px] text-[#8E8E93] font-mono mt-0.5">
+                    {contextMenuProduct.sku}
+                  </p>
+                </div>
+              </div>
+
+              {/* Các thao tác chức năng */}
+              <div className="bg-white rounded-[20px] overflow-hidden flex flex-col shadow-sm">
+                <button
+                  onClick={() => {
+                    router.push(`/admin/products/${contextMenuProduct.id}`);
+                    setContextMenuProduct(null);
+                  }}
+                  className="p-4 text-[17px] font-medium text-black border-b border-[#E5E5EA] active:bg-[#F2F2F7] flex items-center justify-between"
+                >
+                  Chỉnh sửa sản phẩm
+                  <Pencil size={20} className="text-[#8E8E93]" />
+                </button>
+                <button
+                  onClick={() => {
+                    onClone(contextMenuProduct.id);
+                    setContextMenuProduct(null);
+                  }}
+                  className="p-4 text-[17px] font-medium text-black border-b border-[#E5E5EA] active:bg-[#F2F2F7] flex items-center justify-between"
+                >
+                  Nhân bản sản phẩm
+                  <Copy size={20} className="text-[#8E8E93]" />
+                </button>
+                <button
+                  onClick={() => {
+                    setIsSelectionMode(true);
+                    onToggleSelect(contextMenuProduct.id);
+                    setContextMenuProduct(null);
+                  }}
+                  className="p-4 text-[17px] font-medium text-black active:bg-[#F2F2F7] flex items-center justify-between"
+                >
+                  Chọn nhiều sản phẩm
+                  <CheckCircle2 size={20} className="text-[#8E8E93]" />
+                </button>
+              </div>
+
+              {/* Khu vực Xóa */}
+              <div className="bg-white rounded-[20px] overflow-hidden mt-4 shadow-sm">
+                <button
+                  onClick={() => {
+                    onDelete(contextMenuProduct.id);
+                    setContextMenuProduct(null);
+                  }}
+                  className="w-full p-4 text-[17px] font-semibold text-[#FF3B30] active:bg-[#F2F2F7]"
+                >
+                  Xóa sản phẩm
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -376,21 +444,18 @@ export default function AdminProductsPage() {
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false); // State quản lý chọn nhiều trên Mobile
   const limit = 20;
 
-  // Stable reference to track if we're already loading
   const isLoadingRef = useRef(false);
 
   const loadProducts = useCallback(
     async (bustCache = false) => {
-      // Prevent concurrent loads
       if (isLoadingRef.current) return;
-
       isLoadingRef.current = true;
       setIsLoading(true);
       setError("");
       try {
-        // Always add timestamp for admin to ensure fresh data
         const response = await productService.getProducts(
           page,
           limit,
@@ -413,13 +478,12 @@ export default function AdminProductsPage() {
     [page, search],
   );
 
-  // Initial load and reload on page/search change
   useEffect(() => {
     loadProducts(true);
   }, [loadProducts]);
-
   useEffect(() => {
     setSelected(new Set());
+    setIsSelectionMode(false);
   }, [page, search]);
 
   const handleToggleSelect = (id: string) => {
@@ -438,14 +502,16 @@ export default function AdminProductsPage() {
     );
   };
 
+  const handleClearSelection = () => {
+    setSelected(new Set());
+    setIsSelectionMode(false);
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Bạn có chắc muốn xóa sản phẩm này?")) return;
-
-    // Optimistic update
     const deletedProduct = products.find((p) => p.id === id);
     setProducts((p) => p.filter((x) => x.id !== id));
     setTotal((t) => t - 1);
-
     try {
       await productService.deleteProduct(id);
       await loadProducts(true);
@@ -474,15 +540,12 @@ export default function AdminProductsPage() {
 
   const handlePublish = async (id: string, isPublished: boolean) => {
     try {
-      // Optimistic update
       setProducts((p) =>
         p.map((x) => (x.id === id ? { ...x, is_published: !isPublished } : x)),
       );
-
       const updated = isPublished
         ? await productService.unpublishProduct(id)
         : await productService.publishProduct(id);
-
       setProducts((p) => p.map((x) => (x.id === id ? updated : x)));
       await loadProducts(true);
     } catch (err: any) {
@@ -496,8 +559,6 @@ export default function AdminProductsPage() {
       return;
     setIsBulkLoading(true);
     const ids = Array.from(selected);
-
-    // Optimistic update
     const deletedProducts = products.filter((p) => ids.includes(p.id));
     setProducts((p) => p.filter((x) => !ids.includes(x.id)));
     setTotal((t) => t - ids.length);
@@ -510,23 +571,20 @@ export default function AdminProductsPage() {
     const failCount = ids.length - deleted.length;
 
     if (failCount > 0) {
-      // Restore failed items
       const failedIds = ids.filter((_, i) => results[i].status === "rejected");
       const restored = deletedProducts.filter((p) => failedIds.includes(p.id));
       setProducts((p) => [...p, ...restored]);
       setTotal((t) => t + restored.length);
       setError(`Xóa thất bại ${failCount} sản phẩm.`);
     }
-
     setIsBulkLoading(false);
+    setIsSelectionMode(false);
     await loadProducts(true);
   };
 
   const handleBulkPublish = async (publish: boolean) => {
     setIsBulkLoading(true);
     const ids = Array.from(selected);
-
-    // Optimistic update
     setProducts((p) =>
       p.map((x) => (ids.includes(x.id) ? { ...x, is_published: publish } : x)),
     );
@@ -542,11 +600,9 @@ export default function AdminProductsPage() {
     const updated: Product[] = results
       .filter((r) => r.status === "fulfilled")
       .map((r) => (r as PromiseFulfilledResult<Product>).value);
-
-    // Update with server results
     setProducts((p) => p.map((x) => updated.find((u) => u.id === x.id) ?? x));
     setIsBulkLoading(false);
-
+    setIsSelectionMode(false);
     await loadProducts(true);
   };
 
@@ -555,25 +611,51 @@ export default function AdminProductsPage() {
   return (
     <div className="min-h-screen bg-[#F2F2F7] font-sans pb-24">
       <div className="p-5 md:p-8 max-w-[1400px] mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-[34px] font-bold text-black tracking-tight leading-none mb-1">
-              Sản phẩm
-            </h1>
-            <p className="text-[15px] text-[#8E8E93] font-medium">
-              {total} sản phẩm trong hệ thống
-            </p>
-          </div>
-          <Link
-            href="/admin/products/new"
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#007AFF] text-white rounded-[14px] text-[15px] font-semibold hover:bg-[#007AFF]/90 active:scale-95 transition-all shadow-[0_2px_10px_rgba(0,122,255,0.3)]"
-          >
-            <Plus size={18} strokeWidth={2} /> Thêm mới
-          </Link>
+        {/* ── HEADER ĐỘNG (THAY ĐỔI THEO CHẾ ĐỘ CHỌN) ── */}
+        <div className="flex items-center justify-between mb-6 h-12">
+          {/* Header Mobile khi đang Chọn Nhiều */}
+          {isSelectionMode ? (
+            <div className="w-full flex items-center justify-between md:hidden animate-in fade-in">
+              <button
+                onClick={handleClearSelection}
+                className="text-[17px] font-medium text-[#007AFF] active:opacity-70 transition-opacity"
+              >
+                Hủy
+              </button>
+              <h1 className="text-[17px] font-semibold text-black tracking-tight">
+                {selected.size > 0
+                  ? `Đã chọn ${selected.size}`
+                  : "Chọn sản phẩm"}
+              </h1>
+              <button
+                onClick={handleToggleAll}
+                className="text-[17px] font-medium text-[#007AFF] active:opacity-70 transition-opacity"
+              >
+                Tất cả
+              </button>
+            </div>
+          ) : (
+            /* Header Chuẩn */
+            <div className="w-full flex items-center justify-between animate-in fade-in">
+              <div>
+                <h1 className="text-[34px] font-bold text-black tracking-tight leading-none mb-1">
+                  Sản phẩm
+                </h1>
+                <p className="text-[15px] text-[#8E8E93] font-medium">
+                  {total} sản phẩm trong hệ thống
+                </p>
+              </div>
+              <Link
+                href="/admin/products/new"
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-[#007AFF] text-white rounded-[14px] text-[15px] font-semibold hover:bg-[#007AFF]/90 active:scale-95 transition-all shadow-[0_2px_10px_rgba(0,122,255,0.3)]"
+              >
+                <Plus size={18} strokeWidth={2} /> Thêm mới
+              </Link>
+            </div>
+          )}
         </div>
 
-        {/* Error Alert */}
+        {/* Cảnh báo lỗi */}
         {error && (
           <div className="mb-6 p-4 bg-[#FF3B30]/10 rounded-[16px] text-[#FF3B30] text-[15px] font-medium flex items-center justify-between">
             <span>{error}</span>
@@ -586,18 +668,18 @@ export default function AdminProductsPage() {
           </div>
         )}
 
-        {/* Bulk Action Bar */}
+        {/* Thanh thao tác nhanh (Chỉ hiện khi có item được chọn) */}
         {selected.size > 0 && (
           <BulkActionBar
             count={selected.size}
             onPublish={() => handleBulkPublish(true)}
             onUnpublish={() => handleBulkPublish(false)}
             onDelete={handleBulkDelete}
-            onClear={() => setSelected(new Set())}
+            onClear={handleClearSelection}
           />
         )}
 
-        {/* Search */}
+        {/* Thanh Tìm kiếm */}
         <div className="relative mb-6">
           <Search
             size={18}
@@ -616,7 +698,7 @@ export default function AdminProductsPage() {
           />
         </div>
 
-        {/* Content */}
+        {/* Nội dung List Sản phẩm */}
         {isLoading ? (
           <div className="flex justify-center py-20">
             <div className="w-10 h-10 border-4 border-[#007AFF]/20 border-t-[#007AFF] rounded-full animate-spin" />
@@ -627,9 +709,6 @@ export default function AdminProductsPage() {
               <Search size={32} className="text-[#8E8E93]" />
             </div>
             <p className="text-[17px] font-medium text-black">Không tìm thấy</p>
-            <p className="text-[15px] text-[#8E8E93] mt-1">
-              Thử đổi từ khóa tìm kiếm khác
-            </p>
           </div>
         ) : (
           <div
@@ -639,7 +718,7 @@ export default function AdminProductsPage() {
                 : "transition-opacity"
             }
           >
-            {/* Mobile: Inset Grouped List */}
+            {/* ── MOBILE: List tối giản có Long Press Context Menu ── */}
             <div className="md:hidden">
               <MobileCardList
                 products={products}
@@ -648,9 +727,12 @@ export default function AdminProductsPage() {
                 onPublish={handlePublish}
                 onClone={handleClone}
                 onDelete={handleDelete}
+                isSelectionMode={isSelectionMode}
+                setIsSelectionMode={setIsSelectionMode}
               />
             </div>
-            {/* Desktop: macOS Style Table */}
+
+            {/* ── DESKTOP: Bảng tính truyền thống ── */}
             <div className="hidden md:block">
               <DesktopTable
                 products={products}
@@ -665,7 +747,7 @@ export default function AdminProductsPage() {
           </div>
         )}
 
-        {/* Pagination Apple Style */}
+        {/* Phân trang */}
         {totalPages > 1 && (
           <div className="mt-8 flex items-center justify-between text-[15px]">
             <span className="text-[#8E8E93] font-medium">
@@ -676,7 +758,7 @@ export default function AdminProductsPage() {
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-white border border-[#E5E5EA] rounded-[12px] font-semibold text-black hover:bg-[#F2F2F7] disabled:opacity-40 disabled:hover:bg-white transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-95"
+                className="px-4 py-2 bg-white border border-[#E5E5EA] rounded-[12px] font-semibold text-black hover:bg-[#F2F2F7] disabled:opacity-40 transition-colors active:scale-95"
               >
                 Trước
               </button>
@@ -686,7 +768,7 @@ export default function AdminProductsPage() {
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-white border border-[#E5E5EA] rounded-[12px] font-semibold text-black hover:bg-[#F2F2F7] disabled:opacity-40 disabled:hover:bg-white transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-95"
+                className="px-4 py-2 bg-white border border-[#E5E5EA] rounded-[12px] font-semibold text-black hover:bg-[#F2F2F7] disabled:opacity-40 transition-colors active:scale-95"
               >
                 Tiếp
               </button>
