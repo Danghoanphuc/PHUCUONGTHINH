@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { productService, Product } from "@/lib/product-service";
 import {
   ImageIcon,
-  Globe, // Thay cho Eye
-  Archive, // Thay cho EyeOff
+  Globe,
+  Archive,
   Plus,
   Search,
   Copy,
@@ -89,7 +89,7 @@ function BulkActionBar({
   );
 }
 
-// ── Desktop table (Kiểu macOS) với Status Dot ──────────────────────────────────
+// ── Desktop table (Kiểu macOS) ────────────────────────────────────────────────
 function DesktopTable({
   products,
   selected,
@@ -242,7 +242,7 @@ function DesktopTable({
   );
 }
 
-// ── Mobile Card List với Công tắc iOS (Toggle Switch) ──────────────────────
+// ── Mobile Card List (Toggle Switch & Long Press Fix) ─────────────────────────
 function MobileCardList({
   products,
   selected,
@@ -287,10 +287,11 @@ function MobileCardList({
                   e.preventDefault();
                   onToggleSelect(product.id);
                 } else {
-                  router.push(`/admin/products/${product.id}`);
+                  router.push(`/p/${product.sku}`);
                 }
               }}
-              className={`p-4 flex items-center gap-3 transition-colors cursor-pointer ${
+              style={{ WebkitTouchCallout: "none" }}
+              className={`p-4 flex items-center gap-3 transition-colors cursor-pointer select-none ${
                 isSelected ? "bg-[#007AFF]/[0.05]" : "active:bg-[#F2F2F7]"
               } ${index !== products.length - 1 ? "border-b border-[#E5E5EA]" : ""}`}
             >
@@ -368,7 +369,7 @@ function MobileCardList({
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="fixed bottom-0 inset-x-0 z-[70] bg-[#F2F2F7] rounded-t-[32px] p-5 pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.15)]"
             >
-              <div className="bg-white rounded-[20px] p-4 mb-4 flex items-center gap-4 shadow-sm">
+              <div className="bg-white rounded-[20px] p-4 mb-4 flex items-center gap-4 shadow-sm select-none">
                 <ProductAvatar url={getCoverUrl(contextMenuProduct)} />
                 <div className="flex-1 min-w-0">
                   <p className="text-[16px] font-bold text-black line-clamp-1">
@@ -380,7 +381,7 @@ function MobileCardList({
                 </div>
               </div>
 
-              <div className="bg-white rounded-[20px] overflow-hidden flex flex-col shadow-sm">
+              <div className="bg-white rounded-[20px] overflow-hidden flex flex-col shadow-sm select-none">
                 <button
                   onClick={() => {
                     router.push(`/admin/products/${contextMenuProduct.id}`);
@@ -414,7 +415,7 @@ function MobileCardList({
                 </button>
               </div>
 
-              <div className="bg-white rounded-[20px] overflow-hidden mt-4 shadow-sm">
+              <div className="bg-white rounded-[20px] overflow-hidden mt-4 shadow-sm select-none">
                 <button
                   onClick={() => {
                     onDelete(contextMenuProduct.id);
@@ -621,9 +622,7 @@ export default function AdminProductsPage() {
                 Hủy
               </button>
               <h1 className="text-[17px] font-semibold text-black tracking-tight">
-                {selected.size > 0
-                  ? `Đã chọn ${selected.size}`
-                  : "Chọn sản phẩm"}
+                {selected.size > 0 ? `Đã chọn ${selected.size}` : "Chọn SP"}
               </h1>
               <button
                 onClick={handleToggleAll}
@@ -646,7 +645,7 @@ export default function AdminProductsPage() {
                 href="/admin/products/new"
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-[#007AFF] text-white rounded-[14px] text-[15px] font-semibold hover:bg-[#007AFF]/90 active:scale-95 transition-all shadow-[0_2px_10px_rgba(0,122,255,0.3)]"
               >
-                <Plus size={18} strokeWidth={2} /> Thêm mới
+                <Plus size={18} strokeWidth={2} /> Thêm
               </Link>
             </div>
           )}
