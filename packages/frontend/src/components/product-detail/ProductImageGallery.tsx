@@ -97,6 +97,7 @@ export function ProductImageGallery({
             Di chuyển chuột để xem chi tiết
           </div>
 
+          {/* Badges - Góc trái trên */}
           <div
             className="absolute top-3 sm:top-4 left-3 sm:left-4 flex flex-col gap-1.5 sm:gap-2 pointer-events-none"
             onClick={(e) => e.stopPropagation()}
@@ -112,15 +113,13 @@ export function ProductImageGallery({
             ))}
           </div>
 
-          {/* QR Code - Góc phải trên */}
+          {/* QR Code - Góc phải trên (BÊN TRONG ảnh) */}
           {productSku && productUrl && (
-            <div onClick={(e) => e.stopPropagation()}>
-              <ProductQRCode
-                sku={productSku}
-                productUrl={productUrl}
-                productName={productName}
-              />
-            </div>
+            <ProductQRCode
+              sku={productSku}
+              productUrl={productUrl}
+              productName={productName}
+            />
           )}
 
           {/* Nút Share - Kính phủ sương */}
