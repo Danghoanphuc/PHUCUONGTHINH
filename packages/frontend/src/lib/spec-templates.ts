@@ -80,7 +80,8 @@ const GACH_FIELDS: SpecField[] = [
     required: true,
     group: "Chất liệu",
     options: [
-      "Porcelain (Đá đồng chất)",
+      "Porcelain",
+      "Đá đồng chất",
       "Ceramic (Đất nung)",
       "Granite",
       "Nano",
@@ -94,6 +95,7 @@ const GACH_FIELDS: SpecField[] = [
     required: true,
     group: "Chất liệu",
     options: [
+      "Bóng",
       "Bóng kính (Polish)",
       "Mờ (Matte)",
       "Lappato (Bán bóng)",
