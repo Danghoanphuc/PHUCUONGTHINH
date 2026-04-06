@@ -460,7 +460,21 @@ export function Header() {
                 {label}
               </Link>
             ))}
-            <div className="mt-auto pt-8 flex flex-col gap-4">
+            <div className="mt-auto pt-8 flex flex-col gap-3">
+              {!isAuthenticated && (
+                <Link
+                  href="/admin/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 bg-white text-gray-900 font-bold px-4 py-3.5 sm:py-4 rounded-full text-[15px] sm:text-[16px] active:scale-95 transition-transform shadow-md border border-gray-200"
+                >
+                  <LogOut
+                    size={18}
+                    className="sm:w-5 sm:h-5 rotate-180"
+                    strokeWidth={2.5}
+                  />{" "}
+                  Đăng nhập
+                </Link>
+              )}
               <a
                 href="https://zalo.me"
                 target="_blank"
