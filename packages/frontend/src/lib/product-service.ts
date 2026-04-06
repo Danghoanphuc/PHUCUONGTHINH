@@ -123,10 +123,14 @@ class ProductService {
       if (f.search) params.set("search", f.search);
       if (f.category) params.set("category", f.category);
       if (f.published !== undefined)
-        params.set("published", f.published === "all" ? "all" : f.published ? "true" : "false");
+        params.set(
+          "published",
+          f.published === "all" ? "all" : f.published ? "true" : "false",
+        );
       if (f.styles?.length) f.styles.forEach((s) => params.append("styles", s));
       if (f.spaces?.length) f.spaces.forEach((s) => params.append("spaces", s));
-      if (f.technical_specs) params.set("technical", JSON.stringify(f.technical_specs));
+      if (f.technical_specs)
+        params.set("technical", JSON.stringify(f.technical_specs));
     } else {
       params.set("page", pageOrFilters.toString());
       params.set("limit", limit.toString());
@@ -134,10 +138,16 @@ class ProductService {
       if (search) params.set("search", search);
     }
 
+    // Add cache buster to force fresh data from server (bypass browser/CDN cache)
+    if (bustCache) {
+      params.set("_t", Date.now().toString());
+    }
+
     const cacheKey = `products:list:${params.toString()}`;
-    if (!bustCache && !isPublic) { // Admin pages usually want fresh data but we can cache public ones
-       const cached = clientCache.get<ProductFiltersResponse>(cacheKey);
-       if (cached) return cached;
+    if (!bustCache && !isPublic) {
+      // Admin pages usually want fresh data but we can cache public ones
+      const cached = clientCache.get<ProductFiltersResponse>(cacheKey);
+      if (cached) return cached;
     }
 
     // Use /filters endpoint for everything as it's optimized
@@ -165,14 +175,19 @@ class ProductService {
       if (cached) return cached;
     }
 
-    const raw = await apiClient.get<any>(`/products/${id}`);
+    // Add cache buster to force fresh data from server
+    const cacheBuster = bustCache ? `?_t=${Date.now()}` : "";
+    const raw = await apiClient.get<any>(`/products/${id}${cacheBuster}`);
     const product = normalizeTags(raw);
-    
+
     clientCache.set(cacheKey, product, 600_000); // 10 minutes cache for details
     return product;
   }
 
-  async getProductBySku(sku: string, bustCache = false): Promise<Product | null> {
+  async getProductBySku(
+    sku: string,
+    bustCache = false,
+  ): Promise<Product | null> {
     const cacheKey = `products:sku:${sku}`;
     if (!bustCache) {
       const cached = clientCache.get<Product>(cacheKey);
@@ -180,7 +195,11 @@ class ProductService {
     }
 
     try {
-      const raw = await apiClient.get<any>(`/products/sku/${encodeURIComponent(sku)}`);
+      // Add cache buster to force fresh data from server
+      const cacheBuster = bustCache ? `?_t=${Date.now()}` : "";
+      const raw = await apiClient.get<any>(
+        `/products/sku/${encodeURIComponent(sku)}${cacheBuster}`,
+      );
       if (!raw || !raw.id) return null;
       const product = normalizeTags(raw);
       clientCache.set(cacheKey, product, 600_000);
