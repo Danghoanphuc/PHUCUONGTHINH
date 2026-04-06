@@ -539,16 +539,23 @@ export default function AdminProductsPage() {
   };
 
   const handlePublish = async (id: string, isPublished: boolean) => {
+    // Optimistic update
+    setProducts((p) =>
+      p.map((x) => (x.id === id ? { ...x, is_published: !isPublished } : x)),
+    );
+
     try {
-      setProducts((p) =>
-        p.map((x) => (x.id === id ? { ...x, is_published: !isPublished } : x)),
-      );
       const updated = isPublished
         ? await productService.unpublishProduct(id)
         : await productService.publishProduct(id);
+      // Update with actual data from API
       setProducts((p) => p.map((x) => (x.id === id ? updated : x)));
-      await loadProducts(true);
+      // REMOVED: await loadProducts(true) - to prevent flickering from stale cache
     } catch (err: any) {
+      // Rollback on error
+      setProducts((p) =>
+        p.map((x) => (x.id === id ? { ...x, is_published: isPublished } : x)),
+      );
       setError(err.response?.data?.message || "Không thể cập nhật sản phẩm");
       await loadProducts(true);
     }
@@ -585,6 +592,7 @@ export default function AdminProductsPage() {
   const handleBulkPublish = async (publish: boolean) => {
     setIsBulkLoading(true);
     const ids = Array.from(selected);
+    // Optimistic update
     setProducts((p) =>
       p.map((x) => (ids.includes(x.id) ? { ...x, is_published: publish } : x)),
     );
@@ -600,10 +608,11 @@ export default function AdminProductsPage() {
     const updated: Product[] = results
       .filter((r) => r.status === "fulfilled")
       .map((r) => (r as PromiseFulfilledResult<Product>).value);
+    // Update with actual data from API
     setProducts((p) => p.map((x) => updated.find((u) => u.id === x.id) ?? x));
     setIsBulkLoading(false);
     setIsSelectionMode(false);
-    await loadProducts(true);
+    // REMOVED: await loadProducts(true) - to prevent flickering from stale cache
   };
 
   const totalPages = Math.ceil(total / limit);

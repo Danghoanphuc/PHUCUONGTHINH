@@ -390,9 +390,13 @@ export function ProductForm({
             : "Lưu thành công!",
         type: apiErrors.length > 0 ? "info" : "success",
       });
+
+      // Clear Next.js cache before navigation
+      router.refresh();
+
+      // Force full page reload to bypass client-side cache and ensure fresh media
       setTimeout(() => {
-        router.push(`/products/${productId}`);
-        router.refresh();
+        window.location.href = `/p/${formData.sku}`;
       }, 800);
     } catch (err: any) {
       setToast({ message: formatApiError(err, "Lưu thất bại"), type: "error" });
