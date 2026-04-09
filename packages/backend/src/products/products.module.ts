@@ -48,8 +48,10 @@ import { RedisCacheService } from '../common/services/redis-cache.service';
           cached: async (
             key: string,
             factory: () => Promise<any>,
-            ttl = 300,
+            options?: { ttl?: number } | number,
           ) => {
+            const ttl =
+              typeof options === 'number' ? options : options?.ttl || 300;
             return await redisCache.getOrSet(key, factory, ttl);
           },
           generateFilterCacheKey: (filters: any) => {
