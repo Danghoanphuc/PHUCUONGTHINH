@@ -37,7 +37,7 @@ async function getProduct(id: string): Promise<Product | null> {
 
     // Vẫn dùng revalidate để tối ưu cache SEO
     const response = await fetch(`${API_URL}/products/${id}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 10 },
       signal: controller.signal,
     });
 
@@ -50,7 +50,7 @@ async function getProduct(id: string): Promise<Product | null> {
 
     const raw = await response.json();
     // Đề phòng trường hợp API bọc data
-    const productData = raw.data || raw; 
+    const productData = raw.data || raw;
     return normalizeTags(productData);
   } catch (error: any) {
     return null;
