@@ -198,7 +198,7 @@ export function Field({
     <div>
       <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">
         {label}
-        {required && <span className="text-red-400 ml-1">*</span>}
+        {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       {children}
       {hint && !error && (

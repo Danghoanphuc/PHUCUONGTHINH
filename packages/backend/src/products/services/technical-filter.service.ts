@@ -3,16 +3,13 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CacheService } from './cache.service';
 
 export interface TechnicalFilters {
-  format?: string[];
-  color_palette?: string[];
+  size?: string[];
   material?: string[];
-  slip_rating?: string[];
-  thickness?: { min?: number; max?: number };
-  dimensions?: {
-    length?: { min?: number; max?: number };
-    width?: { min?: number; max?: number };
-  };
-  [key: string]: any; // Allow arbitrary technical spec filters
+  surface_finish?: string[];
+  slip_resistance?: string[];
+  origin?: string[];
+  thickness_mm?: { min?: number; max?: number };
+  [key: string]: any;
 }
 
 @Injectable()
@@ -35,35 +32,31 @@ export class TechnicalFilterService {
 
       if (Array.isArray(value) && value.length > 0) {
         // Array filters - match any of the values
-        // Use a more robust regex-like approach if supported, or multiple ORs
-        const orConditions = value.map((val) => ({
-          technical_specs: {
-            contains: `"${key}":"${val}"`,
-          },
-        }));
+        // Use two variants to handle JSON with/without spaces after colon
+        const orConditions = value.flatMap((val) => [
+          { technical_specs: { contains: `"${key}":"${val}"` } },
+          { technical_specs: { contains: `"${key}": "${val}"` } },
+        ]);
         conditions.push({ OR: orConditions });
       } else if (
         typeof value === 'object' &&
+        value !== null &&
         (value.min !== undefined || value.max !== undefined)
       ) {
-        // For range filters in SQLite string-based JSON, we can only check for existence
-        // and then filter in memory if needed, or use a more complex SQL fragment.
-        // For now, we keep it simple but acknowledge the limitation.
         conditions.push({
-          technical_specs: {
-            contains: `"${key}":`,
-          },
+          technical_specs: { contains: `"${key}":` },
         });
       } else if (
         typeof value === 'string' ||
         typeof value === 'number' ||
         typeof value === 'boolean'
       ) {
-        // Exact match filters
+        // Exact match - handle both compact and spaced JSON
         conditions.push({
-          technical_specs: {
-            contains: `"${key}":"${value}"`,
-          },
+          OR: [
+            { technical_specs: { contains: `"${key}":"${value}"` } },
+            { technical_specs: { contains: `"${key}": "${value}"` } },
+          ],
         });
       }
     });
@@ -148,18 +141,32 @@ export class TechnicalFilterService {
    */
   getCommonTechnicalFields() {
     return {
-      format: ['Slab', 'Mosaic', 'Hexagon', 'Subway', 'Penny Round'],
-      material: ['Porcelain', 'Ceramic', 'Natural Stone', 'Glass', 'Metal'],
-      finish: ['Matte', 'Glossy', 'Textured', 'Polished', 'Honed'],
-      slip_rating: ['R9', 'R10', 'R11', 'R12', 'R13'],
-      color_palette: [
-        'White',
-        'Black',
-        'Grey',
-        'Beige',
-        'Brown',
-        'Blue',
-        'Green',
+      material: [
+        'Porcelain',
+        'Đá đồng chất',
+        'Ceramic',
+        'Granite',
+        'Nano',
+        'Full Body Porcelain',
+      ],
+      surface_finish: [
+        'Bóng',
+        'Bóng vittinh',
+        'Mờ',
+        'Giả đá tự nhiên',
+        'Giả gỗ',
+        'Glossy',
+      ],
+      slip_resistance: ['R9', 'R10', 'R11', 'R12'],
+      origin: [
+        'Việt Nam',
+        'Ý',
+        'Tây Ban Nha',
+        'Trung Quốc',
+        'Ấn Độ',
+        'Malaysia',
+        'Indonesia',
+        'Thái Lan',
       ],
     };
   }
