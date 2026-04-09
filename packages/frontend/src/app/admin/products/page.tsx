@@ -451,7 +451,7 @@ export default function AdminProductsPage() {
 
   const loadProducts = useCallback(
     async (bustCache = false) => {
-      if (isLoadingRef.current) return;
+      if (isLoadingRef.current && !bustCache) return;
       isLoadingRef.current = true;
       setIsLoading(true);
       setError("");
@@ -548,16 +548,17 @@ export default function AdminProductsPage() {
       const updated = isPublished
         ? await productService.unpublishProduct(id)
         : await productService.publishProduct(id);
-      // Update with actual data from API
+      // Cập nhật trực tiếp từ data API trả về, không reload toàn bộ list
       setProducts((p) => p.map((x) => (x.id === id ? updated : x)));
-      // REMOVED: await loadProducts(true) - to prevent flickering from stale cache
     } catch (err: any) {
       // Rollback on error
       setProducts((p) =>
         p.map((x) => (x.id === id ? { ...x, is_published: isPublished } : x)),
       );
-      setError(err.response?.data?.message || "Không thể cập nhật sản phẩm");
-      await loadProducts(true);
+      setError(
+        err.response?.data?.message || "Không thể cập nhật trạng thái sản phẩm",
+      );
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -605,14 +606,29 @@ export default function AdminProductsPage() {
           : productService.unpublishProduct(id),
       ),
     );
-    const updated: Product[] = results
+
+    // Cập nhật state với data thực từ API cho các request thành công
+    const fulfilled = results
       .filter((r) => r.status === "fulfilled")
       .map((r) => (r as PromiseFulfilledResult<Product>).value);
-    // Update with actual data from API
-    setProducts((p) => p.map((x) => updated.find((u) => u.id === x.id) ?? x));
+    setProducts((p) => p.map((x) => fulfilled.find((u) => u.id === x.id) ?? x));
+
+    // Rollback optimistic update cho các request thất bại
+    const failedIds = ids.filter((_, i) => results[i].status === "rejected");
+    if (failedIds.length > 0) {
+      setProducts((p) =>
+        p.map((x) =>
+          failedIds.includes(x.id) ? { ...x, is_published: !publish } : x,
+        ),
+      );
+      setError(
+        `Thao tác thất bại ${failedIds.length} sản phẩm. Vui lòng kiểm tra lại hình ảnh hoặc danh mục.`,
+      );
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     setIsBulkLoading(false);
     setIsSelectionMode(false);
-    // REMOVED: await loadProducts(true) - to prevent flickering from stale cache
   };
 
   const totalPages = Math.ceil(total / limit);

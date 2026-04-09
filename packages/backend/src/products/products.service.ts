@@ -397,7 +397,8 @@ export class ProductsService {
       );
     }
 
-    return this.update(id, { is_published: true });
+    const result = await this.update(id, { is_published: true });
+    return result;
   }
 
   async unpublish(id: string): Promise<Product> {

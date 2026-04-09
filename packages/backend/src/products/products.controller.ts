@@ -71,6 +71,7 @@ export class ProductsController {
   @Header('Expires', '0')
   async findAllWithFilters(@Query() query: any) {
     const filters = {
+      _t: query._t,
       categories: query.categories
         ? Array.isArray(query.categories)
           ? query.categories

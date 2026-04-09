@@ -240,10 +240,13 @@ export class CombinedFilterService {
   }
 
   /**
-   * Clear product-related caches
+   * Clear product-related caches including filter lists and available_filters
    */
   clearProductCaches(productId?: string): number {
-    return this.cacheService.invalidateProductCache(productId);
+    let count = this.cacheService.invalidateProductCache(productId);
+    // Xóa thêm key cụ thể của available_filters cache
+    if (this.cacheService.delete('available_filters_all')) count++;
+    return count;
   }
 
   /**
