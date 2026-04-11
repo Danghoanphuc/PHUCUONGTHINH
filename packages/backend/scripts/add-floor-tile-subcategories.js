@@ -18,7 +18,7 @@ async function main() {
     `✅ Tìm thấy danh mục: ${floorTilesCategory.name} (${floorTilesCategory.id})`,
   );
 
-  const subcategories = [{ name: 'Đậm', slug: 'dam-lat-nen' }];
+  const subcategories = []; // 'Đậm' đã được chuyển sang Gạch ốp tường
 
   for (const subcat of subcategories) {
     const existing = await prisma.category.findFirst({

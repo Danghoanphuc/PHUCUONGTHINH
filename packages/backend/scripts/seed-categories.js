@@ -17,7 +17,6 @@ const CATEGORIES = [
           { name: 'Porcelain bóng xám', slug: 'porcelain-bong-xam' },
           { name: 'Porcelain bóng vân đá', slug: 'porcelain-bong-van-da' },
           { name: 'Porcelain bóng giả gỗ', slug: 'porcelain-bong-gia-go' },
-          { name: 'Đậm', slug: 'dam-lat-nen' },
         ],
       },
       {
@@ -33,6 +32,7 @@ const CATEGORIES = [
             slug: 'ceramic-mo-van-gach',
           },
           { name: 'Ceramic / Porcelain 3D', slug: 'ceramic-3d' },
+          { name: 'Đậm', slug: 'dam' },
         ],
       },
       {
