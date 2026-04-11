@@ -249,7 +249,7 @@ export class CategoriesService {
       slug = await this.ensureUniqueSlug(baseSlug, id);
     }
 
-    return this.prisma.category.update({
+    const result = await this.prisma.category.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -263,6 +263,9 @@ export class CategoriesService {
         children: true,
       },
     });
+
+    this.clearCache();
+    return result;
   }
 
   async remove(id: string): Promise<void> {
